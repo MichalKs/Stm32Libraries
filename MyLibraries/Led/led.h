@@ -63,7 +63,7 @@ typedef enum {
   LED_ON,     //!< LED_ON     Turn on LED
 } LED_State_TypeDef;
 
-void LED_Init         (LED_Number_TypeDef led);
+void LED_Add         (LED_Number_TypeDef led);
 void LED_Toggle       (LED_Number_TypeDef led);
 void LED_ChangeState  (LED_Number_TypeDef led, LED_State_TypeDef state);
 

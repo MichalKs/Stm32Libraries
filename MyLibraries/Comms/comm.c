@@ -38,90 +38,82 @@
  * @{
  */
 
-#define COMM_BUF_LEN_TX UART_BUF_LEN_TX    ///< COMM buffer lengths
-#define COMM_BUF_LEN_RX 32     ///< COMM buffer lengths
-#define COMM_TERMINATOR '\r'   ///< COMM frame terminator character
+#define TRANSMIT_BUFFER_LENGTH  UART_BUF_LEN_TX ///< Transmit buffer length
+#define RECEIVE_BUFFER_LENGTH   32              ///< Receive buffer length
+#define TERMINATOR_CHARACTER    '\r'            ///< Frame terminator character
 
-static uint8_t rxBuffer[COMM_BUF_LEN_RX]; ///< Buffer for received data.
-static uint8_t txBuffer[COMM_BUF_LEN_TX]; ///< Buffer for transmitted data.
+static uint8_t receiveBuffer[RECEIVE_BUFFER_LENGTH];    ///< Buffer for received data.
+static uint8_t transmitBuffer[TRANSMIT_BUFFER_LENGTH];  ///< Buffer for transmitted data.
+static FIFO_Typedef receiveFifo;  ///< RX FIFO
+static FIFO_Typedef transmitFifo; ///< TX FIFO
+static int frameCounter; ///< Nonzero signals a new frame (number of received frames)
 
-static FIFO_TypeDef rxFifo; ///< RX FIFO
-static FIFO_TypeDef txFifo; ///< TX FIFO
-
-static uint8_t gotFrame;  ///< Nonzero signals a new frame (number of received frames)
-
-int COMM_TxCallback(char* c);
-void COMM_RxCallback(char c);
+static int transmitCb(char* characterToSend);
+static void receiveCb(char receivedCharacter);
 
 /**
  * @brief Initialize communication terminal interface.
- * @param baud Required baud rate
+ * @param baudRate Required baud rate
  */
-void COMM_Init(int baud) {
+void COMM_Initialize(int baudRate) {
 
   // pass baud rate
   // callback for received data and callback for transmitted data
-  COMM_HAL_Init(baud, COMM_RxCallback, COMM_TxCallback);
+  UART_Initialize(baudRate, receiveCb, transmitCb);
 
   // Initialize RX FIFO for receiving data from PC
-  rxFifo.buf = rxBuffer;
-  rxFifo.len = COMM_BUF_LEN_RX;
-  FIFO_Add(&rxFifo);
+  FIFO_Add(&receiveFifo, receiveBuffer, RECEIVE_BUFFER_LENGTH);
 
   // Initialize TX FIFO for transferring data to PC
-  txFifo.buf = txBuffer;
-  txFifo.len = COMM_BUF_LEN_TX;
-  FIFO_Add(&txFifo);
+  FIFO_Add(&transmitFifo, transmitBuffer, TRANSMIT_BUFFER_LENGTH);
 
 }
 /**
  * @brief Send a char to PC.
- * @details This function can be called in stubs.c _write
- * function in order for printf to work
+ * @details This function can be called in _write for printf to work
  *
- * @param c Char to send.
+ * @param characterToSend Character to send.
  */
-void COMM_Putc(char c) {
+void COMM_PutCharacter(char characterToSend) {
 
   // disable IRQ so it doesn't screw up FIFO count - leads to errors in transmission
-  COMM_HAL_IrqDisable();
+  UART_DisableIrq();
 
-  FIFO_Push(&txFifo,(uint8_t)c); // Put data in TX buffer
+  FIFO_Push(&transmitFifo, characterToSend); // Put data in TX buffer
 
   // enable transmitter if inactive
-  if (!COMM_HAL_IsTxActive()) {
-    COMM_HAL_TxEnable();
+  if (!UART_IsSendingData()) {
+    UART_SendDataIrq();
   }
 
   // enable IRQ again
-  COMM_HAL_IrqEnable();
+  UART_EnableIrq();
 }
 /**
- * @brief Send string to PC
- * @param str C-string to send
+ * @brief Send string to PC with newline
+ * @param line Line to send
  */
-void COMM_Println(char* str) {
-  for (int i = 0; i < strlen(str); i++) {
-    COMM_Putc(str[i]);
+void COMM_PrintLine(char* line) {
+  for (unsigned int i = 0; i < strlen(line); i++) {
+    COMM_PutCharacter(line[i]);
   }
-  COMM_Putc('\r');
-  COMM_Putc('\n');
+  COMM_PutCharacter('\r');
+  COMM_PutCharacter('\n');
 }
 /**
  * @brief Get a char from PC
  * @return Received char.
  * @warning Blocking function! Waits until char is received.
  */
-char COMM_Getc(void) {
+char COMM_GetCharacter(void) {
 
-  uint8_t c;
+  uint8_t receivedCharacter;
 
-  while (FIFO_IsEmpty(&rxFifo) == 1); // wait until buffer is not empty
-  // buffer not empty => char was received
+  while (FIFO_IsEmpty(&receiveFifo)); // wait until buffer is not empty
 
-  FIFO_Pop(&rxFifo,&c); // Get data from RX buffer
+  FIFO_Pop(&receiveFifo, &receivedCharacter); // Get data from RX buffer
 
-  return (char)c;
+  return (char)receivedCharacter;
 }
 /**
  * @brief Get a complete frame from PC(nonblocking)
@@ -132,51 +124,50 @@ char COMM_Getc(void) {
  * @retval 2 Frame error
  * TODO Add maximum length checking so as not to overflow
  */
-int COMM_GetFrame(uint8_t* buf, uint8_t* len) {
+int COMM_GetFrame(uint8_t* buf, int* len) {
 
   uint8_t c;
   *len = 0; // zero out length variable
 
-  if (gotFrame) {
+  if (frameCounter) {
     while (1) {
 
       // no more data and terminator wasn't reached => error
-      if (FIFO_IsEmpty(&rxFifo)) {
+      if (FIFO_IsEmpty(&receiveFifo)) {
         *len = 0;
         println("Invalid frame");
         return 2;
       }
-      FIFO_Pop(&rxFifo, &c);
+      FIFO_Pop(&receiveFifo, &c);
       buf[(*len)++] = c;
 
       // if end of frame
-      if (c == COMM_TERMINATOR) {
+      if (c == TERMINATOR_CHARACTER) {
         (*len)--; // length without terminator character
         buf[*len] = 0; // USART terminator character converted to NULL terminator
         break;
       }
 
     }
-    gotFrame--;
+    frameCounter--;
     return 0;
 
   } else {
 
     return 1;
   }
-
 }
 /**
  * @brief Callback for receiving data from PC.
  * @param c Data sent from lower layer software.
  */
-void COMM_RxCallback(char c) {
+void receiveCb(char receivedCharacter) {
 
-  uint8_t res = FIFO_Push(&rxFifo, c); // Put data in RX buffer
+  uint8_t res = FIFO_Push(&receiveFifo, receivedCharacter); // Put data in RX buffer
 
   // Checking res to ensure no buffer overflow occurred
-  if ((c == COMM_TERMINATOR) && (res == 0)) {
-    gotFrame++;
+  if ((receivedCharacter == TERMINATOR_CHARACTER) && (res == 0)) {
+    frameCounter++;
   }
 }
 /**
@@ -185,17 +176,17 @@ void COMM_RxCallback(char c) {
  * @retval 0 There is no more data in buffer (stop transmitting)
  * @retval 1 Valid data in c
  */
-int COMM_TxCallback(char* buf) {
+int transmitCb(char* dataToTransmit) {
 
-  uint8_t* localBuff = (uint8_t*)buf;
+  char* localBuffer = dataToTransmit;
 
-  if (FIFO_IsEmpty(&txFifo)) {
+  if (FIFO_IsEmpty(&transmitFifo)) {
     return 0;
   }
 
   // get all the data at one go
   int i = 0;
-  while (!FIFO_Pop(&txFifo, localBuff+i)) {
+  while (FIFO_Pop(&transmitFifo, localBuffer+i) == FIFO_OK) {
     i++;
   }
 

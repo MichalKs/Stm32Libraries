@@ -30,11 +30,11 @@
  * @{
  */
 
-void    COMM_Init(int baud);
-void    COMM_Putc(char c);
-char    COMM_Getc(void);
-int     COMM_GetFrame(uint8_t* buf, uint8_t* len);
-void    COMM_Println(char* str);
+void    COMM_Initialize(int baudRate);
+void    COMM_PutCharacter(char characterToSend);
+char    COMM_GetCharacter(void);
+int     COMM_GetFrame(uint8_t* frameBuffer, int* length);
+void    COMM_PrintLine(char* line);
 /**
  * @}
  */

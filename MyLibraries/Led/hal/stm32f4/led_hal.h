@@ -18,7 +18,7 @@
 #ifndef LED_HAL_H_
 #define LED_HAL_H_
 
-#include <inttypes.h>
+#include "utils.h"
 
 /**
  * @defgroup  LED_HAL LED_HAL
@@ -34,7 +34,7 @@
 
 void LED_HAL_Init         (uint8_t led);
 void LED_HAL_Toggle       (uint8_t led);
-void LED_HAL_ChangeState  (uint8_t led, uint8_t state);
+void LED_HAL_ChangeState  (uint8_t led, Boolean state);
 
 /**
  * @}

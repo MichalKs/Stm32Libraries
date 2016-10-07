@@ -105,7 +105,7 @@ int _write(int file, char *ptr, int len)
 
 		for (DataIdx = 0; DataIdx < len; DataIdx++)
 		{
-		  COMM_Putc(*ptr++);
+		  COMM_PutCharacter(*ptr++);
 		}
 	return len;
 }

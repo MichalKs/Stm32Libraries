@@ -1,12 +1,12 @@
 /**
  * @file    main.c
- * @brief   LED test
- * @date    9 kwi 2014
+ * @brief   Blinky test
+ * @date    07.10.2016
  * @author  Michal Ksiezopolski
  *
  *
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the
  * accompanying materials are made available
  * under the terms of the GNU Public License
@@ -22,6 +22,7 @@
 #include "timers.h"
 #include "comm.h"
 #include "led.h"
+#include "utils.h"
 
 #define DEBUG
 
@@ -33,8 +34,6 @@
 #define println(str, args...) (void)0
 #endif
 
-#define COMM_BAUD_RATE 115200UL ///< Baud rate for communication with PC
-
 /**
  * @brief Callback for performing periodic tasks
  */
@@ -42,7 +41,6 @@ void softTimerCallback(void) {
   LED_Toggle(_LED2);
   println("Hello world!");
 }
-
 /**
   * @brief  Main program
   */
@@ -50,63 +48,46 @@ int main(void) {
 
   COMMON_HAL_Init();
 
-  COMM_Init(COMM_BAUD_RATE);
+  const int COMM_BAUD_RATE = 115200;
+  COMM_Initialize(COMM_BAUD_RATE);
   println("Starting program"); // Print a string to terminal
 
-  LED_Init(_LED0); // Add an LED
-  LED_Init(_LED1); // Add an LED
-  LED_Init(_LED2); // Add an LED
+  LED_Add(_LED0);
+  LED_Add(_LED1);
+  LED_Add(_LED2);
 
-  // Add a soft timer with callback running every 1000ms
-  int8_t timerID = TIMER_AddSoftTimer(500, softTimerCallback);
-  TIMER_StartSoftTimer(timerID); // start the timer
+  // Add a soft timer with callback
+  const int SOFT_TIMER_PERIOD_MILLIS = 100;
+  int8_t timerID = TIMER_AddSoftTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
+  TIMER_StartSoftTimer(timerID);
 
-  uint8_t buf[64]; // buffer for receiving commands from PC
-  uint8_t len;      // length of command
-  while (1) {
+  const int FRAME_MAX_SIZE = 64;
+  uint8_t frameBuffer[FRAME_MAX_SIZE];  // buffer for receiving commands from PC
+  int length;           // length of command
+
+  while (TRUE) {
     // check for new frames from PC
-    if (!COMM_GetFrame(buf, &len)) {
-      println("Got frame of length %d: %s", (int)len, (char*)buf);
+    if (!COMM_GetFrame(frameBuffer, &length)) {
+      println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
 
       // control LED0 from terminal
-      if (!strcmp((char*)buf, ":LED 0 ON")) {
+      if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
         LED_ChangeState(_LED0, LED_ON);
       }
-      if (!strcmp((char*)buf, ":LED 0 OFF")) {
+      if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
         LED_ChangeState(_LED0, LED_OFF);
       }
-      if (!strcmp((char*)buf, ":LED 1 ON")) {
+      if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
         LED_ChangeState(_LED1, LED_ON);
       }
-      if (!strcmp((char*)buf, ":LED 1 OFF")) {
+      if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
         LED_ChangeState(_LED1, LED_OFF);
       }
     }
 
     TIMER_SoftTimersUpdate();
   }
+
+  return 0;
 }
-
-
-//int main(void) {
-
-////  KEYS_Init(); // Initialize matrix keyboard
-//
-//
-//  // test another way of measuring time delays
-//  uint32_t softTimer = TIMER_GetTime(); // get start time for delay
-
-//  while (1) {
-
-    // test delay method
-//    if (TIMER_DelayTimer(1000, softTimer)) {
-//      LED_Toggle(LED3);
-//      softTimer = TIMER_GetTime(); // get start time for delay
-//    }
-//
-
-//
-////    KEYS_Update(); // run keyboard
-//  }
-//}
 

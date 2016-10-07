@@ -18,10 +18,6 @@
 #include <fifo.h>
 #include <stdio.h>
 
-#ifndef DEBUG_FIFO
-  #define DEBUG_FIFO
-#endif
-
 #ifdef DEBUG_FIFO
   #define print(str, args...) printf("FIFO--> "str"%s",##args,"\r")
   #define println(str, args...) printf("FIFO--> "str"%s",##args,"\r\n")
@@ -43,83 +39,86 @@
  * buffer pointer. The rest is handled automatically.
  *
  * @param fifo Pointer to FIFO structure
- * @retval 0 FIFO added successfully
- * @retval 1 Error: FIFO length is 0
+ * @retval FIFO_OK FIFO added successfully
+ * @retval FIFO_ZERO_LENGTH FIFO length is 0
+ * @retval FIFO_NULL_BUFFER Received buffer is null
  */
-uint8_t FIFO_Add(FIFO_TypeDef* fifo) {
+int FIFO_Add(FIFO_Typedef* fifo, char* dataBuffer, int length) {
 
-  if (fifo->len == 0 ) {
-    println("Zero FIFO length");
-    return 1;
+  if (length == 0) {
+    return FIFO_ZERO_LENGTH;
   }
 
+  if (dataBuffer == NULL) {
+    return FIFO_NULL_BUFFER;
+  }
+
+  fifo->buffer = dataBuffer;
+  fifo->length = length;
   fifo->tail  = 0;
   fifo->head  = 0;
   fifo->count = 0;
 
-  return 0;
+  return FIFO_OK;
 }
 /**
  * @brief Pushes data to FIFO.
  * @param fifo Pointer to FIFO structure
- * @param c Data byte
- * @retval 0 Data added
- * @retval 1 Error: FIFO is full
+ * @param newData Data byte
+ * @retval FIFO_OK Data added
+ * @retval FIFO_FULL FIFO is full
  */
-uint8_t FIFO_Push(FIFO_TypeDef* fifo, uint8_t c) {
+int FIFO_Push(FIFO_Typedef* fifo, char newData) {
 
   // Check for overflow
-  if (fifo->count == fifo->len) {
-    println("FIFO overflow");
-    return 1;
+  if (fifo->count == fifo->length) {
+    return FIFO_FULL;
   }
 
-  fifo->buf[fifo->head++] = c; // Put char in buffer
-  fifo->count++; // Increase counter
+  fifo->buffer[fifo->head++] = newData;
+  fifo->count++;
 
-
-  if (fifo->head == fifo->len) {
+  if (fifo->head == fifo->length) {
     fifo->head = 0; // start from beginning
   }
 
-  return 0;
+  return FIFO_OK;
 }
 /**
  * @brief Pops data from the FIFO.
  * @param fifo Pointer to FIFO structure
  * @param c data
- * @retval 0 Got valid data
- * @retval 1 Error: FIFO is empty
+ * @retval FIFO_OK Got valid data
+ * @retval FIFO_EMPTY FIFO is empty
  */
-uint8_t FIFO_Pop(FIFO_TypeDef* fifo, uint8_t* c) {
+int FIFO_Pop(FIFO_Typedef* fifo, char* c) {
 
-  // If FIFO is empty
   if (fifo->count == 0) {
-//    println("FIFO is empty");
-    return 1;
+    return FIFO_EMPTY;
   }
-  *c = fifo->buf[fifo->tail++];
+
+  *c = fifo->buffer[fifo->tail++];
   fifo->count--;
 
-  if (fifo->tail == fifo->len) {
+  if (fifo->tail == fifo->length) {
     fifo->tail = 0; // start from beginning
   }
 
-  return 0;
+  return FIFO_OK;
 }
 /**
  * @brief Checks whether the FIFO is empty.
  * @param fifo Pointer to FIFO structure
- * @retval 1 FIFO is empty
- * @retval 0 FIFO is not empty
+ * @retval TRUE FIFO is empty
+ * @retval FALSE FIFO is not empty
  */
-uint8_t FIFO_IsEmpty(FIFO_TypeDef* fifo) {
+Boolean FIFO_IsEmpty(FIFO_Typedef* fifo) {
 
   if (fifo->count == 0) {
-    return 1;
+    return TRUE;
   }
 
-  return 0;
+  return FALSE;
 }
 
 /**

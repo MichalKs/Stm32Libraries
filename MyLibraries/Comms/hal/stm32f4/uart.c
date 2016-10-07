@@ -1,6 +1,6 @@
 /**
- * @file    uart6.c
- * @brief   Controlling UART6
+ * @file    uart.c
+ * @brief   Controlling the UART
  * @date    14.04.2016
  * @author  Michal Ksiezopolski
  * 
@@ -15,40 +15,73 @@
  * @endverbatim
  */
 
-#include <uart.h>
+#include "uart.h"
 #include "common_hal.h"
+#include <stm32f4xx_hal.h>
 
 /**
- * @addtogroup UART6
+ * @addtogroup UART
  * @{
  */
 
-static void  (*rxCallback)(char);  ///< Callback function for receiving data
-static int   (*txCallback)(char*); ///< Callback function for transmitting data (fills up buffer with data to send)
-static UART_HandleTypeDef uartHandle; ///< Handle for UART peripheral
+// Definition for USARTx clock resources
+#define USARTx                           USART2
+#define USARTx_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE()
+#define USARTx_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define USARTx_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
 
-static char rxBuffer[1];  ///< Reception buffer - we receive one character at a time
+#define USARTx_FORCE_RESET()             __HAL_RCC_USART2_FORCE_RESET()
+#define USARTx_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
 
-static volatile int isSendingData; ///< Flag saying if UART is currently sending any data
+// Definition for USARTx Pins
+#define USARTx_TX_PIN                    GPIO_PIN_2
+#define USARTx_TX_GPIO_PORT              GPIOA
+#define USARTx_TX_AF                     GPIO_AF7_USART2
+#define USARTx_RX_PIN                    GPIO_PIN_3
+#define USARTx_RX_GPIO_PORT              GPIOA
+#define USARTx_RX_AF                     GPIO_AF7_USART2
 
+// Definition for USARTx's NVIC
+#define USARTx_IRQn                      USART2_IRQn
+#define USARTx_IRQHandler                USART2_IRQHandler
+
+#define RECEIVE_BUFFER_LENGTH 1 ///< Length of the low level receive buffer
+
+static void  (*rxCallback)(char);           ///< Callback function for receiving data
+static int   (*txCallback)(char*);          ///< Callback function for transmitting data (fills up buffer with data to send)
+static UART_HandleTypeDef uartHandle;       ///< Handle for UART peripheral
+static char rxBuffer[RECEIVE_BUFFER_LENGTH];///< Reception buffer - we receive one character at a time
+static volatile Boolean isSendingData;      ///< Flag saying if UART is currently sending any data
+
+/**
+ * @brief Enables UART IRQ
+ */
+void UART_EnableIrq(void) {
+  HAL_NVIC_EnableIRQ(USARTx_IRQn);
+}
+/**
+ * @brief Disables UART IRQ
+ */
+void UART_DisableIrq(void) {
+  HAL_NVIC_DisableIRQ(USARTx_IRQn);
+}
 /**
  * @brief Checks if UART is currently sending any data
  * @details If so the IRQ will automatically get new data from the FIFO. If not we
  * have to explicitly call HAL_UART_SendData to enable the TX IRQ.
- * @retval 1 UART is sending data
- * @retval 0 UART is not sending data
+ * @retval TRUE UART is sending data
+ * @retval FALSE UART is not sending data
  */
-int UART_IsSendingData(void) {
+Boolean UART_IsSendingData(void) {
   return isSendingData;
 }
-
 /**
  * @brief Sends data using the UART IRQ
  * @details This function is called automatically when the TX IRQ is running.
  * However if the IRQ is not running this function has to be called manually to
  * enable the IRQ.
  */
-void UART_SendData(void) {
+void UART_SendDataIrq(void) {
 
   // has to be static to serve as a buffer for UART
   static char buf[UART_BUF_LEN_TX];
@@ -59,26 +92,26 @@ void UART_SendData(void) {
   }
 
   // get the data
-  int ret = txCallback(buf);
+  int numberOfBytes = txCallback(buf);
 
   // if there is any data in the FIFO
-  if (ret != 0) {
+  if (numberOfBytes > 0) {
     // send it to PC
-    HAL_UART_Transmit_IT(&uartHandle, (uint8_t*)buf, ret);
-    isSendingData = 1;
+    if (HAL_UART_Transmit_IT(&uartHandle, (uint8_t*)buf, numberOfBytes) != HAL_OK) {
+//      COMMON_HAL_ErrorHandler();
+    }
+    isSendingData = TRUE;
   } else {
-    isSendingData = 0;
+    isSendingData = FALSE;
   }
-
 }
-
 /**
  * @brief Initialize UART
  * @param baud Baud rate
  * @param rxCb Receive callback
- * @param txCb Transmit callbacl
+ * @param txCb Transmit callback
  */
-void UART_Init(int baud, void(*rxCb)(char), int(*txCb)(char*) ) {
+void UART_Initialize(int baud, void(*rxCb)(char), int(*txCb)(char*) ) {
 
   txCallback = txCb;
   rxCallback = rxCb;
@@ -93,25 +126,19 @@ void UART_Init(int baud, void(*rxCb)(char), int(*txCb)(char*) ) {
   uartHandle.Init.Mode       = UART_MODE_TX_RX;
 
   if (HAL_UART_Init(&uartHandle) != HAL_OK) {
-    /* Initialization Error */
     COMMON_HAL_ErrorHandler();
   }
 
-  /*##-2- Put UART peripheral in IT reception process ########################*/
-  if(HAL_UART_Receive_IT(&uartHandle, (uint8_t*)rxBuffer, 1) != HAL_OK) {
-    /* Transfer error in reception process */
+  if(HAL_UART_Receive_IT(&uartHandle, (uint8_t*)rxBuffer, RECEIVE_BUFFER_LENGTH) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
-
 }
-
 // ********************** HAL UART callbacks and IRQs **********************
-
 /**
   * @brief  Transfer completed callback
-  * @param  huart UART handle
+  * @param  uart UART handle
   */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef * uart) {
 
   if (rxCallback == NULL) {
     return;
@@ -121,67 +148,52 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   rxCallback(*rxBuffer);
 
   // start another reception
-  HAL_UART_Receive_IT(huart, (uint8_t *)(rxBuffer), 1);
+  if (HAL_UART_Receive_IT(uart, (uint8_t *)(rxBuffer), RECEIVE_BUFFER_LENGTH) != HAL_OK) {
+//    COMMON_HAL_ErrorHandler();
+  }
 }
 /**
  * @brief Transfer completed callback (called whenever IRQ sends the whole buffer)
- * @param huart UART handle
+ * @param uart UART handle
  */
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-  UART_SendData();
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef * uart) {
+  UART_SendDataIrq();
 }
 /**
- * Initialize low level UART
- * @param huart UART handle pointer
+ * @brief Initialize low level UART
+ * @param uart UART handle pointer
  */
-void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
-  GPIO_InitTypeDef  GPIO_InitStruct;
+void HAL_UART_MspInit(UART_HandleTypeDef * uart) {
 
-  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-  /* Enable GPIO TX/RX clock */
+  GPIO_InitTypeDef  gpioInitalization;
+
   USARTx_TX_GPIO_CLK_ENABLE();
   USARTx_RX_GPIO_CLK_ENABLE();
-
-  /* Enable USARTx clock */
   USARTx_CLK_ENABLE();
 
-  /*##-2- Configure peripheral GPIO ##########################################*/
-  /* UART TX GPIO pin configuration  */
-  GPIO_InitStruct.Pin       = USARTx_TX_PIN;
-  GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull      = GPIO_PULLUP;
-  GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
-  GPIO_InitStruct.Alternate = USARTx_TX_AF;
+  gpioInitalization.Pin       = USARTx_TX_PIN;
+  gpioInitalization.Mode      = GPIO_MODE_AF_PP;
+  gpioInitalization.Pull      = GPIO_PULLUP;
+  gpioInitalization.Speed     = GPIO_SPEED_FAST;
+  gpioInitalization.Alternate = USARTx_TX_AF;
+  HAL_GPIO_Init(USARTx_TX_GPIO_PORT, &gpioInitalization);
 
-  HAL_GPIO_Init(USARTx_TX_GPIO_PORT, &GPIO_InitStruct);
+  gpioInitalization.Pin       = USARTx_RX_PIN;
+  gpioInitalization.Alternate = USARTx_RX_AF;
+  HAL_GPIO_Init(USARTx_RX_GPIO_PORT, &gpioInitalization);
 
-  /* UART RX GPIO pin configuration  */
-  GPIO_InitStruct.Pin = USARTx_RX_PIN;
-  GPIO_InitStruct.Alternate = USARTx_RX_AF;
-
-  HAL_GPIO_Init(USARTx_RX_GPIO_PORT, &GPIO_InitStruct);
-
-  /*##-3- Configure the NVIC for UART ########################################*/
-  HAL_NVIC_SetPriority(USARTx_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(USARTx_IRQn, 15, 0);
   HAL_NVIC_EnableIRQ(USARTx_IRQn);
-
 }
 /**
-  * @brief UART MSP De-Initialization
-  *        This function frees the hardware resources used in this example:
-  *          - Disable the Peripheral's clock
-  *          - Revert GPIO and NVIC configuration to their default state
-  * @param huart: UART handle pointer
+  * @brief Deinitialize low level UART
+  * @param uart UART handle pointer
   */
-void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
-  /*##-1- Reset peripherals ##################################################*/
+void HAL_UART_MspDeInit(UART_HandleTypeDef * uart) {
   USARTx_FORCE_RESET();
   USARTx_RELEASE_RESET();
 
-  /*##-2- Disable peripherals and GPIO Clocks #################################*/
-  /* Configure UART Tx as alternate function  */
   HAL_GPIO_DeInit(USARTx_TX_GPIO_PORT, USARTx_TX_PIN);
-  /* Configure UART Rx as alternate function  */
   HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
 
   HAL_NVIC_DisableIRQ(USARTx_IRQn);
@@ -192,7 +204,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
 void USARTx_IRQHandler(void) {
   HAL_UART_IRQHandler(&uartHandle);
 }
-
 /**
  * @}
  */

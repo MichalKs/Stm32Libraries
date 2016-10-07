@@ -48,7 +48,7 @@ static LED_State_TypeDef ledState[MAX_LEDS]; ///< States of the LEDs (MAX_LEDS i
  * @brief Add an LED.
  * @param led LED init structure.
  */
-void LED_Init(LED_Number_TypeDef led) {
+void LED_Add(LED_Number_TypeDef led) {
 
   // Check if LED number is correct.
   if (led >= MAX_LEDS) {

@@ -18,6 +18,7 @@
 #include "led_hal.h"
 #include <stm32f4xx_hal.h>
 
+
 /**
  * @addtogroup LED_HAL
  * @{
@@ -75,7 +76,6 @@ void LED_HAL_Init(uint8_t led) {
   HAL_GPIO_WritePin(ledPort[led], ledPin[led], GPIO_PIN_RESET); // turn LED off
 
 }
-
 /**
  * @brief Toggle an LED.
  * @param led LED number.
@@ -84,20 +84,17 @@ void LED_HAL_Toggle(uint8_t led) {
 
   ledPort[led]->ODR ^= ledPin[led]; // toggle bit
 }
-
 /**
  * @brief Change the state of an LED.
  * @param led LED number.
  * @param state New state.
  */
-void LED_HAL_ChangeState(uint8_t led, uint8_t state) {
-
-  if (state == 1) {
+void LED_HAL_ChangeState(uint8_t led, Boolean state) {
+  if (state == TRUE) {
     ledPort[led]->BSRR = ledPin[led]; // set bit
   } else {
-    ledPort[led]->BSRR = (ledPin[led]<<16); // reset bit
+    ledPort[led]->BSRR = (ledPin[led] << 16); // reset bit
   }
-
 }
 
 /**

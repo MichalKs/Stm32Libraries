@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdtprojectproperties>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.IncludePaths">
+<language name="Assembly Source File">
+
+</language>
+<language name="C Source File">
+<includepath>../../ExternalLibraries/STM32F4/CMSIS/Include</includepath>
+<includepath>../../ExternalLibraries/STM32F4/CMSIS/Device/ST/STM32F4xx/Include</includepath>
+<includepath>../../ExternalLibraries/STM32F4/STM32F4xx_HAL_Driver/Inc</includepath>
+<includepath>../../ExternalLibraries/STM32F4/Include</includepath>
+<includepath>../../MyLibraries/Comms/hal/stm32f4</includepath>
+<includepath>../../MyLibraries/Comms</includepath>
+<includepath>../../MyLibraries/Fifo</includepath>
+<includepath>../../MyLibraries/Utils</includepath>
+<includepath>../../MyLibraries/Timers/hal/stm32f4</includepath>
+<includepath>../../MyLibraries/Timers</includepath>
+<includepath>../../MyLibraries/Hal/stm32f4</includepath>
+<includepath>../../MyLibraries/Led</includepath>
+<includepath>../../MyLibraries/Led/hal/stm32f4</includepath>
+
+</language>
+<language name="Object File">
+
+</language>
+</section>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.Macros">
+<language name="Assembly Source File">
+
+</language>
+<language name="C Source File">
+<macro>
+<name>STM32F407xx</name><value/>
+</macro>
+<macro>
+<name>USE_HAL_DRIVER</name><value/>
+</macro>
+<macro>
+<name>HSE_VALUE</name><value>8000000</value>
+</macro>
+
+</language>
+<language name="Object File">
+
+</language>
+</section>
+</cdtprojectproperties>

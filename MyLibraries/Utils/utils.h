@@ -37,6 +37,14 @@ uint32_t  UTILS_Ntohl       (uint32_t val);
 uint8_t   UTILS_IsBigEndian (void);
 
 /**
+ * @brief Boolean type for flags
+ */
+typedef enum {
+  FALSE = 0,//!< FALSE
+  TRUE = 1  //!< TRUE
+} Boolean;
+
+/**
  * @}
  */
 

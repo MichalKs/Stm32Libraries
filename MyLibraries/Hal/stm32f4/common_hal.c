@@ -19,6 +19,7 @@
 #include "common_hal.h"
 #include <stm32f4xx_hal.h>
 #include <led_hal.h>
+#include "utils.h"
 
 #define HAL_ERROR_LED_NUMBER 3 ///< Number of LED for HAL errors
 
@@ -90,7 +91,7 @@ void COMMON_HAL_Init(void) {
 
   // initialize LED for signaling errors
   LED_HAL_Init(HAL_ERROR_LED_NUMBER); // Add an LED
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, 0);
+  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, FALSE);
 
   /* STM32F4xx HAL library initialization:
        - Configure the Flash prefetch, instruction and Data caches
@@ -108,84 +109,70 @@ void COMMON_HAL_Init(void) {
  * @brief Error handler for HAL
  */
 void COMMON_HAL_ErrorHandler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, 1);
+  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
   while(1) {
 
   }
 }
-
-
 /**
   * @brief   This function handles NMI exception.
   */
 void NMI_Handler(void) {
 
 }
-
 /**
   * @brief  This function handles Hard Fault exception.
   */
 void HardFault_Handler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, 1);
-  /* Go to infinite loop when Hard Fault exception occurs */
+  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
   while (1) {
 
   }
 }
-
 /**
   * @brief  This function handles Memory Manage exception.
   */
 void MemManage_Handler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, 1);
-  /* Go to infinite loop when Memory Manage exception occurs */
+  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
   while (1) {
 
   }
 }
-
 /**
   * @brief  This function handles Bus Fault exception.
   */
 void BusFault_Handler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, 1);
-  /* Go to infinite loop when Bus Fault exception occurs */
+  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
   while (1) {
 
   }
 }
-
 /**
   * @brief  This function handles Usage Fault exception.
   * @param  None
   * @retval None
   */
 void UsageFault_Handler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, 1);
-  /* Go to infinite loop when Usage Fault exception occurs */
+  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
   while (1) {
 
   }
 }
-
 /**
   * @brief  This function handles SVCall exception.
   */
 void SVC_Handler(void) {
 
 }
-
 /**
   * @brief  This function handles Debug Monitor exception.
   */
 void DebugMon_Handler(void) {
 
 }
-
 /**
   * @brief  This function handles PendSVC exception.
   */
 void PendSV_Handler(void) {
 
 }
-
