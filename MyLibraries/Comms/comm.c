@@ -38,6 +38,8 @@
  * @{
  */
 
+
+
 #define TRANSMIT_BUFFER_LENGTH  UART_BUF_LEN_TX ///< Transmit buffer length
 #define RECEIVE_BUFFER_LENGTH   32              ///< Receive buffer length
 #define TERMINATOR_CHARACTER    '\r'            ///< Frame terminator character
@@ -119,42 +121,48 @@ char COMM_GetCharacter(void) {
  * @brief Get a complete frame from PC(nonblocking)
  * @param buf Buffer for data (data will be null terminated for easier string manipulation)
  * @param len Length not including terminator character
- * @retval 0 Received frame
- * @retval 1 No frame in buffer
- * @retval 2 Frame error
- * TODO Add maximum length checking so as not to overflow
+ * @retval COMM_GOT_FRAME Received frame
+ * @retval COMM_NO_FRAME_READY No frame in buffer
+ * @retval COMM_FRAME_ERROR Frame error
  */
-int COMM_GetFrame(uint8_t* buf, int* len) {
+int COMM_GetFrame(uint8_t* frameBuffer, int* length, int maximumLength) {
 
-  uint8_t c;
-  *len = 0; // zero out length variable
+  char receivedByte;
+  *length = 0;
 
   if (frameCounter) {
-    while (1) {
-
+    while (TRUE) {
       // no more data and terminator wasn't reached => error
       if (FIFO_IsEmpty(&receiveFifo)) {
-        *len = 0;
+        *length = 0;
         println("Invalid frame");
-        return 2;
+        FIFO_Flush(&receiveFifo);
+        return COMM_FRAME_ERROR;
       }
-      FIFO_Pop(&receiveFifo, &c);
-      buf[(*len)++] = c;
+      FIFO_Pop(&receiveFifo, &receivedByte);
+      frameBuffer[(*length)++] = receivedByte;
+
+      if (*length >= maximumLength) {
+        println("Frame too long");
+        frameCounter = 0;
+        *length = 0;
+        FIFO_Flush(&receiveFifo);
+        return COMM_FRAME_TOO_LARGE;
+      }
 
       // if end of frame
-      if (c == TERMINATOR_CHARACTER) {
-        (*len)--; // length without terminator character
-        buf[*len] = 0; // USART terminator character converted to NULL terminator
+      if (receivedByte == TERMINATOR_CHARACTER) {
+        (*length)--; // length without terminator character
+        frameBuffer[*length] = 0; // USART terminator character converted to NULL terminator
         break;
       }
 
     }
     frameCounter--;
-    return 0;
+    return COMM_GOT_FRAME;
 
   } else {
-
-    return 1;
+    return COMM_NO_FRAME_READY;
   }
 }
 /**

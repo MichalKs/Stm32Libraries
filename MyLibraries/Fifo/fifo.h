@@ -34,28 +34,28 @@
  * @brief FIFO structure typedef.
  */
 typedef struct {
-  int   head;   ///< Head
-  int   tail;   ///< Tail
-  char* buffer; ///< Pointer to buffer
-  int   length; ///< Maximum length of FIFO
-  int   count;  ///< Current number of data elements
+  int   head;       ///< Head
+  int   tail;       ///< Tail
+  char* dataBuffer; ///< Pointer to buffer
+  int   length;     ///< Maximum length of FIFO
+  int   count;      ///< Current number of data elements
 } FIFO_Typedef;
-
+/**
+ * @brief Error codes
+ */
 typedef enum {
-  FIFO_OK,
-  FIFO_ZERO_LENGTH,
-  FIFO_NULL_BUFFER,
-  FIFO_FULL,
-  FIFO_EMPTY,
-
+  FIFO_OK,         //!< FIFO_OK
+  FIFO_ZERO_LENGTH,//!< FIFO_ZERO_LENGTH
+  FIFO_NULL_BUFFER,//!< FIFO_NULL_BUFFER
+  FIFO_FULL,       //!< FIFO_FULL
+  FIFO_EMPTY,      //!< FIFO_EMPTY
 } FIFO_ErrorTypedef;
 
-
-int     FIFO_Add    (FIFO_Typedef* fifo, char* dataBuffer, int length);
-int     FIFO_Push   (FIFO_Typedef* fifo, char c);
-int     FIFO_Pop    (FIFO_Typedef* fifo, char* c);
-Boolean FIFO_IsEmpty(FIFO_Typedef* fifo);
-
+FIFO_ErrorTypedef FIFO_Add    (FIFO_Typedef* fifo, char* dataBuffer, int length);
+FIFO_ErrorTypedef FIFO_Push   (FIFO_Typedef* fifo, char newData);
+FIFO_ErrorTypedef FIFO_Pop    (FIFO_Typedef* fifo, char* data);
+Boolean           FIFO_IsEmpty(FIFO_Typedef* fifo);
+void              FIFO_Flush  (FIFO_Typedef* fifo);
 /**
  * @}
  */

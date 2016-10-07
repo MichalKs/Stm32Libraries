@@ -39,7 +39,29 @@
  */
 void softTimerCallback(void) {
   LED_Toggle(_LED2);
-  println("Hello world!");
+//  println("Hello world!");
+
+  const int FRAME_MAX_SIZE = 10;
+  uint8_t frameBuffer[FRAME_MAX_SIZE];  // buffer for receiving commands from PC
+  int length;           // length of command
+  // check for new frames from PC
+  if (COMM_GetFrame(frameBuffer, &length, FRAME_MAX_SIZE) == COMM_GOT_FRAME) {
+    println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
+
+    // control LED0 from terminal
+    if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
+      LED_ChangeState(_LED0, LED_ON);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
+      LED_ChangeState(_LED0, LED_OFF);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
+      LED_ChangeState(_LED1, LED_ON);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
+      LED_ChangeState(_LED1, LED_OFF);
+    }
+  }
 }
 /**
   * @brief  Main program
@@ -57,33 +79,11 @@ int main(void) {
   LED_Add(_LED2);
 
   // Add a soft timer with callback
-  const int SOFT_TIMER_PERIOD_MILLIS = 100;
+  const int SOFT_TIMER_PERIOD_MILLIS = 1000;
   int8_t timerID = TIMER_AddSoftTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
   TIMER_StartSoftTimer(timerID);
 
-  const int FRAME_MAX_SIZE = 64;
-  uint8_t frameBuffer[FRAME_MAX_SIZE];  // buffer for receiving commands from PC
-  int length;           // length of command
-
   while (TRUE) {
-    // check for new frames from PC
-    if (!COMM_GetFrame(frameBuffer, &length)) {
-      println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
-
-      // control LED0 from terminal
-      if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
-        LED_ChangeState(_LED0, LED_ON);
-      }
-      if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
-        LED_ChangeState(_LED0, LED_OFF);
-      }
-      if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
-        LED_ChangeState(_LED1, LED_ON);
-      }
-      if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
-        LED_ChangeState(_LED1, LED_OFF);
-      }
-    }
 
     TIMER_SoftTimersUpdate();
   }

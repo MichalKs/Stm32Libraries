@@ -29,11 +29,17 @@
  * @addtogroup COMM
  * @{
  */
+typedef enum {
+  COMM_GOT_FRAME,
+  COMM_NO_FRAME_READY,
+  COMM_FRAME_ERROR,
+  COMM_FRAME_TOO_LARGE,
+} COMM_ErrorTypedef;
 
 void    COMM_Initialize(int baudRate);
 void    COMM_PutCharacter(char characterToSend);
 char    COMM_GetCharacter(void);
-int     COMM_GetFrame(uint8_t* frameBuffer, int* length);
+int     COMM_GetFrame(uint8_t* frameBuffer, int* length, int maximumLength);
 void    COMM_PrintLine(char* line);
 /**
  * @}

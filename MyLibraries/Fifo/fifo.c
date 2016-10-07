@@ -1,11 +1,11 @@
 /**
- * @file    fifo.c
+ * @file    fifo.h
  * @brief   First in first out buffer implementation
- * @date    12 kwi 2014
+ * @date    07.10.2016
  * @author  Michal Ksiezopolski
  * 
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -43,7 +43,7 @@
  * @retval FIFO_ZERO_LENGTH FIFO length is 0
  * @retval FIFO_NULL_BUFFER Received buffer is null
  */
-int FIFO_Add(FIFO_Typedef* fifo, char* dataBuffer, int length) {
+FIFO_ErrorTypedef FIFO_Add(FIFO_Typedef* fifo, char* dataBuffer, int length) {
 
   if (length == 0) {
     return FIFO_ZERO_LENGTH;
@@ -53,7 +53,7 @@ int FIFO_Add(FIFO_Typedef* fifo, char* dataBuffer, int length) {
     return FIFO_NULL_BUFFER;
   }
 
-  fifo->buffer = dataBuffer;
+  fifo->dataBuffer = dataBuffer;
   fifo->length = length;
   fifo->tail  = 0;
   fifo->head  = 0;
@@ -68,14 +68,14 @@ int FIFO_Add(FIFO_Typedef* fifo, char* dataBuffer, int length) {
  * @retval FIFO_OK Data added
  * @retval FIFO_FULL FIFO is full
  */
-int FIFO_Push(FIFO_Typedef* fifo, char newData) {
+FIFO_ErrorTypedef FIFO_Push(FIFO_Typedef* fifo, char newData) {
 
   // Check for overflow
   if (fifo->count == fifo->length) {
     return FIFO_FULL;
   }
 
-  fifo->buffer[fifo->head++] = newData;
+  fifo->dataBuffer[fifo->head++] = newData;
   fifo->count++;
 
   if (fifo->head == fifo->length) {
@@ -91,13 +91,13 @@ int FIFO_Push(FIFO_Typedef* fifo, char newData) {
  * @retval FIFO_OK Got valid data
  * @retval FIFO_EMPTY FIFO is empty
  */
-int FIFO_Pop(FIFO_Typedef* fifo, char* c) {
+FIFO_ErrorTypedef FIFO_Pop(FIFO_Typedef* fifo, char* c) {
 
   if (fifo->count == 0) {
     return FIFO_EMPTY;
   }
 
-  *c = fifo->buffer[fifo->tail++];
+  *c = fifo->dataBuffer[fifo->tail++];
   fifo->count--;
 
   if (fifo->tail == fifo->length) {
@@ -120,7 +120,11 @@ Boolean FIFO_IsEmpty(FIFO_Typedef* fifo) {
 
   return FALSE;
 }
-
+void FIFO_Flush(FIFO_Typedef* fifo) {
+  fifo->tail  = 0;
+  fifo->head  = 0;
+  fifo->count = 0;
+}
 /**
  * @}
  */
