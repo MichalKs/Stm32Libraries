@@ -54,7 +54,7 @@ typedef struct {
 } GRAPH_FontStruct;
 
 
-void GRAPH_DrawRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+void GRAPH_DrawRectangle(int x, int y, int w, int h);
 void GRAPH_DrawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 void GRAPH_Init(void);
 void GRAPH_SetColor(uint8_t r, uint8_t g, uint8_t b);

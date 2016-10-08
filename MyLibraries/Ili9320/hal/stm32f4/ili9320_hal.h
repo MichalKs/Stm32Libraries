@@ -1,12 +1,11 @@
 /**
- * @file: 	ili9320_hal.h
- * @brief:	Hardware abstraction layer for ILI9320
- * @date: 	9 gru 2014
+ * @file:   ili9320_hal.c
+ * @brief:  Hardware abstraction layer for ILI9320
+ * @date:   08.10.2016
  * @author: Michal Ksiezopolski
  *
- *
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the
  * accompanying materials are made available
  * under the terms of the GNU Public License
@@ -18,11 +17,12 @@
 #ifndef INC_ILI9320_HAL_H_
 #define INC_ILI9320_HAL_H_
 
+#include <inttypes.h>
 
-uint16_t ILI9320_HAL_ReadReg(uint16_t reg);
-void ILI9320_HAL_HardInit(void);
-void ILI9320_HAL_WriteReg(uint16_t reg, uint16_t data);
-void ILI9320_HAL_ResetOn(void);
-void ILI9320_HAL_ResetOff(void);
+uint16_t  ILI9320_HAL_ReadReg   (uint16_t address);
+void      ILI9320_HAL_Initialize(void);
+void      ILI9320_HAL_WriteReg  (uint16_t address, uint16_t data);
+void      ILI9320_HAL_ResetOn   (void);
+void      ILI9320_HAL_ResetOff  (void);
 
 #endif /* INC_ILI9320_HAL_H_ */

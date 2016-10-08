@@ -19,21 +19,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <timers.h>
-#include <led.h>
-#include <comm.h>
+#include "timers.h"
+#include "led.h"
+#include "comm.h"
 #include "common_hal.h"
-#include <keys.h>
-#include <graphics.h>
-#include <font_14x27.h>
-#include <font_21x39.h>
-#include <font_10x20.h>
-#include <font_8x16.h>
-#include <tsc2046.h>
-#include <gui.h>
-#include <fat.h>
-#include <sdcard.h>
-#include <utils.h>
+#include "keys.h"
+#include "graphics.h"
+#include "font_14x27.h"
+#include "font_21x39.h"
+#include "font_10x20.h"
+#include "font_8x16.h"
+#include "tsc2046.h"
+#include "gui.h"
+#include "fat.h"
+#include "sdcard.h"
+#include "utils.h"
 
 void tscEvent1(uint16_t x, uint16_t y);
 void tscEvent2(uint16_t x, uint16_t y);

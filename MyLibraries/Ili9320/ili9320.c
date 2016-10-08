@@ -19,70 +19,82 @@
  * @endverbatim
  */
 
-#include <ili9320.h>
-#include <timers.h>
+#include "ili9320.h"
+#include "timers.h"
+#include "ili9320_hal.h"
 #include <stdio.h>
-#include <ili9320_hal.h>
+
+#define DEBUG_ILI9320
+
+#ifdef DEBUG_ILI9320
+#define print(str, args...) printf(""str"%s",##args,"")
+#define println(str, args...) printf("ILI9320--> "str"%s",##args,"\r\n")
+#else
+#define print(str, args...) (void)0
+#define println(str, args...) (void)0
+#endif
 
 /**
  * @addtogroup ILI9320
  * @{
  */
 
-/*
- * ILI9320 driver commands/registers
+/**
+ * @brief ILI9320 commands
  */
-#define ILI9320_START_OSCILLATION 0x00
-#define ILI9320_READ_ID           0x00
-#define ILI9320_DRIVER_OUTPUT     0x01
-#define ILI9320_DRIVING_WAVE      0x02
-#define ILI9320_ENTRY_MODE        0x03
-#define ILI9320_RESIZE            0x04
-#define ILI9320_DISP1             0x07
-#define ILI9320_DISP2             0x08
-#define ILI9320_DISP3             0x09
-#define ILI9320_DISP4             0x0a
-#define ILI9320_RGB_DISP1         0x0c
-#define ILI9320_FRAME_MARKER      0x0d
-#define ILI9320_RGB_DISP2         0x0f
-#define ILI9320_POWER1            0x10
-#define ILI9320_POWER2            0x11
-#define ILI9320_POWER3            0x12
-#define ILI9320_POWER4            0x13
-#define ILI9320_HOR_GRAM_ADDR     0x20
-#define ILI9320_VER_GRAM_ADDR     0x21
-#define ILI9320_WRITE_TO_GRAM     0x22
-#define ILI9320_POWER7            0x29
-#define ILI9320_FRAME_RATE        0x2b
-#define ILI9320_GAMMA1            0x30
-#define ILI9320_GAMMA2            0x31
-#define ILI9320_GAMMA3            0x32
-#define ILI9320_GAMMA4            0x35
-#define ILI9320_GAMMA5            0x36
-#define ILI9320_GAMMA6            0x37
-#define ILI9320_GAMMA7            0x38
-#define ILI9320_GAMMA8            0x39
-#define ILI9320_GAMMA9            0x3c
-#define ILI9320_GAMMA10           0x3d
-#define ILI9320_HOR_ADDR_START    0x50
-#define ILI9320_HOR_ADDR_END      0x51
-#define ILI9320_VER_ADDR_START    0x52
-#define ILI9320_VER_ADDR_END      0x53
-#define ILI9320_DRIVER_OUTPUT2    0x60
-#define ILI9320_BASE_IMAGE        0x61
-#define ILI9320_VERTICAL_SCROLL   0x6a
-#define ILI9320_PARTIAL1_POS      0x80
-#define ILI9320_PARTIAL1_START    0x81
-#define ILI9320_PARTIAL1_END      0x82
-#define ILI9320_PARTIAL2_POS      0x83
-#define ILI9320_PARTIAL2_START    0x84
-#define ILI9320_PARTIAL2_END      0x85
-#define ILI9320_PANEL_INTERFACE1  0x90
-#define ILI9320_PANEL_INTERFACE2  0x92
-#define ILI9320_PANEL_INTERFACE3  0x93
-#define ILI9320_PANEL_INTERFACE4  0x95
-#define ILI9320_PANEL_INTERFACE5  0x97
-#define ILI9320_PANEL_INTERFACE6  0x98
+typedef enum {
+  ILI9320_START_OSCILLATION = 0x00, //!< ILI9320_START_OSCILLATION
+  ILI9320_READ_ID           = 0x00, //!< ILI9320_READ_ID
+  ILI9320_DRIVER_OUTPUT     = 0x01, //!< ILI9320_DRIVER_OUTPUT
+  ILI9320_DRIVING_WAVE      = 0x02, //!< ILI9320_DRIVING_WAVE
+  ILI9320_ENTRY_MODE        = 0x03, //!< ILI9320_ENTRY_MODE
+  ILI9320_RESIZE            = 0x04, //!< ILI9320_RESIZE
+  ILI9320_DISP1             = 0x07, //!< ILI9320_DISP1
+  ILI9320_DISP2             = 0x08, //!< ILI9320_DISP2
+  ILI9320_DISP3             = 0x09, //!< ILI9320_DISP3
+  ILI9320_DISP4             = 0x0a, //!< ILI9320_DISP4
+  ILI9320_RGB_DISP1         = 0x0c, //!< ILI9320_RGB_DISP1
+  ILI9320_FRAME_MARKER      = 0x0d, //!< ILI9320_FRAME_MARKER
+  ILI9320_RGB_DISP2         = 0x0f, //!< ILI9320_RGB_DISP2
+  ILI9320_POWER1            = 0x10, //!< ILI9320_POWER1
+  ILI9320_POWER2            = 0x11, //!< ILI9320_POWER2
+  ILI9320_POWER3            = 0x12, //!< ILI9320_POWER3
+  ILI9320_POWER4            = 0x13, //!< ILI9320_POWER4
+  ILI9320_HOR_GRAM_ADDR     = 0x20, //!< ILI9320_HOR_GRAM_ADDR
+  ILI9320_VER_GRAM_ADDR     = 0x21, //!< ILI9320_VER_GRAM_ADDR
+  ILI9320_WRITE_TO_GRAM     = 0x22, //!< ILI9320_WRITE_TO_GRAM
+  ILI9320_POWER7            = 0x29, //!< ILI9320_POWER7
+  ILI9320_FRAME_RATE        = 0x2b, //!< ILI9320_FRAME_RATE
+  ILI9320_GAMMA1            = 0x30, //!< ILI9320_GAMMA1
+  ILI9320_GAMMA2            = 0x31, //!< ILI9320_GAMMA2
+  ILI9320_GAMMA3            = 0x32, //!< ILI9320_GAMMA3
+  ILI9320_GAMMA4            = 0x35, //!< ILI9320_GAMMA4
+  ILI9320_GAMMA5            = 0x36, //!< ILI9320_GAMMA5
+  ILI9320_GAMMA6            = 0x37, //!< ILI9320_GAMMA6
+  ILI9320_GAMMA7            = 0x38, //!< ILI9320_GAMMA7
+  ILI9320_GAMMA8            = 0x39, //!< ILI9320_GAMMA8
+  ILI9320_GAMMA9            = 0x3c, //!< ILI9320_GAMMA9
+  ILI9320_GAMMA10           = 0x3d, //!< ILI9320_GAMMA10
+  ILI9320_HOR_ADDR_START    = 0x50, //!< ILI9320_HOR_ADDR_START
+  ILI9320_HOR_ADDR_END      = 0x51, //!< ILI9320_HOR_ADDR_END
+  ILI9320_VER_ADDR_START    = 0x52, //!< ILI9320_VER_ADDR_START
+  ILI9320_VER_ADDR_END      = 0x53, //!< ILI9320_VER_ADDR_END
+  ILI9320_DRIVER_OUTPUT2    = 0x60, //!< ILI9320_DRIVER_OUTPUT2
+  ILI9320_BASE_IMAGE        = 0x61, //!< ILI9320_BASE_IMAGE
+  ILI9320_VERTICAL_SCROLL   = 0x6a, //!< ILI9320_VERTICAL_SCROLL
+  ILI9320_PARTIAL1_POS      = 0x80, //!< ILI9320_PARTIAL1_POS
+  ILI9320_PARTIAL1_START    = 0x81, //!< ILI9320_PARTIAL1_START
+  ILI9320_PARTIAL1_END      = 0x82, //!< ILI9320_PARTIAL1_END
+  ILI9320_PARTIAL2_POS      = 0x83, //!< ILI9320_PARTIAL2_POS
+  ILI9320_PARTIAL2_START    = 0x84, //!< ILI9320_PARTIAL2_START
+  ILI9320_PARTIAL2_END      = 0x85, //!< ILI9320_PARTIAL2_END
+  ILI9320_PANEL_INTERFACE1  = 0x90, //!< ILI9320_PANEL_INTERFACE1
+  ILI9320_PANEL_INTERFACE2  = 0x92, //!< ILI9320_PANEL_INTERFACE2
+  ILI9320_PANEL_INTERFACE3  = 0x93, //!< ILI9320_PANEL_INTERFACE3
+  ILI9320_PANEL_INTERFACE4  = 0x95, //!< ILI9320_PANEL_INTERFACE4
+  ILI9320_PANEL_INTERFACE5  = 0x97, //!< ILI9320_PANEL_INTERFACE5
+  ILI9320_PANEL_INTERFACE6  = 0x98, //!< ILI9320_PANEL_INTERFACE6
+} ILI9320_CommandsTypedef;
 
 uint16_t ILI9320_RGBDecode(uint8_t r, uint8_t g, uint8_t b);
 
@@ -91,27 +103,28 @@ uint16_t ILI9320_RGBDecode(uint8_t r, uint8_t g, uint8_t b);
  */
 void ILI9320_Initializtion(void) {
 
-  ILI9320_HAL_HardInit(); // GPIO and FSMC init
+  const int RESET_DELAY = 50;
+  const int INIT_DELAY = 100;
+  const int ILI9320_ID = 0x9320;
+  ILI9320_HAL_Initialize(); // GPIO and FSMC init
 
   // Reset the LCD
   ILI9320_HAL_ResetOff();
-  TIMER_DelayMillis(50);
+  TIMER_DelayMillis(RESET_DELAY);
   ILI9320_HAL_ResetOn();
-  TIMER_DelayMillis(50);
+  TIMER_DelayMillis(RESET_DELAY);
   ILI9320_HAL_ResetOff();
-  TIMER_DelayMillis(50);
+  TIMER_DelayMillis(RESET_DELAY);
 
   ILI9320_HAL_WriteReg(ILI9320_START_OSCILLATION, 0x0001);
-  TIMER_DelayMillis(20);
+  TIMER_DelayMillis(RESET_DELAY);
 
-  // Read LCD ID
-  unsigned int id;
-  id = ILI9320_HAL_ReadReg(ILI9320_READ_ID);
+  int id = ILI9320_HAL_ReadReg(ILI9320_READ_ID);
 
-  printf("ID TFT LCD = %x\r\n", id);
+  println("ID TFT LCD = %x", id);
 
   // Add more LCD init codes here
-  if (id == 0x9320) {
+  if (id == ILI9320_ID) {
 
     ILI9320_HAL_WriteReg(ILI9320_DRIVER_OUTPUT, 0x0100); // SS = 1 - coordinates from left to right
     ILI9320_HAL_WriteReg(ILI9320_DRIVING_WAVE, 0x0700);  // Line inversion
@@ -154,10 +167,9 @@ void ILI9320_Initializtion(void) {
     ILI9320_HAL_WriteReg(ILI9320_PANEL_INTERFACE5, 0x0000);
     ILI9320_HAL_WriteReg(ILI9320_PANEL_INTERFACE6, 0x0000);
     ILI9320_HAL_WriteReg(ILI9320_DISP1, 0x0173);
-
   }
 
-  TIMER_DelayMillis(100);
+  TIMER_DelayMillis(INIT_DELAY);
 }
 /**
  * @brief Convert RGB value to ILI9320 format.
@@ -174,8 +186,7 @@ uint16_t ILI9320_RGBDecode(uint8_t r, uint8_t g, uint8_t b) {
  * @param x X coordinate
  * @param y Y coordinate
  */
-void ILI9320_SetCursor(uint16_t x, uint16_t y) {
-
+void ILI9320_SetCursor(int x, int y) {
   ILI9320_HAL_WriteReg(ILI9320_HOR_GRAM_ADDR, y);
   ILI9320_HAL_WriteReg(ILI9320_VER_GRAM_ADDR, x);
 
@@ -188,7 +199,7 @@ void ILI9320_SetCursor(uint16_t x, uint16_t y) {
  * @param g Green color value.
  * @param b Blue color value.
  */
-void ILI9320_DrawPixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b) {
+void ILI9320_DrawPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
 
   ILI9320_SetCursor(x, y);
   ILI9320_HAL_WriteReg(ILI9320_WRITE_TO_GRAM, ILI9320_RGBDecode(r, g, b));
@@ -200,8 +211,7 @@ void ILI9320_DrawPixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b) 
  * @param width Width of window.
  * @param height Height of window.
  */
-void ILI9320_SetWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
-
+void ILI9320_SetWindow(int x, int y, int width, int height) {
   ILI9320_SetCursor(x, y);
   ILI9320_HAL_WriteReg(ILI9320_HOR_ADDR_START, y);
   ILI9320_HAL_WriteReg(ILI9320_HOR_ADDR_END, y + height - 1);
