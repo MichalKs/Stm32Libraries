@@ -96,8 +96,6 @@ typedef enum {
   ILI9320_PANEL_INTERFACE6  = 0x98, //!< ILI9320_PANEL_INTERFACE6
 } ILI9320_CommandsTypedef;
 
-uint16_t ILI9320_RGBDecode(uint8_t r, uint8_t g, uint8_t b);
-
 /**
  * @brief Initialize the ILI9320 TFT LCD driver.
  */
@@ -178,8 +176,11 @@ void ILI9320_Initializtion(void) {
  * @param b Blue
  * @return Converted value of color.
  */
-uint16_t ILI9320_RGBDecode(uint8_t r, uint8_t g, uint8_t b) {
-  return ((r & 0x1f) << 11) | ((g & 0x3f) << 5) | (b & 0x1f);
+unsigned int ILI9320_RGBDecode(unsigned int rgbColor) {
+  unsigned int red    = (rgbColor >> 16) & 0xff;
+  unsigned int green  = (rgbColor >> 8) & 0xff;
+  unsigned int blue   = (rgbColor >> 0) & 0xff;
+  return ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1f);
 }
 /**
  * @brief Move cursor to given coordinates.
@@ -199,10 +200,10 @@ void ILI9320_SetCursor(int x, int y) {
  * @param g Green color value.
  * @param b Blue color value.
  */
-void ILI9320_DrawPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
+void ILI9320_DrawPixel(int x, int y, unsigned int color) {
 
   ILI9320_SetCursor(x, y);
-  ILI9320_HAL_WriteReg(ILI9320_WRITE_TO_GRAM, ILI9320_RGBDecode(r, g, b));
+  ILI9320_HAL_WriteReg(ILI9320_WRITE_TO_GRAM, ILI9320_RGBDecode(color));
 }
 /**
  * @brief Set work window to draw data.

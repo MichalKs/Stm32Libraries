@@ -57,19 +57,18 @@ typedef struct {
 void GRAPH_DrawRectangle(int x, int y, int w, int h);
 void GRAPH_DrawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 void GRAPH_Init(void);
-void GRAPH_SetColor(uint8_t r, uint8_t g, uint8_t b);
+void GRAPH_SetColor(unsigned int rgbColor);
 void GRAPH_DrawBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t lineWidth);
 void GRAPH_DrawCircle(uint16_t x0, uint16_t y0, uint16_t radius);
 void GRAPH_DrawFilledCircle(uint16_t x, uint16_t y, uint16_t radius);
 void GRAPH_DrawString(const char* s, uint16_t x, uint16_t y);
 void GRAPH_DrawChar(uint8_t c, uint16_t x, uint16_t y);
-void GRAPH_SetBgColor(uint8_t r, uint8_t g, uint8_t b);
-void GRAPH_ClrScreen(uint8_t r, uint8_t g, uint8_t b);
+void GRAPH_SetBgColor(unsigned int rgbColor);
 void GRAPH_DrawImage(uint16_t x, uint16_t y);
 void GRAPH_DrawGraph(const uint8_t* data, uint16_t len, uint16_t x, uint16_t y);
 void GRAPH_DrawBarChart(const uint8_t* data, uint16_t len, uint16_t x, uint16_t y, uint16_t width);
 void GRAPH_SetFont(GRAPH_FontStruct font);
-
+void GRAPH_ClearScreen(unsigned int rgbColor);
 /**
  * @}
  */

@@ -27,6 +27,8 @@
  * @{
  */
 
+#define RGB_TO_UNSIGNED_INT(red, green, blue) ((unsigned int)(((red)<<16)|((green)<<8)|(blue)))
+
 /**
  * @brief Structure containing information about
  * an image.
@@ -59,15 +61,6 @@ static GRAPH_ImageStruct displayedImage = {
 };
 
 /**
- * @brief Color structure
- */
-typedef struct {
-  uint8_t red; ///< Red
-  uint8_t green; ///< Green
-  uint8_t blue; ///< Blue
-} GRAPH_ColorTypedef;
-
-/**
  * @brief Structure for reading BMP files
  */
 typedef struct {
@@ -88,8 +81,8 @@ typedef struct {
   uint32_t importantColors;
 } BMP_File;
 
-static GRAPH_ColorTypedef currentColor;    ///< Global color
-static GRAPH_ColorTypedef currentBackgroundColor;  ///< Global background color
+static unsigned int currentColor;    ///< Global color
+static unsigned int currentBackgroundColor;  ///< Global background color
 
 /**
  * @brief Initialized graphics - TFT LCD ILI9320.
@@ -98,21 +91,15 @@ void GRAPH_Init(void) {
   ILI9320_Initializtion();
   // window occupies whole LCD screen
   ILI9320_SetWindow(0, 0, 320, 240);
-  GRAPH_ClrScreen(200, 200, 200); // black screen on startup
+  GRAPH_ClearScreen(0); // black screen on startup
 }
 /**
  * @brief Clears the screen with given color.
  */
-void GRAPH_ClrScreen(uint8_t red, uint8_t green, uint8_t blue) {
-
-  GRAPH_ColorTypedef tmp = currentColor; // save current color
-
-  currentColor.red = red;
-  currentColor.blue = blue;
-  currentColor.green = green;
-
+void GRAPH_ClearScreen(unsigned int rgbColor) {
+  unsigned int tmp = currentColor; // save current color
+  currentColor = rgbColor;
   GRAPH_DrawRectangle(0, 0, 320, 240);
-
   currentColor = tmp;
 }
 /**
@@ -124,36 +111,22 @@ void GRAPH_ClrScreen(uint8_t red, uint8_t green, uint8_t blue) {
  * @param font Font information structure.
  */
 void GRAPH_SetFont(GRAPH_FontStruct font) {
-
   currentFont = font;
 }
 /**
  * @brief Sets the global color variable.
- *
  * @details All subsequent objects will be drawn using this color.
- *
- * @param r Red
- * @param g Green
- * @param b Blue
+ * @param rgbColor Color
  */
-void GRAPH_SetColor(uint8_t red, uint8_t green, uint8_t blue) {
-
-  currentColor.red = red;
-  currentColor.blue = blue;
-  currentColor.green = green;
+void GRAPH_SetColor(unsigned int rgbColor) {
+  currentColor = rgbColor;
 }
 /**
  * @brief Sets the global background color variable.
- *
- * @param r Red
- * @param g Green
- * @param b Blue
+ * @param rgbColor Color
  */
-void GRAPH_SetBgColor(uint8_t red, uint8_t green, uint8_t blue) {
-
-  currentBackgroundColor.red = red;
-  currentBackgroundColor.blue = blue;
-  currentBackgroundColor.green = green;
+void GRAPH_SetBgColor(unsigned int rgbColor) {
+  currentBackgroundColor = rgbColor;
 }
 /**
  * @brief Draws an image on screen.
@@ -164,7 +137,7 @@ void GRAPH_SetBgColor(uint8_t red, uint8_t green, uint8_t blue) {
  */
 void GRAPH_DrawImage(uint16_t x, uint16_t y) {
 
-  int red, green, blue;
+  unsigned int red, green, blue;
   int pos;
 
   for (int i = 0; i < displayedImage.rows; i++) { // rows
@@ -173,7 +146,7 @@ void GRAPH_DrawImage(uint16_t x, uint16_t y) {
       red = displayedImage.data[pos];
       green = displayedImage.data[pos+1];
       blue = displayedImage.data[pos+2];
-      ILI9320_DrawPixel(j+x, i+y, red, green, blue);
+      ILI9320_DrawPixel(j+x, i+y, RGB_TO_UNSIGNED_INT(red, green, blue));
     }
   }
 
@@ -211,11 +184,9 @@ void GRAPH_DrawChar(uint8_t c, uint16_t x, uint16_t y) {
       bitmask = 0x01; // start from lowest bit
       for (int k = 0; k < bitsPerByte; k++, bitmask <<= 1) { // for 8 bits in byte
         if (ptr[pos + i * currentFont.bytesPerColumn + j] & bitmask) {
-          ILI9320_DrawPixel(x+j*bitsPerByte+k, y+i,
-              currentColor.red, currentColor.green, currentColor.blue);
+          ILI9320_DrawPixel(x+j*bitsPerByte+k, y+i, currentColor);
         } else {
-          ILI9320_DrawPixel(x+j*bitsPerByte+k, y+i,
-              currentBackgroundColor.red, currentBackgroundColor.green, currentBackgroundColor.blue);
+          ILI9320_DrawPixel(x+j*bitsPerByte+k, y+i, currentBackgroundColor);
         }
       }
     }
@@ -250,7 +221,7 @@ void GRAPH_DrawRectangle(int x, int y, int w, int h) {
   // Fill rectangle with color
   for (i = x; i < x + w; i++) {
     for (j = y; j < y + h; j++) {
-      ILI9320_DrawPixel(i, j, currentColor.red, currentColor.green, currentColor.blue);
+      ILI9320_DrawPixel(i, j, currentColor);
     }
   }
 }
@@ -310,12 +281,9 @@ void GRAPH_DrawGraph(const uint8_t* data, uint16_t len, uint16_t x, uint16_t y) 
 
   for (int i = 0; i < len; i++) {
     // draw pixels up and down to make line more visible
-    ILI9320_DrawPixel(x+i,y+data[i]-1,
-        currentColor.red, currentColor.green, currentColor.blue);
-    ILI9320_DrawPixel(x+i,y+data[i],
-        currentColor.red, currentColor.green, currentColor.blue);
-    ILI9320_DrawPixel(x+i,y+data[i]+1,
-        currentColor.red, currentColor.green, currentColor.blue);
+    ILI9320_DrawPixel(x+i,y+data[i]-1,currentColor);
+    ILI9320_DrawPixel(x+i,y+data[i], currentColor);
+    ILI9320_DrawPixel(x+i,y+data[i]+1,currentColor);
   }
 
   GRAPH_SetFont(tmp); // restore font
@@ -357,21 +325,21 @@ void GRAPH_DrawCircle(uint16_t x, uint16_t y, uint16_t radius) {
 
   while(newX >= newY) {
     ILI9320_DrawPixel(newX + x, newY + y,
-        currentColor.red, currentColor.green, currentColor.blue);
+        currentColor);
     ILI9320_DrawPixel(newY + x, newX + y,
-        currentColor.red, currentColor.green, currentColor.blue);
+        currentColor);
     ILI9320_DrawPixel(-newX + x, newY + y,
-        currentColor.red, currentColor.green, currentColor.blue);
+        currentColor);
     ILI9320_DrawPixel(-newY + x, newX + y,
-        currentColor.red, currentColor.green, currentColor.blue);
+        currentColor);
     ILI9320_DrawPixel(-newX + x, -newY + y,
-        currentColor.red, currentColor.green, currentColor.blue);
+        currentColor);
     ILI9320_DrawPixel(-newY + x, -newX + y,
-        currentColor.red, currentColor.green, currentColor.blue);
+        currentColor);
     ILI9320_DrawPixel(newX + x, -newY + y,
-        currentColor.red, currentColor.green, currentColor.blue);
+        currentColor);
     ILI9320_DrawPixel(newY + x, -newX + y,
-        currentColor.red, currentColor.green, currentColor.blue);
+        currentColor);
 
     newY++;
 
@@ -414,9 +382,9 @@ void GRAPH_DrawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
   int err = (dx>dy ? dx : -dy)/2; // error
   int tmpErr;
 
-  for(;;) {
+  while(1) {
 
-    ILI9320_DrawPixel(x1, y1, currentColor.red, currentColor.green, currentColor.blue);
+    ILI9320_DrawPixel(x1, y1, currentColor);
 
     // if end of line
     if (x1==x2 && y1==y2) {

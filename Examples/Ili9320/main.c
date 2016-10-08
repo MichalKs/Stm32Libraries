@@ -107,11 +107,11 @@ int main(void) {
 
   GRAPH_Init();
 
-  GRAPH_SetColor(0x00, 0x00, 0xff);
-  GRAPH_SetBgColor(0xff, 0x00, 0x00);
+  GRAPH_SetColor(0x0000ff);
+  GRAPH_SetBgColor(0xff0000);
   GRAPH_DrawBox(100, 100, 100, 100, 5);
   GRAPH_DrawFilledCircle(50, 50, 50);
-  GRAPH_SetColor(0xff, 0xff, 0xff);
+  GRAPH_SetColor(0xffffff);
   GRAPH_SetFont(font21x39Info);
   GRAPH_DrawChar('A', 120, 50);
   GRAPH_DrawString("Hello World", 200, 0);
@@ -124,7 +124,7 @@ int main(void) {
 
   // draw image test
   TIMER_DelayMillis(3000);
-  GRAPH_ClrScreen(0, 0, 0);
+  GRAPH_ClearScreen(0);
   GRAPH_DrawImage(30, 30);
 
   // data for example graph - sinusoidal signal
@@ -136,12 +136,12 @@ int main(void) {
   }
 
   TIMER_DelayMillis(3000);
-  GRAPH_ClrScreen(0, 0, 0);
+  GRAPH_ClearScreen(0);
   GRAPH_DrawGraph(graphData, 290, 0, 0);
 
 //   draw example bar chart
   TIMER_DelayMillis(3000);
-  GRAPH_ClrScreen(0, 0, 0);
+  GRAPH_ClearScreen(0);
   GRAPH_DrawBarChart(graphData+30, 32, 0, 0, 5);
 //
 //
