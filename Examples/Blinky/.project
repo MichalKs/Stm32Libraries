@@ -25,12 +25,12 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>MyLibraries</name>
+			<name>libs/MyLibraries</name>
 			<type>2</type>
 			<location>/home/mik/git/Stm32Libraries/MyLibraries</location>
 		</link>
 		<link>
-			<name>STM32F4</name>
+			<name>libs/STM32F4</name>
 			<type>2</type>
 			<location>/home/mik/git/Stm32Libraries/ExternalLibraries/STM32F4</location>
 		</link>
