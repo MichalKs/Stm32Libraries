@@ -20,6 +20,6 @@
 
 #include <graphics.h>
 
-extern const GRAPH_FontStruct font21x39Info;
+extern const GRAPH_FontTypedef font21x39Info;
 
 #endif /* INC_FONT_21X39_H_ */

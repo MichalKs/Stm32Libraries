@@ -20,6 +20,6 @@
 
 #include <graphics.h>
 
-extern const GRAPH_FontStruct font8x16Info;
+extern const GRAPH_FontTypedef font8x16Info;
 
 #endif /* INC_FONT_8X16_H_ */

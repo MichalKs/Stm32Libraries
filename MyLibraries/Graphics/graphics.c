@@ -30,30 +30,9 @@
 #define RGB_TO_UNSIGNED_INT(red, green, blue) ((unsigned int)(((red)<<16)|((green)<<8)|(blue)))
 
 /**
- * @brief Structure containing information about
- * an image.
- *
- * @details The image is assumed to be structured in the following way.
- * Image data starts in the top right corner. The first three bytes are
- * the RGB bytes of the last column of the first row, next three bytes
- * are the second to last column of row 1, etc. After column 1 is reached
- * the next row starts.
- */
-typedef struct {
-  const uint8_t* data;///< Image data
-  int rows;           ///< Number of pixel rows
-  int columns;        ///< Number of pixel columns
-  int bytesPerPixel;  ///< Number of bytes per pixel
-} GRAPH_ImageStruct;
-
-/**
- * @brief Currently set font.
- */
-static GRAPH_FontStruct currentFont;
-/**
  * @brief Example image to be drawn on screen.
  */
-static GRAPH_ImageStruct displayedImage = {
+static GRAPH_ImageTypedef displayedImage = {
     example_bmp,
     192,
     256,
@@ -81,8 +60,9 @@ typedef struct {
   uint32_t importantColors;
 } BMP_File;
 
-static unsigned int currentColor;    ///< Global color
-static unsigned int currentBackgroundColor;  ///< Global background color
+static GRAPH_FontTypedef currentFont;         ///< Currently set font
+static unsigned int currentColor;             ///< Global color
+static unsigned int currentBackgroundColor;   ///< Global background color
 
 /**
  * @brief Initialized graphics - TFT LCD ILI9320.
@@ -91,7 +71,7 @@ void GRAPH_Init(void) {
   ILI9320_Initializtion();
   // window occupies whole LCD screen
   ILI9320_SetWindow(0, 0, 320, 240);
-  GRAPH_ClearScreen(0); // black screen on startup
+  GRAPH_ClearScreen(GRAPH_BLACK);
 }
 /**
  * @brief Clears the screen with given color.
@@ -104,13 +84,11 @@ void GRAPH_ClearScreen(unsigned int rgbColor) {
 }
 /**
  * @brief Sets the currently used font.
- *
  * @details This function should be called before attempting
  * to write a string to the LCD.
- *
  * @param font Font information structure.
  */
-void GRAPH_SetFont(GRAPH_FontStruct font) {
+void GRAPH_SetFont(GRAPH_FontTypedef font) {
   currentFont = font;
 }
 /**
@@ -132,10 +110,8 @@ void GRAPH_SetBgColor(unsigned int rgbColor) {
  * @brief Draws an image on screen.
  * @param x X coordinate of top right corner.
  * @param y Y coordinate of top right corner.
- *
- * TODO Make function more general.
  */
-void GRAPH_DrawImage(uint16_t x, uint16_t y) {
+void GRAPH_DrawImage(int x, int y) {
 
   unsigned int red, green, blue;
   int pos;
@@ -149,26 +125,25 @@ void GRAPH_DrawImage(uint16_t x, uint16_t y) {
       ILI9320_DrawPixel(j+x, i+y, RGB_TO_UNSIGNED_INT(red, green, blue));
     }
   }
-
 }
 /**
  * @brief Draws a character on screen.
- * @param c Character to draw (ASCII code)
+ * @param character Character to draw (ASCII code)
  * @param x X coordinate of character
  * @param y T coordinate of character
  */
-void GRAPH_DrawChar(uint8_t c, uint16_t x, uint16_t y) {
+void GRAPH_DrawChar(char character, int x, int y) {
 
   // no font set
   if (currentFont.data == 0) {
     return;
   }
 
-  const uint16_t row = c - currentFont.firstChar; // Font usually skips first chars (useless)
+  const uint16_t row = character - currentFont.firstCharacter; // Font usually skips first chars (useless)
   const uint16_t bitsPerByte = 8;
 
   // if nonexisting char
-  if (row >= currentFont.numberOfChars) {
+  if (row >= currentFont.numberOfCharacters) {
     return;
   }
 
@@ -199,12 +174,9 @@ void GRAPH_DrawChar(uint8_t c, uint16_t x, uint16_t y) {
  * @param y Y coordinate
  * TODO Enable drawing vertical and horizontal strings.
  */
-void GRAPH_DrawString(const char* s, uint16_t x, uint16_t y) {
-
-  uint16_t len = strlen(s);
-
+void GRAPH_DrawString(const char* s, int x, int y) {
   // skip columnCount pixel columns for next char
-  for (int i = 0; i < len; i++, y+=currentFont.columnCount) {
+  for (unsigned int i = 0; i < strlen(s); i++, y += currentFont.columnCount) {
     GRAPH_DrawChar(s[i], x, y);
   }
 }
@@ -215,12 +187,9 @@ void GRAPH_DrawString(const char* s, uint16_t x, uint16_t y) {
  * @param w Width
  * @param h Height
  */
-void GRAPH_DrawRectangle(int x, int y, int w, int h) {
-
-  int i, j;
-  // Fill rectangle with color
-  for (i = x; i < x + w; i++) {
-    for (j = y; j < y + h; j++) {
+void GRAPH_DrawRectangle(int x, int y, int width, int height) {
+  for (int i = x; i < x + width; i++) {
+    for (int j = y; j < y + height; j++) {
       ILI9320_DrawPixel(i, j, currentColor);
     }
   }
@@ -233,13 +202,14 @@ void GRAPH_DrawRectangle(int x, int y, int w, int h) {
  * @param h Height
  * @param lineWidth Width of borders
  */
-void GRAPH_DrawBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t lineWidth) {
+void GRAPH_DrawBox(int x, int y, int width, int height,
+    int lineWidth) {
 
   // Draw borders
-  GRAPH_DrawRectangle(x, y, lineWidth, h);
-  GRAPH_DrawRectangle(x+lineWidth, y, w-2*lineWidth, lineWidth);
-  GRAPH_DrawRectangle(x+w-lineWidth, y, lineWidth, h);
-  GRAPH_DrawRectangle(x+lineWidth, y+h-lineWidth, w-2*lineWidth, lineWidth);
+  GRAPH_DrawRectangle(x, y, lineWidth, height);
+  GRAPH_DrawRectangle(x+lineWidth, y, width-2*lineWidth, lineWidth);
+  GRAPH_DrawRectangle(x+width-lineWidth, y, lineWidth, height);
+  GRAPH_DrawRectangle(x+lineWidth, y+height-lineWidth, width-2*lineWidth, lineWidth);
 }
 /**
  * @brief Draws a graph portraying data (measurements, etc.).
@@ -252,7 +222,7 @@ void GRAPH_DrawBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t lineW
  * descriptions, graph title.
  *
  */
-void GRAPH_DrawGraph(const uint8_t* data, uint16_t len, uint16_t x, uint16_t y) {
+void GRAPH_DrawGraph(const uint8_t* data, int len, int x, int y) {
 
   const uint16_t xOffset = 30; // offset for axis and description
   x += xOffset;
@@ -262,7 +232,7 @@ void GRAPH_DrawGraph(const uint8_t* data, uint16_t len, uint16_t x, uint16_t y) 
 
   const uint16_t maxDataLen = 320 - xOffset - 20;
 
-  GRAPH_FontStruct tmp = currentFont; // save current font
+  GRAPH_FontTypedef tmp = currentFont; // save current font
 
   GRAPH_SetFont(font8x16Info);
   // X axis description
@@ -299,16 +269,16 @@ void GRAPH_DrawGraph(const uint8_t* data, uint16_t len, uint16_t x, uint16_t y) 
  * TODO Add graph scaling.
  *
  */
-void GRAPH_DrawBarChart(const uint8_t* data, uint16_t len,
-    uint16_t x, uint16_t y, uint16_t width) {
+void GRAPH_DrawBarChart(const uint8_t* data, int lengthOfData,
+    int x, int y, int widthOfSingleBar) {
 
-  uint16_t pos = x;
+  int currentPosition = x;
 
-  const uint8_t space = 5; // space between bars
+  const int SPACE = 5; // space between bars
 
-  for (int i = 0; i < len; i++, pos+=width+space) {
+  for (int i = 0; i < lengthOfData; i++, currentPosition += widthOfSingleBar + SPACE) {
     // draw pixels up and down to make line more visible
-    GRAPH_DrawRectangle(pos, 0, width, data[i]);
+    GRAPH_DrawRectangle(currentPosition, 0, widthOfSingleBar, data[i]);
   }
 }
 /**
@@ -317,29 +287,21 @@ void GRAPH_DrawBarChart(const uint8_t* data, uint16_t len,
  * @param y0 Center Y coordinate.
  * @param radius Circle radius.
  */
-void GRAPH_DrawCircle(uint16_t x, uint16_t y, uint16_t radius) {
+void GRAPH_DrawCircle(int x, int y, int radius) {
 
   int newX = radius;
   int newY = 0;
   int error = 1-newX;
 
   while(newX >= newY) {
-    ILI9320_DrawPixel(newX + x, newY + y,
-        currentColor);
-    ILI9320_DrawPixel(newY + x, newX + y,
-        currentColor);
-    ILI9320_DrawPixel(-newX + x, newY + y,
-        currentColor);
-    ILI9320_DrawPixel(-newY + x, newX + y,
-        currentColor);
-    ILI9320_DrawPixel(-newX + x, -newY + y,
-        currentColor);
-    ILI9320_DrawPixel(-newY + x, -newX + y,
-        currentColor);
-    ILI9320_DrawPixel(newX + x, -newY + y,
-        currentColor);
-    ILI9320_DrawPixel(newY + x, -newX + y,
-        currentColor);
+    ILI9320_DrawPixel(newX + x, newY + y, currentColor);
+    ILI9320_DrawPixel(newY + x, newX + y, currentColor);
+    ILI9320_DrawPixel(-newX + x, newY +  y, currentColor);
+    ILI9320_DrawPixel(-newY + x, newX + y, currentColor);
+    ILI9320_DrawPixel(-newX + x, -newY + y, currentColor);
+    ILI9320_DrawPixel(-newY + x, -newX + y, currentColor);
+    ILI9320_DrawPixel(newX + x, -newY + y, currentColor);
+    ILI9320_DrawPixel(newY + x, -newX + y, currentColor);
 
     newY++;
 
@@ -358,8 +320,7 @@ void GRAPH_DrawCircle(uint16_t x, uint16_t y, uint16_t radius) {
  * @param radius Circle radius.
  * TODO Change implmentation - currenly not all pixels drawn
  */
-void GRAPH_DrawFilledCircle(uint16_t x, uint16_t y, uint16_t radius) {
-
+void GRAPH_DrawFilledCircle(int x, int y, int radius) {
   while (radius--) {
     GRAPH_DrawCircle(x,y,radius);
   }
@@ -372,7 +333,7 @@ void GRAPH_DrawFilledCircle(uint16_t x, uint16_t y, uint16_t radius) {
  * @param x2 End point X coordinate
  * @param y2 End point Y coordinate
  */
-void GRAPH_DrawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
+void GRAPH_DrawLine(int x1, int y1, int x2, int y2) {
 
   int dx = x2>x1 ? (x2-x1) : (x1-x2); // slope
   int sx = x1<x2 ? 1 : -1; // sign

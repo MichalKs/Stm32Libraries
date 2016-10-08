@@ -102,8 +102,8 @@ typedef enum {
 void ILI9320_Initializtion(void) {
 
   const int RESET_DELAY = 50;
-  const int INIT_DELAY = 100;
-  const int ILI9320_ID = 0x9320;
+  const int INIT_DELAY  = 100;
+  const int ILI9320_ID  = 0x9320;
   ILI9320_HAL_Initialize(); // GPIO and FSMC init
 
   // Reset the LCD
@@ -148,7 +148,6 @@ void ILI9320_Initializtion(void) {
     ILI9320_HAL_WriteReg(ILI9320_HOR_ADDR_END, 239);
     ILI9320_HAL_WriteReg(ILI9320_VER_ADDR_START, 0);
     ILI9320_HAL_WriteReg(ILI9320_VER_ADDR_END, 319);
-
     ILI9320_HAL_WriteReg(ILI9320_DRIVER_OUTPUT2, 0x2700);
     ILI9320_HAL_WriteReg(ILI9320_BASE_IMAGE, 0x0001);
     ILI9320_HAL_WriteReg(ILI9320_VERTICAL_SCROLL, 0x0000);
@@ -171,10 +170,8 @@ void ILI9320_Initializtion(void) {
 }
 /**
  * @brief Convert RGB value to ILI9320 format.
- * @param r Red
- * @param g Green
- * @param b Blue
- * @return Converted value of color.
+ * @param rgbColor Color
+ * @return Converted value of color in ILI9320 format.
  */
 unsigned int ILI9320_RGBDecode(unsigned int rgbColor) {
   unsigned int red    = (rgbColor >> 16) & 0xff;
@@ -190,20 +187,16 @@ unsigned int ILI9320_RGBDecode(unsigned int rgbColor) {
 void ILI9320_SetCursor(int x, int y) {
   ILI9320_HAL_WriteReg(ILI9320_HOR_GRAM_ADDR, y);
   ILI9320_HAL_WriteReg(ILI9320_VER_GRAM_ADDR, x);
-
 }
 /**
  * @brief Draws a pixel on the LCD.
  * @param x X coordinate of pixel.
  * @param y Y coordinate of pixel.
- * @param r Red color value.
- * @param g Green color value.
- * @param b Blue color value.
+ * @param rgbColor Color value.
  */
-void ILI9320_DrawPixel(int x, int y, unsigned int color) {
-
+void ILI9320_DrawPixel(int x, int y, unsigned int rgbColor) {
   ILI9320_SetCursor(x, y);
-  ILI9320_HAL_WriteReg(ILI9320_WRITE_TO_GRAM, ILI9320_RGBDecode(color));
+  ILI9320_HAL_WriteReg(ILI9320_WRITE_TO_GRAM, ILI9320_RGBDecode(rgbColor));
 }
 /**
  * @brief Set work window to draw data.

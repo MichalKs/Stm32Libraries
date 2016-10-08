@@ -46,28 +46,52 @@
  *
  */
 typedef struct {
-  const uint8_t* data;    ///< Font pixel data
-  uint8_t columnCount;    ///< How many columns does the font have (we assume every char is in different row)
-  uint8_t bytesPerColumn; ///< Number of bytes per columns
-  uint8_t firstChar;      ///< First character in font in ASCII code
-  uint8_t numberOfChars;  ///< Number of characters in font
-} GRAPH_FontStruct;
+  const uint8_t* data;        ///< Font pixel data
+  uint8_t columnCount;        ///< How many columns does the font have (we assume every char is in different row)
+  uint8_t bytesPerColumn;     ///< Number of bytes per columns
+  uint8_t firstCharacter;     ///< First character in font in ASCII code
+  uint8_t numberOfCharacters; ///< Number of characters in font
+} GRAPH_FontTypedef;
+/**
+ * @brief Structure containing information about
+ * an image.
+ *
+ * @details The image is assumed to be structured in the following way.
+ * Image data starts in the top right corner. The first three bytes are
+ * the RGB bytes of the last column of the first row, next three bytes
+ * are the second to last column of row 1, etc. After column 1 is reached
+ * the next row starts.
+ */
+typedef struct {
+  const uint8_t* data;///< Image data
+  int rows;           ///< Number of pixel rows
+  int columns;        ///< Number of pixel columns
+  int bytesPerPixel;  ///< Number of bytes per pixel
+} GRAPH_ImageTypedef;
 
+typedef enum {
+  GRAPH_BLACK = 0x000000,
+  GRAPH_RED   = 0xff0000,
+  GRAPH_BLUE  = 0x0000ff,
+  GRAPH_GREEN = 0x00ff00,
+  GRAPH_WHITE = 0xffffff,
+} GRAPH_ColorTypedef;
 
 void GRAPH_DrawRectangle(int x, int y, int w, int h);
-void GRAPH_DrawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+void GRAPH_DrawLine(int x1, int y1, int x2, int y2);
 void GRAPH_Init(void);
 void GRAPH_SetColor(unsigned int rgbColor);
-void GRAPH_DrawBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t lineWidth);
-void GRAPH_DrawCircle(uint16_t x0, uint16_t y0, uint16_t radius);
-void GRAPH_DrawFilledCircle(uint16_t x, uint16_t y, uint16_t radius);
-void GRAPH_DrawString(const char* s, uint16_t x, uint16_t y);
-void GRAPH_DrawChar(uint8_t c, uint16_t x, uint16_t y);
+void GRAPH_DrawBox(int x, int y, int width, int height, int lineWidth);
+void GRAPH_DrawCircle(int x, int y, int radius);
+void GRAPH_DrawFilledCircle(int x, int y, int radius);
+void GRAPH_DrawString(const char* s, int x, int y);
+void GRAPH_DrawChar(char character, int x, int y);
 void GRAPH_SetBgColor(unsigned int rgbColor);
-void GRAPH_DrawImage(uint16_t x, uint16_t y);
-void GRAPH_DrawGraph(const uint8_t* data, uint16_t len, uint16_t x, uint16_t y);
-void GRAPH_DrawBarChart(const uint8_t* data, uint16_t len, uint16_t x, uint16_t y, uint16_t width);
-void GRAPH_SetFont(GRAPH_FontStruct font);
+void GRAPH_DrawImage(int x, int y);
+void GRAPH_DrawGraph(const uint8_t* data, int len, int x, int y);
+void GRAPH_DrawBarChart(const uint8_t* data, int lengthOfData,
+    int x, int y, int widthOfSingleBar);
+void GRAPH_SetFont(GRAPH_FontTypedef font);
 void GRAPH_ClearScreen(unsigned int rgbColor);
 /**
  * @}

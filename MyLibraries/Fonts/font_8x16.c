@@ -128,7 +128,7 @@ const uint8_t font8x16[1536] = {
 };
 
 
-const GRAPH_FontStruct font8x16Info = {
+const GRAPH_FontTypedef font8x16Info = {
   font8x16,  // font data
   8,         // 21 columns
   2,          // 5 bytes per columns

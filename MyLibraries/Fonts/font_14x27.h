@@ -20,6 +20,6 @@
 
 #include <graphics.h>
 
-extern const GRAPH_FontStruct font14x27Info;
+extern const GRAPH_FontTypedef font14x27Info;
 
 #endif /* INC_FONT_14X27_H_ */
