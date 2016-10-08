@@ -1,11 +1,11 @@
 /**
- * @file    comm.c
+ * @file    comm.h
  * @brief   Communication with PC functions.
- * @date    25 sie 2014
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  * 
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -38,14 +38,12 @@
  * @{
  */
 
-
-
 #define TRANSMIT_BUFFER_LENGTH  UART_BUF_LEN_TX ///< Transmit buffer length
 #define RECEIVE_BUFFER_LENGTH   32              ///< Receive buffer length
 #define TERMINATOR_CHARACTER    '\r'            ///< Frame terminator character
 
-static uint8_t receiveBuffer[RECEIVE_BUFFER_LENGTH];    ///< Buffer for received data.
-static uint8_t transmitBuffer[TRANSMIT_BUFFER_LENGTH];  ///< Buffer for transmitted data.
+static char receiveBuffer[RECEIVE_BUFFER_LENGTH];    ///< Buffer for received data.
+static char transmitBuffer[TRANSMIT_BUFFER_LENGTH];  ///< Buffer for transmitted data.
 static FIFO_Typedef receiveFifo;  ///< RX FIFO
 static FIFO_Typedef transmitFifo; ///< TX FIFO
 static int frameCounter; ///< Nonzero signals a new frame (number of received frames)
@@ -104,7 +102,7 @@ void COMM_PrintLine(char* line) {
 }
 /**
  * @brief Get a char from PC
- * @return Received char.
+ * @return Received character
  * @warning Blocking function! Waits until char is received.
  */
 char COMM_GetCharacter(void) {
@@ -125,27 +123,30 @@ char COMM_GetCharacter(void) {
  * @retval COMM_NO_FRAME_READY No frame in buffer
  * @retval COMM_FRAME_ERROR Frame error
  */
-int COMM_GetFrame(uint8_t* frameBuffer, int* length, int maximumLength) {
+COMM_ErrorTypedef COMM_GetFrame(char* frameBuffer, int* length, int maximumLength) {
 
   char receivedByte;
   *length = 0;
 
   if (frameCounter) {
     while (TRUE) {
+
       // no more data and terminator wasn't reached => error
       if (FIFO_IsEmpty(&receiveFifo)) {
+        frameCounter = 0;
         *length = 0;
         println("Invalid frame");
         FIFO_Flush(&receiveFifo);
         return COMM_FRAME_ERROR;
       }
+
       FIFO_Pop(&receiveFifo, &receivedByte);
       frameBuffer[(*length)++] = receivedByte;
 
       if (*length >= maximumLength) {
-        println("Frame too long");
         frameCounter = 0;
         *length = 0;
+        println("Frame too long");
         FIFO_Flush(&receiveFifo);
         return COMM_FRAME_TOO_LARGE;
       }
@@ -153,7 +154,7 @@ int COMM_GetFrame(uint8_t* frameBuffer, int* length, int maximumLength) {
       // if end of frame
       if (receivedByte == TERMINATOR_CHARACTER) {
         (*length)--; // length without terminator character
-        frameBuffer[*length] = 0; // USART terminator character converted to NULL terminator
+        frameBuffer[*length] = 0; // terminator character converted to NULL terminator
         break;
       }
 
@@ -171,18 +172,18 @@ int COMM_GetFrame(uint8_t* frameBuffer, int* length, int maximumLength) {
  */
 void receiveCb(char receivedCharacter) {
 
-  uint8_t res = FIFO_Push(&receiveFifo, receivedCharacter); // Put data in RX buffer
+  // Put data in RX buffer
+  FIFO_ErrorTypedef result = FIFO_Push(&receiveFifo, receivedCharacter);
 
-  // Checking res to ensure no buffer overflow occurred
-  if ((receivedCharacter == TERMINATOR_CHARACTER) && (res == 0)) {
+  // Checking result to ensure no buffer overflow occurred
+  if ((receivedCharacter == TERMINATOR_CHARACTER) && (result == 0)) {
     frameCounter++;
   }
 }
 /**
  * @brief Callback for transmitting data to lower layer
- * @param c Transmitted data
- * @retval 0 There is no more data in buffer (stop transmitting)
- * @retval 1 Valid data in c
+ * @param dataToTransmit Transmitted data
+ * @return Number of bytes to be transmitted
  */
 int transmitCb(char* dataToTransmit) {
 
@@ -200,7 +201,6 @@ int transmitCb(char* dataToTransmit) {
 
   return i;
 }
-
 /**
  * @}
  */

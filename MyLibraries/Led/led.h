@@ -1,7 +1,7 @@
 /**
  * @file    led.h
  * @brief   Light Emitting Diodes control functions.
- * @date    9 kwi 2014
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  *
  * @details A simple library to add an abstraction
@@ -14,7 +14,7 @@
  * led_hal.c and led_hal.h.
  * 
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -53,7 +53,6 @@ typedef enum {
   _LED9,//!< LED9
 
 } LED_Number_TypeDef;
-
 /**
  * @brief State of an LED.
  */
@@ -62,10 +61,19 @@ typedef enum {
   LED_OFF,    //!< LED_OFF    Turn off LED
   LED_ON,     //!< LED_ON     Turn on LED
 } LED_State_TypeDef;
+/**
+ * @brief LED errors
+ */
+typedef enum {
+  LED_OK,            //!< LED_OK
+  LED_NOT_INITALIZED,//!< LED_NOT_INITALIZED
+  LED_TOO_MANY_LEDS, //!< LED_TOO_MANY_LEDS
+  LED_INCORRECT_LED_NUMBER,
+} LED_ErrorTypedef;
 
-void LED_Add         (LED_Number_TypeDef led);
-void LED_Toggle       (LED_Number_TypeDef led);
-void LED_ChangeState  (LED_Number_TypeDef led, LED_State_TypeDef state);
+LED_ErrorTypedef LED_Add          (LED_Number_TypeDef led);
+LED_ErrorTypedef LED_Toggle       (LED_Number_TypeDef led);
+LED_ErrorTypedef LED_ChangeState  (LED_Number_TypeDef led, LED_State_TypeDef state);
 
 /**
  * @}

@@ -92,7 +92,6 @@ FIFO_ErrorTypedef FIFO_Push(FIFO_Typedef* fifo, char newData) {
  * @retval FIFO_EMPTY FIFO is empty
  */
 FIFO_ErrorTypedef FIFO_Pop(FIFO_Typedef* fifo, char* c) {
-
   if (fifo->count == 0) {
     return FIFO_EMPTY;
   }
@@ -113,11 +112,9 @@ FIFO_ErrorTypedef FIFO_Pop(FIFO_Typedef* fifo, char* c) {
  * @retval FALSE FIFO is not empty
  */
 Boolean FIFO_IsEmpty(FIFO_Typedef* fifo) {
-
   if (fifo->count == 0) {
     return TRUE;
   }
-
   return FALSE;
 }
 void FIFO_Flush(FIFO_Typedef* fifo) {

@@ -1,7 +1,7 @@
 /**
  * @file    uart.h
  * @brief   Controlling UART
- * @date    14.04.2016
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  * 
  * @verbatim
@@ -18,7 +18,6 @@
 #ifndef UART_H_
 #define UART_H_
 
-#include <inttypes.h>
 #include "utils.h"
 
 /**
@@ -33,11 +32,11 @@
 
 #define UART_BUF_LEN_TX 512 ///< Buffer length for UART peripheral
 
-void    UART_Initialize(int baud, void(*rxCb)(char), int(*txCb)(char*));
+void    UART_Initialize   (int baud, void(*rxCb)(char), int(*txCb)(char*));
 Boolean UART_IsSendingData(void);
-void    UART_SendDataIrq(void);
-void    UART_EnableIrq(void);
-void    UART_DisableIrq(void);
+void    UART_SendDataIrq  (void);
+void    UART_EnableIrq    (void);
+void    UART_DisableIrq   (void);
 /**
  * @}
  */

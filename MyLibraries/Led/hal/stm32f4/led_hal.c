@@ -45,7 +45,7 @@ static uint32_t ledPin[MAX_LEDS] = {
  * @brief Add an LED.
  * @param led LED number.
  */
-void LED_HAL_Init(uint8_t led) {
+void LED_HAL_Init(int led) {
 
   if (ledPort[led] == GPIOA) {
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -63,15 +63,15 @@ void LED_HAL_Init(uint8_t led) {
     __HAL_RCC_GPIOG_CLK_ENABLE();
   }
 
-  GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitTypeDef gpioInitialization;
 
-  GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull  = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  gpioInitialization.Mode  = GPIO_MODE_OUTPUT_PP;
+  gpioInitialization.Pull  = GPIO_PULLUP;
+  gpioInitialization.Speed = GPIO_SPEED_FREQ_LOW;
 
-  GPIO_InitStruct.Pin = ledPin[led];
+  gpioInitialization.Pin = ledPin[led];
 
-  HAL_GPIO_Init(ledPort[led], &GPIO_InitStruct);
+  HAL_GPIO_Init(ledPort[led], &gpioInitialization);
 
   HAL_GPIO_WritePin(ledPort[led], ledPin[led], GPIO_PIN_RESET); // turn LED off
 
@@ -82,7 +82,7 @@ void LED_HAL_Init(uint8_t led) {
  */
 void LED_HAL_Toggle(uint8_t led) {
 
-  ledPort[led]->ODR ^= ledPin[led]; // toggle bit
+  ledPort[led]->ODR ^= ledPin[led];
 }
 /**
  * @brief Change the state of an LED.
@@ -96,7 +96,6 @@ void LED_HAL_ChangeState(uint8_t led, Boolean state) {
     ledPort[led]->BSRR = (ledPin[led] << 16); // reset bit
   }
 }
-
 /**
  * @}
  */

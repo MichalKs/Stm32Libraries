@@ -1,7 +1,7 @@
 /**
- * @file    led.c
- * @brief   Light Emitting Diode control functions.
- * @date    9 kwi 2014
+ * @file    led.h
+ * @brief   Light Emitting Diodes control functions.
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  *
  * @details A simple library to add an abstraction
@@ -14,7 +14,7 @@
  * led_hal.c and led_hal.h.
  *
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -22,20 +22,11 @@
  * and is available at 
  * http://www.gnu.org/licenses/gpl.html
  * @endverbatim
- *
  */
 
 #include <stdio.h>
 #include <led.h>
 #include <led_hal.h>
-
-#ifdef DEBUG_LED
-  #define print(str, args...) printf("LED--> "str"%s",##args,"\r")
-  #define println(str, args...) printf("LED--> "str"%s",##args,"\r\n")
-#else
-  #define print(str, args...) (void)0
-  #define println(str, args...) (void)0
-#endif
 
 /**
  * @addtogroup LED
@@ -48,58 +39,52 @@ static LED_State_TypeDef ledState[MAX_LEDS]; ///< States of the LEDs (MAX_LEDS i
  * @brief Add an LED.
  * @param led LED init structure.
  */
-void LED_Add(LED_Number_TypeDef led) {
+LED_ErrorTypedef LED_Add(LED_Number_TypeDef led) {
 
-  // Check if LED number is correct.
   if (led >= MAX_LEDS) {
-    println("Error: Incorrect LED number %d!", (int)led);
-    return;
+    return LED_TOO_MANY_LEDS;
   }
 
   LED_HAL_Init(led);
   ledState[led] = LED_OFF; // LED initially off
+  return LED_OK;
 }
-
 /**
  * @brief Change the state of an LED.
  * @param led LED number.
  * @param state New state.
  */
-void LED_ChangeState(LED_Number_TypeDef led, LED_State_TypeDef state) {
+LED_ErrorTypedef LED_ChangeState(LED_Number_TypeDef led, LED_State_TypeDef state) {
 
   if (led >= MAX_LEDS) {
-    println("Error: Incorrect LED number %d!", (int)led);
-    return;
+    return LED_INCORRECT_LED_NUMBER;
   }
 
   if (ledState[led] == LED_UNUSED) {
-    println("Error: Uninitialized LED %d!", (int)led);
-    return;
+    return LED_NOT_INITALIZED;
   } else {
     if (state == LED_OFF) {
-      LED_HAL_ChangeState(led, 0); // turn off LED
+      LED_HAL_ChangeState(led, FALSE); // turn off LED
     } else if (state == LED_ON) {
-      LED_HAL_ChangeState(led, 1); // light up LED
+      LED_HAL_ChangeState(led, TRUE); // light up LED
     }
   }
 
   ledState[led] = state; // update LED state
+  return LED_OK;
 }
-
 /**
  * @brief Toggle an LED.
  * @param led LED number.
  */
-void LED_Toggle(LED_Number_TypeDef led) {
+LED_ErrorTypedef LED_Toggle(LED_Number_TypeDef led) {
 
   if (led >= MAX_LEDS) {
-    println("Error: Incorrect LED number %d!", (int)led);
-    return;
+    return LED_INCORRECT_LED_NUMBER;
   }
 
   if (ledState[led] == LED_UNUSED) {
-    println("Error: Uninitialized LED %d!", (int)led);
-    return;
+    return LED_NOT_INITALIZED;
   } else {
     if (ledState[led] == LED_OFF) {
       ledState[led] = LED_ON;
@@ -108,8 +93,8 @@ void LED_Toggle(LED_Number_TypeDef led) {
     }
     LED_HAL_Toggle(led);
   }
+  return LED_OK;
 }
-
 /**
  * @}
  */

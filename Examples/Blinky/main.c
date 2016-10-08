@@ -39,7 +39,7 @@
  */
 void softTimerCallback(void) {
   LED_Toggle(_LED2);
-
+  println("Hello world");
   const int FRAME_MAX_SIZE = 10;
   uint8_t frameBuffer[FRAME_MAX_SIZE];  // buffer for receiving commands from PC
   int length;           // length of command

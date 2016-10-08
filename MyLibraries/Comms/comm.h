@@ -1,11 +1,11 @@
 /**
  * @file    comm.h
  * @brief   Communication with PC functions.
- * @date    25 sie 2014
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  * 
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -29,18 +29,21 @@
  * @addtogroup COMM
  * @{
  */
+/**
+ * @brief Communication errors
+ */
 typedef enum {
-  COMM_GOT_FRAME,
-  COMM_NO_FRAME_READY,
-  COMM_FRAME_ERROR,
-  COMM_FRAME_TOO_LARGE,
+  COMM_GOT_FRAME,      //!< COMM_GOT_FRAME
+  COMM_NO_FRAME_READY, //!< COMM_NO_FRAME_READY
+  COMM_FRAME_ERROR,    //!< COMM_FRAME_ERROR
+  COMM_FRAME_TOO_LARGE,//!< COMM_FRAME_TOO_LARGE
 } COMM_ErrorTypedef;
 
-void    COMM_Initialize(int baudRate);
-void    COMM_PutCharacter(char characterToSend);
-char    COMM_GetCharacter(void);
-int     COMM_GetFrame(uint8_t* frameBuffer, int* length, int maximumLength);
-void    COMM_PrintLine(char* line);
+void              COMM_Initialize   (int baudRate);
+void              COMM_PutCharacter (char characterToSend);
+char              COMM_GetCharacter (void);
+COMM_ErrorTypedef COMM_GetFrame     (char* frameBuffer, int* length, int maximumLength);
+void              COMM_PrintLine    (char* line);
 /**
  * @}
  */

@@ -1,7 +1,7 @@
 /**
  * @file    uart.c
  * @brief   Controlling the UART
- * @date    14.04.2016
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  * 
  * @verbatim
@@ -23,32 +23,26 @@
  * @addtogroup UART
  * @{
  */
+// hardware configuration
+#define USART                           USART2
+#define USART_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE()
+#define USART_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define USART_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define USART_FORCE_RESET()             __HAL_RCC_USART2_FORCE_RESET()
+#define USART_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
+#define USART_TX_PIN                    GPIO_PIN_2
+#define USART_TX_GPIO_PORT              GPIOA
+#define USART_TX_AF                     GPIO_AF7_USART2
+#define USART_RX_PIN                    GPIO_PIN_3
+#define USART_RX_GPIO_PORT              GPIOA
+#define USART_RX_AF                     GPIO_AF7_USART2
+#define USART_IRQ_NUMBER                USART2_IRQn
+#define USART_IRQ_HANDLER               USART2_IRQHandler
+#define USART_IRQ_PRIORITY              15
 
-// Definition for USARTx clock resources
-#define USARTx                           USART2
-#define USARTx_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE()
-#define USARTx_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
-#define USARTx_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
-
-#define USARTx_FORCE_RESET()             __HAL_RCC_USART2_FORCE_RESET()
-#define USARTx_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
-
-// Definition for USARTx Pins
-#define USARTx_TX_PIN                    GPIO_PIN_2
-#define USARTx_TX_GPIO_PORT              GPIOA
-#define USARTx_TX_AF                     GPIO_AF7_USART2
-#define USARTx_RX_PIN                    GPIO_PIN_3
-#define USARTx_RX_GPIO_PORT              GPIOA
-#define USARTx_RX_AF                     GPIO_AF7_USART2
-
-// Definition for USARTx's NVIC
-#define USARTx_IRQn                      USART2_IRQn
-#define USARTx_IRQHandler                USART2_IRQHandler
-
-#define RECEIVE_BUFFER_LENGTH 1 ///< Length of the low level receive buffer
-
-static void  (*rxCallback)(char);           ///< Callback function for receiving data
-static int   (*txCallback)(char*);          ///< Callback function for transmitting data (fills up buffer with data to send)
+#define RECEIVE_BUFFER_LENGTH 1             ///< Length of the low level receive buffer
+static void (*rxCallback)(char);            ///< Callback function for receiving data
+static int  (*txCallback)(char*);           ///< Callback function for transmitting data (fills up buffer with data to send)
 static UART_HandleTypeDef uartHandle;       ///< Handle for UART peripheral
 static char rxBuffer[RECEIVE_BUFFER_LENGTH];///< Reception buffer - we receive one character at a time
 static volatile Boolean isSendingData;      ///< Flag saying if UART is currently sending any data
@@ -57,13 +51,13 @@ static volatile Boolean isSendingData;      ///< Flag saying if UART is currentl
  * @brief Enables UART IRQ
  */
 void UART_EnableIrq(void) {
-  HAL_NVIC_EnableIRQ(USARTx_IRQn);
+  HAL_NVIC_EnableIRQ(USART_IRQ_NUMBER);
 }
 /**
  * @brief Disables UART IRQ
  */
 void UART_DisableIrq(void) {
-  HAL_NVIC_DisableIRQ(USARTx_IRQn);
+  HAL_NVIC_DisableIRQ(USART_IRQ_NUMBER);
 }
 /**
  * @brief Checks if UART is currently sending any data
@@ -98,7 +92,7 @@ void UART_SendDataIrq(void) {
   if (numberOfBytes > 0) {
     // send it to PC
     if (HAL_UART_Transmit_IT(&uartHandle, (uint8_t*)buf, numberOfBytes) != HAL_OK) {
-//      COMMON_HAL_ErrorHandler();
+      COMMON_HAL_ErrorHandler();
     }
     isSendingData = TRUE;
   } else {
@@ -116,8 +110,7 @@ void UART_Initialize(int baud, void(*rxCb)(char), int(*txCb)(char*) ) {
   txCallback = txCb;
   rxCallback = rxCb;
 
-  uartHandle.Instance        = USARTx;
-
+  uartHandle.Instance        = USART;
   uartHandle.Init.BaudRate   = baud;
   uartHandle.Init.WordLength = UART_WORDLENGTH_8B;
   uartHandle.Init.StopBits   = UART_STOPBITS_1;
@@ -149,7 +142,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef * uart) {
 
   // start another reception
   if (HAL_UART_Receive_IT(uart, (uint8_t *)(rxBuffer), RECEIVE_BUFFER_LENGTH) != HAL_OK) {
-//    COMMON_HAL_ErrorHandler();
+    COMMON_HAL_ErrorHandler();
   }
 }
 /**
@@ -167,41 +160,41 @@ void HAL_UART_MspInit(UART_HandleTypeDef * uart) {
 
   GPIO_InitTypeDef  gpioInitalization;
 
-  USARTx_TX_GPIO_CLK_ENABLE();
-  USARTx_RX_GPIO_CLK_ENABLE();
-  USARTx_CLK_ENABLE();
+  USART_TX_GPIO_CLK_ENABLE();
+  USART_RX_GPIO_CLK_ENABLE();
+  USART_CLK_ENABLE();
 
-  gpioInitalization.Pin       = USARTx_TX_PIN;
+  gpioInitalization.Pin       = USART_TX_PIN;
   gpioInitalization.Mode      = GPIO_MODE_AF_PP;
   gpioInitalization.Pull      = GPIO_PULLUP;
   gpioInitalization.Speed     = GPIO_SPEED_FAST;
-  gpioInitalization.Alternate = USARTx_TX_AF;
-  HAL_GPIO_Init(USARTx_TX_GPIO_PORT, &gpioInitalization);
+  gpioInitalization.Alternate = USART_TX_AF;
+  HAL_GPIO_Init(USART_TX_GPIO_PORT, &gpioInitalization);
 
-  gpioInitalization.Pin       = USARTx_RX_PIN;
-  gpioInitalization.Alternate = USARTx_RX_AF;
-  HAL_GPIO_Init(USARTx_RX_GPIO_PORT, &gpioInitalization);
+  gpioInitalization.Pin       = USART_RX_PIN;
+  gpioInitalization.Alternate = USART_RX_AF;
+  HAL_GPIO_Init(USART_RX_GPIO_PORT, &gpioInitalization);
 
-  HAL_NVIC_SetPriority(USARTx_IRQn, 15, 0);
-  HAL_NVIC_EnableIRQ(USARTx_IRQn);
+  HAL_NVIC_SetPriority(USART_IRQ_NUMBER, USART_IRQ_PRIORITY, 0);
+  HAL_NVIC_EnableIRQ(USART_IRQ_NUMBER);
 }
 /**
   * @brief Deinitialize low level UART
   * @param uart UART handle pointer
   */
 void HAL_UART_MspDeInit(UART_HandleTypeDef * uart) {
-  USARTx_FORCE_RESET();
-  USARTx_RELEASE_RESET();
+  USART_FORCE_RESET();
+  USART_RELEASE_RESET();
 
-  HAL_GPIO_DeInit(USARTx_TX_GPIO_PORT, USARTx_TX_PIN);
-  HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
+  HAL_GPIO_DeInit(USART_TX_GPIO_PORT, USART_TX_PIN);
+  HAL_GPIO_DeInit(USART_RX_GPIO_PORT, USART_RX_PIN);
 
-  HAL_NVIC_DisableIRQ(USARTx_IRQn);
+  HAL_NVIC_DisableIRQ(USART_IRQ_NUMBER);
 }
 /**
  * @brief  This function handles UART interrupt request.
  */
-void USARTx_IRQHandler(void) {
+void USART_IRQ_HANDLER(void) {
   HAL_UART_IRQHandler(&uartHandle);
 }
 /**
