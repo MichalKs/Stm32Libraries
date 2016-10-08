@@ -35,10 +35,6 @@
 #include <sdcard.h>
 #include <utils.h>
 
-#define SYSTICK_FREQ 1000 ///< Frequency of the SysTick set at 1kHz.
-#define COMM_BAUD_RATE 115200UL ///< Baud rate for communication with PC
-
-void softTimerCallback(void);
 void tscEvent1(uint16_t x, uint16_t y);
 void tscEvent2(uint16_t x, uint16_t y);
 
@@ -56,31 +52,55 @@ void tscEvent2(uint16_t x, uint16_t y);
 //#define USE_GUI
 
 /**
+ * @brief Callback for performing periodic tasks
+ */
+void softTimerCallback(void) {
+
+  println("Hello world");
+
+  const int FRAME_MAX_SIZE = 10;
+  char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
+  int length;                         // length of command
+
+  // check for new frames from PC
+  if (COMM_GetFrame(frameBuffer, &length, FRAME_MAX_SIZE) == COMM_GOT_FRAME) {
+    println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
+
+    // control LED0 from terminal
+    if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
+      LED_ChangeState(_LED0, LED_ON);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
+      LED_ChangeState(_LED0, LED_OFF);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
+      LED_ChangeState(_LED1, LED_ON);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
+      LED_ChangeState(_LED1, LED_OFF);
+    }
+  }
+}
+
+/**
  * @brief Main function
- * @return Whatever
  */
 int main(void) {
 
   COMMON_HAL_Init();
 
-  COMM_Initialize(COMM_BAUD_RATE); // initialize communication with PC
-  // Print a string to terminal
-  println("Starting program*********************************************");
+  const int COMM_BAUD_RATE = 115200;
+  COMM_Initialize(COMM_BAUD_RATE);
+  println("Starting program"); // Print a string to terminal
 
-  // Add a soft timer with callback running every 1000ms
-  int timerID = TIMER_AddSoftTimer(1000, softTimerCallback);
-  TIMER_StartSoftTimer(timerID); // start the timer
+  LED_Add(_LED0);
+  LED_Add(_LED1);
+  LED_Add(_LED2);
 
-  LED_Add(_LED0); // Add an LED
-  LED_Add(_LED1); // Add an LED
-  LED_Add(_LED2); // Add an LED
-  LED_Add(_LED3); // Add an LED
-
-  char buf[256]; // buffer for receiving commands from PC
-  int len;      // length of command
-
-  // test another way of measuring time delays
-  unsigned int softTimer = TIMER_GetTimeMillis(); // get start time for delay
+  // Add a soft timer with callback
+  const int SOFT_TIMER_PERIOD_MILLIS = 1000;
+  int timerId = TIMER_AddSoftTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
+  TIMER_StartSoftTimer(timerId);
 
 
 #ifndef USE_GUI
@@ -173,35 +193,9 @@ int main(void) {
 #endif
 
   while (TRUE) {
-
-    // test delay method
-//    if (TIMER_DelayTimer(1000, softTimer)) {
-//      LED_Toggle(LED3);
-//      softTimer = TIMER_GetTime(); // get start time for delay
-//    }
-
-    // check for new frames from PC
-    if (!COMM_GetFrame(buf, &len, 32)) {
-      println("Got frame of length %d: %s", (int)len, (char*)buf);
-
-      // control LED0 from terminal
-      if (!strcmp((char*)buf, ":LED0 ON")) {
-        LED_ChangeState(_LED0, LED_ON);
-      }
-      if (!strcmp((char*)buf, ":LED0 OFF")) {
-        LED_ChangeState(_LED0, LED_OFF);
-      }
-    }
 //    TSC2046_Update(); // run touchscreen functions
     TIMER_SoftTimersUpdate(); // run timers
   }
-}
-/**
- * @brief Callback function called on every soft timer overflow
- */
-void softTimerCallback(void) {
-  println("ILI123 hello");
-  LED_Toggle(_LED0); // Toggle LED
 }
 /**
  * @brief Example touchscreen event handler.
