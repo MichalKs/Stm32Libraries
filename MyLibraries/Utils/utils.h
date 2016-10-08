@@ -1,11 +1,11 @@
 /**
- * @file    utils.h
+ * @file    utils.c
  * @brief   Utility and help functions.
- * @date    20 lip 2014
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  * 
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -30,11 +30,7 @@
  * @{
  */
 
-void      UTILS_Hexdump     (const uint8_t* buf, uint32_t length);
-void      UTILS_HexdumpC    (const uint8_t const *buf, uint32_t length);
-void      UTILS_Hexdump16C  (const uint16_t const *buf, uint32_t length);
-uint32_t  UTILS_Ntohl       (uint32_t val);
-uint8_t   UTILS_IsBigEndian (void);
+#define NEWLINE_SEQUENCE "\r\n" ///< Sequence to send to get new line in terminal
 
 /**
  * @brief Boolean type for flags
@@ -43,6 +39,12 @@ typedef enum {
   FALSE = 0,//!< FALSE
   TRUE = 1  //!< TRUE
 } Boolean;
+
+void UTILS_Hexdump(const uint8_t const *dataBuffer, int length);
+void UTILS_HexdumpWithCharacters(const uint8_t const *dataBuffer, int length);
+void UTILS_Hexdump16(const uint16_t const *dataBuffer, int length);
+unsigned int UTILS_ConvertUnsignedIntToHostEndianness(unsigned int value);
+Boolean   UTILS_IsArchitectureBigEndian (void);
 
 /**
  * @}

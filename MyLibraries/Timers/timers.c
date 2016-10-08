@@ -1,15 +1,14 @@
 /**
- * @file    timers.c
+ * @file    timers.h
  * @brief   Timing control functions.
- * @date    9 kwi 2014
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  * 
- *
  * Control of the SysTick and software timers
  * incremented based on SysTick interrupts.
  *
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -19,17 +18,17 @@
  * @endverbatim
  */
 
-#include <timers.h>
+#include "timers.h"
+#include "systick.h"
 #include <stdio.h>
-#include <systick.h>
 
 #ifndef DEBUG_TIMERS
   #define DEBUG_TIMERS
 #endif
 
 #ifdef DEBUG_TIMERS
-  #define print(str, args...) printf("LED--> "str"%s",##args,"\r")
-  #define println(str, args...) printf("LED--> "str"%s",##args,"\r\n")
+  #define print(str, args...) printf("TIMER--> "str"%s",##args,"\r")
+  #define println(str, args...) printf("TIMER--> "str"%s",##args,"\r\n")
 #else
   #define print(str, args...) (void)0
   #define println(str, args...) (void)0
@@ -40,160 +39,153 @@
  * @{
  */
 
-#define MAX_SOFT_TIMERS 10 ///< Maximum number of soft timers.
-
-static uint8_t softTimerCount; ///< Count number of soft timers
+#define MAX_SOFT_TIMERS       10    ///< Maximum number of soft timers.
+#define ID_TO_ARRAY_INDEX(x)  (x-1) ///< Converts timer ID to array index
 
 /**
  * @brief Soft timer structure.
  */
 typedef struct {
-  uint8_t id;                     ///< Timer ID
-  uint32_t value;                 ///< Current count value
-  uint32_t max;                   ///< Overflow value
-  uint8_t active;                 ///< Is timer active?
-  void (*overflowCallback)(void); ///< Function called on overflow event
-} TIMER_Soft_TypeDef;
+  int id;                     ///< Timer ID
+  unsigned int currentCount;  ///< Current count value
+  unsigned int overflowValue; ///< Overflow value
+  Boolean isActive;           ///< Is timer active?
+  void (*overflowCb)(void);   ///< Function called on overflow event
+} TIMER_SoftTimerTypedef;
 
-static TIMER_Soft_TypeDef softTimers[MAX_SOFT_TIMERS]; ///< Array of soft timers
-
+static TIMER_SoftTimerTypedef softTimers[MAX_SOFT_TIMERS]; ///< Array of soft timers
+static int softTimerCount; ///< Count number of soft timers
 /**
  * @brief Returns the system time.
  * @return System time
  */
-uint32_t TIMER_GetTime(void) {
-  return SYSTICK_GetTime();
+unsigned int TIMER_GetTimeMillis(void) {
+  return SYSTICK_GetTimeMillis();
 }
 /**
- * @brief Delay function.
- * @param ms Milliseconds to delay.
+ * @brief Blocking delay function.
+ * @param millis Milliseconds to delay.
  * @warning This is a blocking function. Use with care!
  */
-void TIMER_Delay(uint32_t ms) {
+void TIMER_DelayMillis(unsigned int millis) {
 
-  uint32_t startTime = TIMER_GetTime();
-  uint32_t currentTime;
+  unsigned int startTimeMillis = TIMER_GetTimeMillis();
+  unsigned int currentTimeMillis;
 
-  while (1) { // Delay
-    currentTime = TIMER_GetTime();
-    if ((currentTime >= startTime) && (currentTime-startTime > ms)) {
+  while (TRUE) {
+    currentTimeMillis = TIMER_GetTimeMillis();
+    if ((currentTimeMillis >= startTimeMillis) &&
+        (currentTimeMillis-startTimeMillis > millis)) {
       break;
     }
     // account for system timer overflow
-    if ((currentTime < startTime) && (UINT32_MAX-startTime + currentTime > ms)) {
+    if ((currentTimeMillis < startTimeMillis) &&
+        (UINT32_MAX-startTimeMillis + currentTimeMillis > millis)) {
       break;
     }
   }
 }
 /**
- * @brief Nonblocking delay function using
- * @param ms Delay time
- * @param startTime System time at start of delay (this has to be written before delay using TIMER_GetTime())
- * @retval 0 Delay value has not been reached (wait longer)
- * @retval 1 Delay value has been reached
+ * @brief Nonblocking delay function
+ * @param millis Delay time
+ * @param startTimeMillis System time at start of delay (this has to be written before delay using TIMER_GetTime())
+ * @retval FALSE Delay value has not been reached (wait longer)
+ * @retval TRUE Delay value has been reached
  */
-uint8_t TIMER_DelayTimer(uint32_t ms, uint32_t startTime) {
+Boolean TIMER_DelayTimer(unsigned int millis, unsigned int startTimeMillis) {
 
-  uint32_t currentTime = TIMER_GetTime();
+  unsigned int currentTimeMillis = TIMER_GetTimeMillis();
 
-  if ((currentTime >= startTime) && (currentTime-startTime > ms)) {
-
-    return 1;
+  if ((currentTimeMillis >= startTimeMillis) && (currentTimeMillis-startTimeMillis > millis)) {
+    return TRUE;
 
   // account for system timer overflow
-  } else if ((currentTime < startTime) && (UINT32_MAX-startTime + currentTime > ms)) {
-    return 1;
+  } else if ((currentTimeMillis < startTimeMillis) &&
+      (UINT32_MAX-startTimeMillis + currentTimeMillis > millis)) {
+    return TRUE;
   } else {
-    return 0;
+    return FALSE;
   }
 }
 /**
  * @brief Adds a soft timer
- * @param maxVal Overflow value of timer
- * @param fun Function called on overflow (should return void and accept no parameters)
- * @return Returns the ID of the new counter or error code (-1)
- * @retval -1 Error: too many timers
+ * @param overflowValue Overflow value of timer
+ * @param overflowCb Function called on overflow (should return void and accept no parameters)
+ * @return Returns the ID of the new counter or error code
+ * @retval TIMER_TOO_MANY_TIMERS Too many timers
  */
-int8_t TIMER_AddSoftTimer(uint32_t maxVal, void (*fun)(void)) {
+int TIMER_AddSoftTimer(unsigned int overflowValue,
+    void (*overflowCb)(void)) {
 
   if (softTimerCount > MAX_SOFT_TIMERS) {
-    println("TIMERS: Reached maximum number of timers!");
-    return -1;
+    println("Reached maximum number of timers!");
+    return TIMER_TOO_MANY_TIMERS;
   }
-
-  softTimers[softTimerCount].id = softTimerCount;
-  softTimers[softTimerCount].overflowCallback = fun;
-  softTimers[softTimerCount].max = maxVal;
-  softTimers[softTimerCount].value = 0;
-  softTimers[softTimerCount].active = 0; // inactive on startup
-
   softTimerCount++;
 
-  return (softTimerCount - 1);
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].id             = softTimerCount;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].overflowCb     = overflowCb;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].overflowValue  = overflowValue;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].currentCount   = 0;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].isActive       = FALSE; // inactive on startup
+
+  return softTimerCount;
 }
 /**
  * @brief Starts the timer (zeroes out current count value).
  * @param id Timer ID
  */
-void TIMER_StartSoftTimer(uint8_t id) {
-
-  softTimers[id].value = 0;
-  softTimers[id].active = 1; // start timer
+void TIMER_StartSoftTimer(int id) {
+  softTimers[ID_TO_ARRAY_INDEX(id)].currentCount = 0;
+  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = TRUE; // start timer
 }
 /**
  * @brief Pauses given timer (current count value unchanged)
  * @param id Timer ID
  */
-void TIMER_PauseSoftTimer(uint8_t id) {
-
-  softTimers[id].active = 0; // pause timer
+void TIMER_PauseSoftTimer(int id) {
+  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = FALSE; // pause timer
 }
 /**
  * @brief Resumes a timer (starts counting from last value).
  * @param id Timer ID
  */
-void TIMER_ResumeSoftTimer(uint8_t id) {
-
-  softTimers[id].active = 1; // start timer
+void TIMER_ResumeSoftTimer(int id) {
+  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = TRUE; // start timer
 }
 /**
  * @brief Updates all the timers and calls the overflow functions as
  * necessary
- *
- * @details This function should be called periodically in the main
- * loop of the program.
+ * @details This function can be called periodically in the main
+ * loop of the program
  */
 void TIMER_SoftTimersUpdate(void) {
 
-  static uint32_t prevVal;
-  uint32_t delta;
-  uint32_t sysTicks = SYSTICK_GetTime();
+  static unsigned int previousTimeMillis;
+  unsigned int deltaMillis;
+  unsigned int currentTimeMillis = SYSTICK_GetTimeMillis();
 
-  if (sysTicks >= prevVal) {
-
-    delta = sysTicks - prevVal; // How much time passed from previous run
-
+  if (currentTimeMillis >= previousTimeMillis) {
+    // How much time passed from previous run
+    deltaMillis = currentTimeMillis - previousTimeMillis;
   } else { // if overflow occurs
-
-    // the difference is the value that prevVal
-    // has to UINT32_MAX + the new number of sysTicks
-    delta = UINT32_MAX - prevVal + sysTicks;
-
+    // the difference is the value that previousTimeMillis
+    // has to UINT32_MAX + the new number of currentTimeMillis
+    deltaMillis = UINT32_MAX - previousTimeMillis + currentTimeMillis;
   }
 
-  prevVal += delta; // update time for the function
+  previousTimeMillis += deltaMillis; // update time for the function
 
-  uint8_t i;
-  for (i = 0; i < softTimerCount; i++) {
+  for (int i = 0; i < softTimerCount; i++) {
 
-    if (softTimers[i].active == 1) {
+    if (softTimers[i].isActive == TRUE) {
 
-      softTimers[i].value += delta; // update active timer values
+      softTimers[i].currentCount += deltaMillis; // update active timer values
 
-      if (softTimers[i].value >= softTimers[i].max) { // if overflow
-        softTimers[i].value = 0; // zero out timer
-        if (softTimers[i].overflowCallback != NULL) {
-          softTimers[i].overflowCallback(); // call the overflow function
+      if (softTimers[i].currentCount >= softTimers[i].overflowValue) { // if overflow
+        softTimers[i].currentCount = 0; // zero out timer
+        if (softTimers[i].overflowCb != NULL) {
+          softTimers[i].overflowCb(); // call the overflow function
         }
       }
     }

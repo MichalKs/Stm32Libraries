@@ -18,9 +18,6 @@
 #ifndef SYSTICK_H_
 #define SYSTICK_H_
 
-#include <inttypes.h>
-
-
 /**
  * @defgroup  SYSTICK SYSTICK
  * @brief     SYSTICK control functions.
@@ -30,7 +27,7 @@
  * @addtogroup SYSTICK
  * @{
  */
-uint32_t  SYSTICK_GetTime (void);
+unsigned int  SYSTICK_GetTimeMillis (void);
 
 /**
  * @}

@@ -80,7 +80,7 @@ void LED_HAL_Init(int led) {
  * @brief Toggle an LED.
  * @param led LED number.
  */
-void LED_HAL_Toggle(uint8_t led) {
+void LED_HAL_Toggle(int led) {
 
   ledPort[led]->ODR ^= ledPin[led];
 }
@@ -89,7 +89,7 @@ void LED_HAL_Toggle(uint8_t led) {
  * @param led LED number.
  * @param state New state.
  */
-void LED_HAL_ChangeState(uint8_t led, Boolean state) {
+void LED_HAL_ChangeState(int led, Boolean state) {
   if (state == TRUE) {
     ledPort[led]->BSRR = ledPin[led]; // set bit
   } else {

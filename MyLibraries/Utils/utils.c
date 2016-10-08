@@ -1,11 +1,11 @@
 /**
  * @file    utils.c
  * @brief   Utility and help functions.
- * @date    20 lip 2014
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  * 
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -15,9 +15,9 @@
  * @endverbatim
  */
 
-#include <utils.h>
+#include "utils.h"
+#include "timers.h"
 #include <stdio.h>
-#include <timers.h>
 
 /**
  * @addtogroup UTILS
@@ -26,125 +26,134 @@
 
 /**
  * @brief Function determines byte order of given architecture.
- * @retval 1 Architecture is big endian.
- * @retval 0 Architecture is little endian.
+ * @retval TRUE Architecture is big endian.
+ * @retval FALSE Architecture is little endian.
  */
-uint8_t UTILS_IsBigEndian(void) {
-  const int i = 1;
-  return (*(char*)&i) == 0;
+Boolean UTILS_IsArchitectureBigEndian(void) {
+  const int i = TRUE;
+  return (*(char*)&i) == FALSE;
 }
 /**
- * @brief Converts big endian long value to host endianness.
- * @param val Value to convert
+ * @brief Converts big endian value to host endianness.
+ * @param value Value to convert
  * @return Converted value
  */
-uint32_t UTILS_Ntohl(uint32_t val) {
+unsigned int UTILS_ConvertUnsignedIntToHostEndianness(unsigned int value) {
+
+  const int NUMBER_OF_BYTES_IN_INT = 4;
+  const int LAST_BYTE_IN_ARRAY = 3;
 
   // if we're on big endian arch
   // then do nothing
-  if (UTILS_IsBigEndian()) {
-    return val;
+  if (UTILS_IsArchitectureBigEndian()) {
+    return value;
   }
 
   // else convert to little endian
-  uint32_t tmp = 0;
-  uint8_t* tmpPtr = (uint8_t*)&tmp;
-  uint8_t* valPtr = (uint8_t*)&val;
+  unsigned int returnValue = 0;
+  uint8_t* destination = (uint8_t*)&returnValue;
+  uint8_t* source = (uint8_t*)&value;
 
-  for (int i = 0; i < 4; i++) {
-    tmpPtr[i] = valPtr[3-i];
+  for (int i = 0; i < NUMBER_OF_BYTES_IN_INT; i++) {
+    destination[i] = source[LAST_BYTE_IN_ARRAY-i];
   }
 
-  return tmp;
+  return returnValue;
 }
 /**
  * @brief Send data in hex format to terminal.
- * @param buf Data buffer.
+ * @param dataBuffer Data buffer.
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void UTILS_Hexdump(const uint8_t const *buf, uint32_t length) {
+void UTILS_Hexdump(const uint8_t const *dataBuffer, int length) {
 
-  uint32_t i = 0;
+  const int MAXIMUM_CHARACTERS_IN_LINE = 16;
+  const int DELAY_TIME_MILLIS = 50;
+  const int DELAY_TIME = 100;
+  int i = 0;
 
   while (length--) {
 
-    printf("%02x ", buf[i]);
-
+    printf("%02x ", dataBuffer[i]);
     i++;
-    // new line every 16 chars
-    if ((i % 16) == 0) {
-      printf("\r\n");
+
+    if ((i % MAXIMUM_CHARACTERS_IN_LINE) == 0) {
+      printf(NEWLINE_SEQUENCE);
     }
-    // delay every 50 chars
-    if ((i % 50) == 0) {
-//      TIMER_Delay(100); // Delay so as not to overflow buffer
+
+    if ((i % DELAY_TIME_MILLIS) == 0) {
+      TIMER_DelayMillis(DELAY_TIME); // Delay so as not to overflow buffer
     }
   }
-  printf("\r\n");
+  printf(NEWLINE_SEQUENCE);
 }
 /**
  * @brief Send data in hex and ASCII format to terminal.
- * @param buf Data buffer.
+ * @param dataBuffer Data buffer.
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void UTILS_HexdumpC(const uint8_t const *buf, uint32_t length) {
+void UTILS_HexdumpWithCharacters(const uint8_t const *dataBuffer, int length) {
 
-  uint32_t i = 0;
+  const int MAXIMUM_CHARACTERS_IN_LINE = 8;
+  const int DELAY_TIME_MILLIS = 50;
+  const int DELAY_TIME = 100;
+  const char LOWEST_CHARACTER_TO_DISPLAY = ' ';
+  const char HIGHEST_CHARACTER_TO_DISPLAY = '~';
+  const char PLACEHOLDER_FOR_NONDISPLAYED_VALUES = '.';
+  int i = 0;
 
   while (length--) {
 
-    if (buf[i]>=' ' && buf[i] <= '~') {
-      printf("%02x %c ", buf[i], buf[i]);
+    if ((dataBuffer[i] >= LOWEST_CHARACTER_TO_DISPLAY) &&
+        (dataBuffer[i] <= HIGHEST_CHARACTER_TO_DISPLAY)) {
+      printf("%02x %c ", dataBuffer[i], dataBuffer[i]);
     } else { // nonalphanumeric as dot
-      printf("%02x %c ", buf[i], '.');
+      printf("%02x %c ", dataBuffer[i], PLACEHOLDER_FOR_NONDISPLAYED_VALUES);
     }
 
     i++;
-    // new line every 8 chars
-    if ((i % 8) == 0) {
-      printf("\r\n");
+
+    if ((i % MAXIMUM_CHARACTERS_IN_LINE) == 0) {
+      printf(NEWLINE_SEQUENCE);
     }
-    // delay every 50 chars
-    if ((i % 50) == 0) {
-//      TIMER_Delay(100); // Delay so as not to overflow buffer
+
+    if ((i % DELAY_TIME_MILLIS) == 0) {
+      TIMER_DelayMillis(DELAY_TIME); // Delay so as not to overflow buffer
     }
   }
-  printf("\r\n");
+  printf(NEWLINE_SEQUENCE);
 }
 /**
- * @brief Send data in hex and ASCII format to terminal.
- * @param buf Data buffer.
+ * @brief Send data in hex format to terminal.
+ * @param dataBuffer Data buffer.
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void UTILS_Hexdump16C(const uint16_t const *buf, uint32_t length) {
+void UTILS_Hexdump16(const uint16_t const *dataBuffer, int length) {
 
-  uint32_t i = 0;
+  const int MAXIMUM_CHARACTERS_IN_LINE = 8;
+  const int DELAY_TIME_MILLIS = 50;
+  const int DELAY_TIME = 100;
+  int i = 0;
 
   while (length--) {
 
-    if (buf[i]>=' ' && buf[i] <= '~') {
-      printf("%04x %c ", buf[i], buf[i]);
-    } else { // nonalphanumeric as dot
-      printf("%04x %c ", buf[i], '.');
+    printf("%04x", dataBuffer[i], dataBuffer[i]);
+    i++;
+
+    if ((i % MAXIMUM_CHARACTERS_IN_LINE) == 0) {
+      printf(NEWLINE_SEQUENCE);
     }
 
-    i++;
-    // new line every 16 chars
-    if ((i % 8) == 0) {
-      printf("\r\n");
-    }
-    // delay every 50 chars
-    if ((i % 50) == 0) {
-//      TIMER_Delay(100); // Delay so as not to overflow buffer
+    if ((i % DELAY_TIME_MILLIS) == 0) {
+      TIMER_DelayMillis(DELAY_TIME); // Delay so as not to overflow buffer
     }
   }
-  printf("\r\n");
+  printf(NEWLINE_SEQUENCE);
+  
 }
-
 /**
  * @}
  */
-

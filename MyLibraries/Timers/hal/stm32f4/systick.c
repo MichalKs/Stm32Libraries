@@ -28,23 +28,21 @@
  * @{
  */
 
-static volatile uint32_t sysTicks;  ///< Delay timer.
+static volatile unsigned int systemClockMillis;  ///< System clock timer.
 
 /**
  * @brief Get the system time
  * @return System time.
  */
-uint32_t SYSTICK_GetTime(void) {
-  return sysTicks;
+unsigned int SYSTICK_GetTimeMillis(void) {
+  return systemClockMillis;
 }
-
 /**
  * @brief Interrupt handler for SysTick.
  */
 void SysTick_Handler(void) {
   HAL_IncTick();
-  sysTicks++; // Update system time
-
+  systemClockMillis++; // Update system time
 }
 
 /**

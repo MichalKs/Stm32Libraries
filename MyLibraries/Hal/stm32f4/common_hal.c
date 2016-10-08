@@ -1,12 +1,12 @@
 /**
- * @file    common_hal.c
- * @brief
- * @date    25 cze 2016
+ * @file    common_hal.h
+ * @brief   Common HAL files for STM32
+ * @date    08.10.2016
  * @author  Michal Ksiezopolski
  *
  *
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the
  * accompanying materials are made available
  * under the terms of the GNU Public License
@@ -17,9 +17,9 @@
  */
 
 #include "common_hal.h"
-#include <stm32f4xx_hal.h>
-#include <led_hal.h>
+#include "led_hal.h"
 #include "utils.h"
+#include <stm32f4xx_hal.h>
 
 #define HAL_ERROR_LED_NUMBER 3 ///< Number of LED for HAL errors
 
@@ -89,8 +89,8 @@ static void systemClockConfig(void) {
  */
 void COMMON_HAL_Init(void) {
 
-  // initialize LED for signaling errors
-  LED_HAL_Init(HAL_ERROR_LED_NUMBER); // Add an LED
+  // Initialize LED for signaling errors
+  LED_HAL_Init(HAL_ERROR_LED_NUMBER);
   LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, FALSE);
 
   /* STM32F4xx HAL library initialization:
@@ -110,7 +110,7 @@ void COMMON_HAL_Init(void) {
  */
 void COMMON_HAL_ErrorHandler(void) {
   LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
-  while(1) {
+  while(TRUE) {
 
   }
 }
@@ -125,7 +125,7 @@ void NMI_Handler(void) {
   */
 void HardFault_Handler(void) {
   LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
-  while (1) {
+  while (TRUE) {
 
   }
 }
@@ -134,7 +134,7 @@ void HardFault_Handler(void) {
   */
 void MemManage_Handler(void) {
   LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
-  while (1) {
+  while (TRUE) {
 
   }
 }
@@ -143,7 +143,7 @@ void MemManage_Handler(void) {
   */
 void BusFault_Handler(void) {
   LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
-  while (1) {
+  while (TRUE) {
 
   }
 }
@@ -154,7 +154,7 @@ void BusFault_Handler(void) {
   */
 void UsageFault_Handler(void) {
   LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
-  while (1) {
+  while (TRUE) {
 
   }
 }

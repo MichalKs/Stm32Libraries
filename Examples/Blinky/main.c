@@ -4,7 +4,6 @@
  * @date    07.10.2016
  * @author  Michal Ksiezopolski
  *
- *
  * @verbatim
  * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the
@@ -38,11 +37,14 @@
  * @brief Callback for performing periodic tasks
  */
 void softTimerCallback(void) {
+
   LED_Toggle(_LED2);
   println("Hello world");
+
   const int FRAME_MAX_SIZE = 10;
-  uint8_t frameBuffer[FRAME_MAX_SIZE];  // buffer for receiving commands from PC
-  int length;           // length of command
+  char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
+  int length;                         // length of command
+
   // check for new frames from PC
   if (COMM_GetFrame(frameBuffer, &length, FRAME_MAX_SIZE) == COMM_GOT_FRAME) {
     println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
@@ -79,11 +81,10 @@ int main(void) {
 
   // Add a soft timer with callback
   const int SOFT_TIMER_PERIOD_MILLIS = 1000;
-  int8_t timerID = TIMER_AddSoftTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
-  TIMER_StartSoftTimer(timerID);
+  int timerId = TIMER_AddSoftTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
+  TIMER_StartSoftTimer(timerId);
 
   while (TRUE) {
-
     TIMER_SoftTimersUpdate();
   }
 
