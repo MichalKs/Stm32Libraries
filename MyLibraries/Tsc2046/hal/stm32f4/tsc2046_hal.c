@@ -16,7 +16,7 @@
  * @endverbatim
  */
 
-#include <tsc2046_hal.h>
+#include "tsc2046_hal.h"
 #include <stm32f4xx.h>
 
 static void (*penirqCallback)(void); ///< PENIRQ interrupt callback function
@@ -27,69 +27,57 @@ static void (*penirqCallback)(void); ///< PENIRQ interrupt callback function
  */
 void TSC2046_HAL_PenirqInit(void (*penirqCb)(void)) {
 
-//  penirqCallback = penirqCb;
-//
-//  GPIO_InitTypeDef GPIO_InitStructure;
-//  EXTI_InitTypeDef EXTI_InitStructure;
-//  NVIC_InitTypeDef NVIC_InitStructure;
-//
-//  /* Enable the PENIRQ Clock */
-//  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-//  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-//
-//  /* Configure PENIRQ pin as input */
-//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-//  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-//  GPIO_Init(GPIOD, &GPIO_InitStructure);
-//
-//
-//  /* Connect Button EXTI Line to PENIRQ GPIO Pin */
-//  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource2);
-//
-//  /* Configure PENIRQ EXTI line */
-//  EXTI_InitStructure.EXTI_Line = EXTI_Line2;
-//  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-//  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-//  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-//  EXTI_Init(&EXTI_InitStructure);
-//
-//  /* Enable and set PENIRQ EXTI Interrupt to the lowest priority */
-//  NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn ;
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//
-//  NVIC_Init(&NVIC_InitStructure);
-}
+  penirqCallback = penirqCb;
 
+  GPIO_InitTypeDef   GPIO_InitStructure;
+
+  /* Enable GPIOC clock */
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /* Configure PC.13 pin as input floating */
+  GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStructure.Pull = GPIO_PULLUP;
+  GPIO_InitStructure.Pin = GPIO_PIN_2;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+  /* Enable and set EXTI lines 15 to 10 Interrupt to the lowest priority */
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+}
+/**
+ * @brief
+ * @return
+ */
 uint8_t TSC2046_HAL_ReadPenirq(void) {
-//  return GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_2);
+  return HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_2);
 }
-
 /**
  * @brief Clear PENIRQ flag and enable PENIRQ interrupt.
  */
 void TSC2046_HAL_EnablePenirq(void) {
-//  EXTI_ClearITPendingBit(EXTI_Line2);
-//  NVIC_EnableIRQ(EXTI2_IRQn);
+  NVIC_ClearPendingIRQ(EXTI2_IRQn);
+  NVIC_EnableIRQ(EXTI2_IRQn);
 }
 /**
  * @brief Disable PENIRQ interrupt.
  */
 void TSC2046_HAL_DisablePenirq(void) {
-//  NVIC_DisableIRQ(EXTI2_IRQn);
+  NVIC_DisableIRQ(EXTI2_IRQn);
 }
 /**
  * @brief Handler for PENIRQ interrupt.
  */
 void EXTI2_IRQHandler(void) {
-
-//  if (EXTI_GetITStatus(EXTI_Line2) != RESET) {
-//
-//    penirqCallback();
-//    EXTI_ClearITPendingBit(EXTI_Line2);
-//
-//  }
-
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+}
+/**
+  * @brief EXTI line detection callbacks
+  * @param GPIO_Pin: Specifies the pins connected EXTI line
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == GPIO_PIN_2) {
+    penirqCallback();
+  }
 }

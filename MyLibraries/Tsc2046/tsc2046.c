@@ -135,10 +135,11 @@ void TSC2046_Init(void) {
   ctrl.bits.powerDown = PD_POWER_DOWN;
   ctrl.bits.channelSelect = MEASURE_X;
 
+  uint8_t buf[3] = {0};
+  buf[0] = ctrl.byte;
+
   SPI3_Select();
-  SPI3_Transmit(ctrl.byte);
-  SPI3_Transmit(0);
-  SPI3_Transmit(0);
+  SPI3_SendBuffer(buf,3);
   SPI3_Deselect();
 }
 /**
@@ -185,12 +186,12 @@ void TSC2046_Update(void) {
   uint16_t x, y;
 
   if (irqReceived == 1) { // init counter
-    debounce = TIMER_GetTime();
+    debounce = TIMER_GetTimeMillis();
     irqReceived = 2;
   } else if (irqReceived == 2) { // debounce delay
     if (TIMER_DelayTimer(DEBOUNCE_TIME, debounce)) {
       irqReceived = 3;
-      debounce = TIMER_GetTime();
+      debounce = TIMER_GetTimeMillis();
       // still down?
       if (!TSC2046_HAL_ReadPenirq()) {
 
@@ -236,16 +237,22 @@ void TSC2046_ReadPos(uint16_t *x, uint16_t *y) {
   uint16_t tmpX, tmpY;
 
   // read Y
-  SPI3_Transmit(ctrl.byte);
-  tmpY = ((uint16_t)SPI3_Transmit(0))<<8;
-  tmpY |= SPI3_Transmit(0);
+  uint8_t rxBuffer[3] = {0};
+  uint8_t txBuffer[3] = {0};
+  txBuffer[0] = ctrl.byte;
+  SPI3_TransmitBuffer(rxBuffer, txBuffer, 3);
+
+  tmpY = ((uint16_t)rxBuffer[1])<<8;
+  tmpY |= rxBuffer[2];
 
   ctrl.bits.channelSelect = MEASURE_X;
 
   // read X
-  SPI3_Transmit(ctrl.byte);
-  tmpX = ((uint16_t)SPI3_Transmit(0))<<8;
-  tmpX |= SPI3_Transmit(0);
+  txBuffer[0] = ctrl.byte;
+  SPI3_TransmitBuffer(rxBuffer, txBuffer, 3);
+
+  tmpX = ((uint16_t)rxBuffer[1])<<8;
+  tmpX |= rxBuffer[2];
 
   *y = tmpY >> 3;
   *x = tmpX >> 3;

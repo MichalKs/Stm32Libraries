@@ -30,7 +30,6 @@
  * @{
  */
 
-uint8_t SPI3_Transmit       (uint8_t data);
 void    SPI3_Init           (void);
 void    SPI3_Select         (void);
 void    SPI3_Deselect       (void);

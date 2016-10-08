@@ -56,7 +56,7 @@ void tscEvent2(uint16_t x, uint16_t y);
  */
 void softTimerCallback(void) {
 
-  println("Hello world");
+//  println("Hello world");
 
   const int FRAME_MAX_SIZE = 10;
   char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
@@ -107,11 +107,11 @@ int main(void) {
 
   GRAPH_Init();
 
-  GRAPH_SetColor(0x0000ff);
-  GRAPH_SetBgColor(0xff0000);
+  GRAPH_SetColor(GRAPH_BLUE);
+  GRAPH_SetBgColor(GRAPH_RED);
   GRAPH_DrawBox(100, 100, 100, 100, 5);
   GRAPH_DrawFilledCircle(50, 50, 50);
-  GRAPH_SetColor(0xffffff);
+  GRAPH_SetColor(GRAPH_WHITE);
   GRAPH_SetFont(font21x39Info);
   GRAPH_DrawChar('A', 120, 50);
   GRAPH_DrawString("Hello World", 200, 0);
@@ -123,32 +123,31 @@ int main(void) {
   GRAPH_DrawString("To be or not to be", 170, 0);
 
   // draw image test
-  TIMER_DelayMillis(3000);
-  GRAPH_ClearScreen(0);
-  GRAPH_DrawImage(30, 30);
+//  TIMER_DelayMillis(3000);
+//  GRAPH_ClearScreen(0);
+//  GRAPH_DrawImage(30, 30);
 
   // data for example graph - sinusoidal signal
-  uint8_t graphData[320];
-  double x = 0.0;
-
-  for (int i = 0; i < 320; i++, x+=0.01*M_PI) {
-    graphData[i] = (uint8_t)(sin(x)*100 + 100);
-  }
-
-  TIMER_DelayMillis(3000);
-  GRAPH_ClearScreen(0);
-  GRAPH_DrawGraph(graphData, 290, 0, 0);
+//  uint8_t graphData[320];
+//  double x = 0.0;
+//
+//  for (int i = 0; i < 320; i++, x+=0.01*M_PI) {
+//    graphData[i] = (uint8_t)(sin(x)*100 + 100);
+//  }
+//
+//  TIMER_DelayMillis(3000);
+//  GRAPH_ClearScreen(0);
+//  GRAPH_DrawGraph(graphData, 290, 0, 0);
 
 //   draw example bar chart
-  TIMER_DelayMillis(3000);
-  GRAPH_ClearScreen(0);
-  GRAPH_DrawBarChart(graphData+30, 32, 0, 0, 5);
-//
-//
-//  TSC2046_Init();
-//  // register an event for a given region
-//  TSC2046_RegisterEvent(0, 0, 1500, 4000, tscEvent1);
-//  TSC2046_RegisterEvent(0, 0, 4000, 1500, tscEvent2);
+//  TIMER_DelayMillis(3000);
+//  GRAPH_ClearScreen(0);
+//  GRAPH_DrawBarChart(graphData+30, 32, 0, 0, 5);
+
+  TSC2046_Init();
+  // register an event for a given region
+  TSC2046_RegisterEvent(0, 0, 1500, 4000, tscEvent1);
+  TSC2046_RegisterEvent(0, 0, 4000, 1500, tscEvent2);
 
 #endif
 
@@ -193,7 +192,7 @@ int main(void) {
 #endif
 
   while (TRUE) {
-//    TSC2046_Update(); // run touchscreen functions
+    TSC2046_Update(); // run touchscreen functions
     TIMER_SoftTimersUpdate(); // run timers
   }
 }
@@ -203,7 +202,8 @@ int main(void) {
  * @param y Y coordinate of touch.
  */
 void tscEvent1(uint16_t x, uint16_t y) {
-//  LED_Toggle(LED0);
+  println("event 1");
+  LED_Toggle(_LED0);
 }
 /**
  * @brief Example touchscreen event handler.
@@ -211,5 +211,6 @@ void tscEvent1(uint16_t x, uint16_t y) {
  * @param y Y coordinate of touch.
  */
 void tscEvent2(uint16_t x, uint16_t y) {
-//  LED_Toggle(LED1);
+  println("event 2");
+  LED_Toggle(_LED1);
 }

@@ -36,7 +36,7 @@ void GUI_Init(void) {
   TSC2046_Init(); // initialize touchscreen
   GRAPH_Init();
   GRAPH_SetColor(0xffff00);
-  GRAPH_SetBgColor(0xff0000);
+  GRAPH_SetBgColor(GRAPH_RED);
   GRAPH_SetFont(font8x16Info);
 }
 
