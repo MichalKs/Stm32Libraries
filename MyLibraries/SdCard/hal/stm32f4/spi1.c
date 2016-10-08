@@ -125,9 +125,9 @@ uint8_t SPI1_Transmit(uint8_t data) {
  */
 void SPI1_SendBuffer(uint8_t* buf, uint32_t len) {
 
-  while (len--) {
-    SPI1_Transmit(*buf++);
-  }
+//  while (len--) {
+//    SPI1_Transmit(*buf++);
+//  }
 }
 /**
  * @brief Read multiple data on SPI1.

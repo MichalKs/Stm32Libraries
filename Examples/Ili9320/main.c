@@ -23,16 +23,16 @@
 #include <led.h>
 #include <comm.h>
 #include "common_hal.h"
-//#include <keys.h>
-//#include <graphics.h>
-//#include <font_14x27.h>
-//#include <font_21x39.h>
-//#include <font_10x20.h>
-//#include <font_8x16.h>
-//#include <tsc2046.h>
-//#include <gui.h>
-//#include <fat.h>
-//#include <sdcard.h>
+#include <keys.h>
+#include <graphics.h>
+#include <font_14x27.h>
+#include <font_21x39.h>
+#include <font_10x20.h>
+#include <font_8x16.h>
+#include <tsc2046.h>
+#include <gui.h>
+#include <fat.h>
+#include <sdcard.h>
 #include <utils.h>
 
 #define SYSTICK_FREQ 1000 ///< Frequency of the SysTick set at 1kHz.
@@ -85,44 +85,44 @@ int main(void) {
 
 #ifndef USE_GUI
 
-//  GRAPH_Init();
-//
-//  GRAPH_SetColor(0x00, 0x00, 0xff);
-//  GRAPH_SetBgColor(0xff, 0x00, 0x00);
-//  GRAPH_DrawBox(100, 100, 100, 100, 5);
-//  GRAPH_DrawFilledCircle(50, 50, 50);
-//  GRAPH_SetColor(0xff, 0xff, 0xff);
-//  GRAPH_SetFont(font21x39Info);
-//  GRAPH_DrawChar('A', 120, 50);
-//  GRAPH_DrawString("Hello World", 200, 0);
-//  GRAPH_SetFont(font14x27Info);
-//  GRAPH_DrawString("A mouse is", 240, 0);
-//  GRAPH_SetFont(font10x20Info);
-//  GRAPH_DrawString("not a lion.", 280, 0);
-//  GRAPH_SetFont(font8x16Info);
-//  GRAPH_DrawString("To be or not to be", 170, 0);
-//
-//  // draw image test
-//  TIMER_Delay(3000);
-//  GRAPH_ClrScreen(0, 0, 0);
-//  GRAPH_DrawImage(30, 30);
-//
-//  // data for example graph - sinusoidal signal
-//  uint8_t graphData[320];
-//  double x = 0.0;
-//
-//  for (int i = 0; i < 320; i++, x+=0.01*M_PI) {
-//    graphData[i] = (uint8_t)(sin(x)*100 + 100);
-//  }
-//
-//  TIMER_Delay(3000);
-//  GRAPH_ClrScreen(0, 0, 0);
-//  GRAPH_DrawGraph(graphData, 290, 0, 0);
-//
-////   draw example bar chart
-//  TIMER_Delay(3000);
-//  GRAPH_ClrScreen(0, 0, 0);
-//  GRAPH_DrawBarChart(graphData+30, 32, 0, 0, 5);
+  GRAPH_Init();
+
+  GRAPH_SetColor(0x00, 0x00, 0xff);
+  GRAPH_SetBgColor(0xff, 0x00, 0x00);
+  GRAPH_DrawBox(100, 100, 100, 100, 5);
+  GRAPH_DrawFilledCircle(50, 50, 50);
+  GRAPH_SetColor(0xff, 0xff, 0xff);
+  GRAPH_SetFont(font21x39Info);
+  GRAPH_DrawChar('A', 120, 50);
+  GRAPH_DrawString("Hello World", 200, 0);
+  GRAPH_SetFont(font14x27Info);
+  GRAPH_DrawString("A mouse is", 240, 0);
+  GRAPH_SetFont(font10x20Info);
+  GRAPH_DrawString("not a lion.", 280, 0);
+  GRAPH_SetFont(font8x16Info);
+  GRAPH_DrawString("To be or not to be", 170, 0);
+
+  // draw image test
+  TIMER_DelayMillis(3000);
+  GRAPH_ClrScreen(0, 0, 0);
+  GRAPH_DrawImage(30, 30);
+
+  // data for example graph - sinusoidal signal
+  uint8_t graphData[320];
+  double x = 0.0;
+
+  for (int i = 0; i < 320; i++, x+=0.01*M_PI) {
+    graphData[i] = (uint8_t)(sin(x)*100 + 100);
+  }
+
+  TIMER_DelayMillis(3000);
+  GRAPH_ClrScreen(0, 0, 0);
+  GRAPH_DrawGraph(graphData, 290, 0, 0);
+
+//   draw example bar chart
+  TIMER_DelayMillis(3000);
+  GRAPH_ClrScreen(0, 0, 0);
+  GRAPH_DrawBarChart(graphData+30, 32, 0, 0, 5);
 //
 //
 //  TSC2046_Init();
@@ -200,7 +200,7 @@ int main(void) {
  * @brief Callback function called on every soft timer overflow
  */
 void softTimerCallback(void) {
-  println("ILI hello");
+  println("ILI123 hello");
   LED_Toggle(_LED0); // Toggle LED
 }
 /**

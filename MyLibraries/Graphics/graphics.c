@@ -101,7 +101,7 @@ void GRAPH_Init(void) {
   ILI9320_Initializtion();
   // window occupies whole LCD screen
   ILI9320_SetWindow(0, 0, 320, 240);
-  GRAPH_ClrScreen(0, 0, 0); // black screen on startup
+  GRAPH_ClrScreen(200, 200, 200); // black screen on startup
 }
 /**
  * @brief Clears the screen with given color.

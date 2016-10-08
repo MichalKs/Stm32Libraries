@@ -95,14 +95,14 @@ void ILI9320_Initializtion(void) {
 
   // Reset the LCD
   ILI9320_HAL_ResetOff();
-  TIMER_Delay(50);
+  TIMER_DelayMillis(50);
   ILI9320_HAL_ResetOn();
-  TIMER_Delay(50);
+  TIMER_DelayMillis(50);
   ILI9320_HAL_ResetOff();
-  TIMER_Delay(50);
+  TIMER_DelayMillis(50);
 
   ILI9320_HAL_WriteReg(ILI9320_START_OSCILLATION, 0x0001);
-  TIMER_Delay(20);
+  TIMER_DelayMillis(20);
 
   // Read LCD ID
   unsigned int id;
@@ -157,7 +157,7 @@ void ILI9320_Initializtion(void) {
 
   }
 
-  TIMER_Delay(100);
+  TIMER_DelayMillis(100);
 }
 /**
  * @brief Convert RGB value to ILI9320 format.

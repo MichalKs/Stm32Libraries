@@ -28,7 +28,7 @@
  * @brief Initialize SPI3 and SS pin.
  */
 void SPI3_Init(void) {
-
+//
 //  // Enable GPIO clock for SPI pins
 //  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 //
