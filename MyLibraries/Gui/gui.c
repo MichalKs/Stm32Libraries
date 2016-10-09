@@ -20,27 +20,29 @@
 #include <graphics.h>
 #include <tsc2046.h>
 #include <font_8x16.h>
+#include "ili9320.h"
 
 /**
  * @addtogroup GUI
  * @{
  */
 
-static void GUI_ConvertLCD2TSC(int *x, int *y, int *width, int *height);
+static void convertLCD2TSC(int *x, int *y, int *width, int *height);
 
 /**
  * @brief Initialize GUI.
  */
 void GUI_Init(void) {
-
   TSC2046_Initialize();
-  GRAPH_Init();
-  GRAPH_SetColor(0x605454);
-  GRAPH_SetBgColor(GRAPH_RED);
+  GRAPH_LcdDriverTypedef lcdDriver;
+  lcdDriver.initialize = ILI9320_Initializtion;
+  lcdDriver.setWindow = ILI9320_SetWindow;
+  lcdDriver.drawPixel = ILI9320_DrawPixel;
+  lcdDriver.width = 320;
+  lcdDriver.height = 240;
+  GRAPH_Initialize(&lcdDriver);
   GRAPH_SetFont(font8x16Info);
 }
-
-
 /**
  * @brief Adds a button to the GUI.
  *
@@ -54,14 +56,15 @@ void GUI_Init(void) {
  * @param text Description of button (shown on screen).
  */
 void GUI_AddButton(int x, int y, int width, int height,
-    void (*eventCb)(int x, int y), const char* buttonText) {
+    void (*eventCb)(int x, int y), const char* buttonText, unsigned int buttonColor,
+    unsigned int textColor) {
 
-  GRAPH_DrawRectangle(x,y,width,height);
+  GRAPH_DrawRectangle(x,y,width,height, buttonColor);
 
   // TODO Derive position of button text from string and font size
-  GRAPH_DrawString(buttonText, x+width/4, y+height/4);
+  GRAPH_DrawString(buttonText, x+width/4, y+height/4, textColor, buttonColor);
 
-  GUI_ConvertLCD2TSC(&x, &y, &width, &height);
+  convertLCD2TSC(&x, &y, &width, &height);
 
   TSC2046_RegisterEvent(x, y, width, height, eventCb);
 
@@ -91,7 +94,7 @@ void GUI_AddLabel(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
  * @param w Width
  * @param h height
  */
-static void GUI_ConvertLCD2TSC(int *x, int *y, int *width, int *height) {
+static void convertLCD2TSC(int *x, int *y, int *width, int *height) {
 
   uint16_t tmpX, tmpY, tmpW, tmpH;
   uint16_t startX, startY;

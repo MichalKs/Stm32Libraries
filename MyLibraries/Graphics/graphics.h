@@ -69,6 +69,14 @@ typedef struct {
   int bytesPerPixel;  ///< Number of bytes per pixel
 } GRAPH_ImageTypedef;
 
+typedef struct {
+  int width;
+  int height;
+  void (*initialize)(void);
+  void (*drawPixel)(int x, int y, unsigned int rgbColor);
+  void (*setWindow)(int x, int y, int width, int height);
+} GRAPH_LcdDriverTypedef;
+
 typedef enum {
   GRAPH_BLACK = 0x000000,
   GRAPH_RED   = 0xff0000,
@@ -77,22 +85,25 @@ typedef enum {
   GRAPH_WHITE = 0xffffff,
 } GRAPH_ColorTypedef;
 
-void GRAPH_DrawRectangle(int x, int y, int w, int h);
-void GRAPH_DrawLine(int x1, int y1, int x2, int y2);
-void GRAPH_Init(void);
-void GRAPH_SetColor(unsigned int rgbColor);
-void GRAPH_DrawBox(int x, int y, int width, int height, int lineWidth);
-void GRAPH_DrawCircle(int x, int y, int radius);
-void GRAPH_DrawFilledCircle(int x, int y, int radius);
-void GRAPH_DrawString(const char* s, int x, int y);
-void GRAPH_DrawChar(char character, int x, int y);
-void GRAPH_SetBgColor(unsigned int rgbColor);
-void GRAPH_DrawImage(int x, int y);
-void GRAPH_DrawGraph(const uint8_t* data, int len, int x, int y);
-void GRAPH_DrawBarChart(const uint8_t* data, int lengthOfData,
-    int x, int y, int widthOfSingleBar);
-void GRAPH_SetFont(GRAPH_FontTypedef font);
+void GRAPH_Initialize(GRAPH_LcdDriverTypedef * driver);
 void GRAPH_ClearScreen(unsigned int rgbColor);
+void GRAPH_SetFont(GRAPH_FontTypedef font);
+void GRAPH_DrawChar(char character, int x, int y, unsigned int foregroundColor,
+    unsigned int backgroundColor);
+void GRAPH_DrawString(const char* s, int x, int y, unsigned int foregroundColor,
+    unsigned int backgroundColor);
+void GRAPH_DrawLine(int x1, int y1, int x2, int y2, unsigned int foregroundColor);
+void GRAPH_DrawRectangle(int x, int y, int width, int height, unsigned int color);
+void GRAPH_DrawBox(int x, int y, int width, int height,
+    int lineWidth, unsigned int color);
+void GRAPH_DrawCircle(int x, int y, int radius, unsigned int color);
+void GRAPH_DrawFilledCircle(int x, int y, int radius, unsigned int color);
+void GRAPH_DrawImage(int x, int y);
+void GRAPH_DrawGraph(const uint8_t* data, int len, int x, int y,
+    unsigned int foregroundColor, unsigned int backgroundColor);
+void GRAPH_DrawBarChart(const uint8_t* data, int lengthOfData,
+    int x, int y, int widthOfSingleBar, unsigned int color);
+
 /**
  * @}
  */

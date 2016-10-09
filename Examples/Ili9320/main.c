@@ -186,8 +186,8 @@ int main(void) {
 #ifdef USE_GUI
   GUI_Init();
 
-  GUI_AddButton(50, 50, 50, 100, tscEvent1, "LED 0");
-  GUI_AddButton(200, 50, 50, 100, tscEvent2, "LED 1");
+  GUI_AddButton(50, 50, 50, 100, tscEvent1, "LED 0", 0x867474, GRAPH_WHITE);
+  GUI_AddButton(200, 50, 50, 100, tscEvent2, "LED 1", 0x867474, GRAPH_WHITE);
 
 #endif
 

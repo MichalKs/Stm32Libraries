@@ -29,7 +29,8 @@
  */
 
 void GUI_AddButton(int x, int y, int width, int height,
-    void (*eventCb)(int x, int y), const char* buttonText);
+    void (*eventCb)(int x, int y), const char* buttonText, unsigned int buttonColor,
+    unsigned int textColor);
 void GUI_Init(void);
 
 /**
