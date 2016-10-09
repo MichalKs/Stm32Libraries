@@ -26,7 +26,7 @@
  * @{
  */
 
-static void GUI_ConvertLCD2TSC(uint16_t *x, uint16_t *y, uint16_t *w, uint16_t *h);
+static void GUI_ConvertLCD2TSC(int *x, int *y, int *width, int *height);
 
 /**
  * @brief Initialize GUI.
@@ -53,17 +53,17 @@ void GUI_Init(void) {
  * @param cb Callback for button press event.
  * @param text Description of button (shown on screen).
  */
-void GUI_AddButton(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
-    void (*cb)(uint16_t x, uint16_t y), const char* text) {
+void GUI_AddButton(int x, int y, int width, int height,
+    void (*eventCb)(int x, int y), const char* buttonText) {
 
-  GRAPH_DrawRectangle(x,y,w,h);
+  GRAPH_DrawRectangle(x,y,width,height);
 
   // TODO Derive position of button text from string and font size
-  GRAPH_DrawString(text, x+w/4, y+h/4);
+  GRAPH_DrawString(buttonText, x+width/4, y+height/4);
 
-  GUI_ConvertLCD2TSC(&x, &y, &w, &h);
+  GUI_ConvertLCD2TSC(&x, &y, &width, &height);
 
-  TSC2046_RegisterEvent(x, y, w, h, cb);
+  TSC2046_RegisterEvent(x, y, width, height, eventCb);
 
 }
 /**
@@ -91,15 +91,15 @@ void GUI_AddLabel(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
  * @param w Width
  * @param h height
  */
-static void GUI_ConvertLCD2TSC(uint16_t *x, uint16_t *y, uint16_t *w, uint16_t *h) {
+static void GUI_ConvertLCD2TSC(int *x, int *y, int *width, int *height) {
 
   uint16_t tmpX, tmpY, tmpW, tmpH;
   uint16_t startX, startY;
 
-  startY = *x + *w;
+  startY = *x + *width;
   startX = *y;
-  tmpW = *h;
-  tmpH = *w;
+  tmpW = *height;
+  tmpH = *width;
 
   const uint16_t lcdWidth = 320;
   const uint16_t lcdHeight = 240;
@@ -123,8 +123,8 @@ static void GUI_ConvertLCD2TSC(uint16_t *x, uint16_t *y, uint16_t *w, uint16_t *
   *y = tmpY;
   *x = tmpX;
 
-  *h = tmpH * tscDY/lcdWidth;
-  *w = tmpW * tscDX/lcdHeight;
+  *height = tmpH * tscDY/lcdWidth;
+  *width = tmpW * tscDX/lcdHeight;
 
 }
 

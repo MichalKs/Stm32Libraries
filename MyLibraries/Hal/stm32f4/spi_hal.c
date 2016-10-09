@@ -1,6 +1,6 @@
 /**
  * @file    spi_hal.c
- * @brief
+ * @brief   HAL driver for SPI
  * @date    09.10.2016
  * @author  Michal Ksiezopolski
  *
@@ -23,7 +23,6 @@
  * @addtogroup SPI
  * @{
  */
-
 #define SPI3_CLK_ENABLE()                __HAL_RCC_SPI3_CLK_ENABLE()
 #define SPI3_SCK_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOC_CLK_ENABLE()
 #define SPI3_MISO_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOC_CLK_ENABLE()
@@ -43,7 +42,10 @@
 #define SPI3_CS_PIN                      GPIO_PIN_15
 #define SPI3_CS_PORT                     GPIOA
 
+static SPI_HandleTypeDef spi1Handle;
 static SPI_HandleTypeDef spi3Handle;
+
+#define SPI_MAX_DELAY_TIME 500 ///< Maximum delay for polling mode
 
 /**
  * @brief Initialize SPI and SS pin.
@@ -53,6 +55,10 @@ void SPI_HAL_Init(SPI_HAL_Typedef spi) {
   SPI_HandleTypeDef *currentHandle;
 
   switch (spi) {
+  case SPI_HAL_SPI1:
+    currentHandle = &spi1Handle;
+    spi3Handle.Instance = SPI1;
+    break;
   case SPI_HAL_SPI3:
     currentHandle = &spi3Handle;
     spi3Handle.Instance = SPI3;
@@ -105,111 +111,99 @@ void SPI_HAL_Deselect(SPI_HAL_Typedef spi) {
   }
 }
 /**
- * @brief Send multiple data on SPI3.
- * @param buf Buffer to send.
- * @param len Number of bytes to send.
+ * @brief Send multiple data on SPI.
+ * @param transmitBuffer Buffer to send.
+ * @param length Number of bytes to send.
  * @warning Blocking function!
  */
 void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length) {
 
   if (HAL_SPI_Transmit(&spi3Handle, (uint8_t*)transmitBuffer,
-       length, 5000) != HAL_OK) {
+       length, SPI_MAX_DELAY_TIME) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
 }
 /**
- * @brief Read multiple data on SPI3.
- * @param buf Buffer to place read data.
- * @param len Number of bytes to read.
+ * @brief Read multiple data on SPI.
+ * @param receiveBuffer Buffer to place read data.
+ * @param length Number of bytes to read.
  * @warning Blocking function!
  */
 void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length) {
 
   if (HAL_SPI_Receive(&spi3Handle, (uint8_t*)receiveBuffer,
-       length, 5000) != HAL_OK) {
+       length, SPI_MAX_DELAY_TIME) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
 }
 /**
  * @brief Transmit multiple data on SPI3.
- * @param rx_buf Receive buffer.
- * @param tx_buf Transmit buffer.
- * @param len Number of bytes to transmit.
+ * @param receiveBuffer Receive buffer.
+ * @param transmitBuffer Transmit buffer.
+ * @param length Number of bytes to transmit.
+ * @warning Blocking function!
  */
 void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
     uint8_t* transmitBuffer, int length) {
 
   if (HAL_SPI_TransmitReceive(&spi3Handle, (uint8_t*)transmitBuffer,
-      (uint8_t *)receiveBuffer, length, 5000) != HAL_OK) {
+      (uint8_t *)receiveBuffer, length, SPI_MAX_DELAY_TIME) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
 }
-
-void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
+/**
+ * @brief Initalize SPI HAL driver
+ * @param spiHandle Handle of SPI
+ */
+void HAL_SPI_MspInit(SPI_HandleTypeDef *spiHandle) {
   GPIO_InitTypeDef  gpioInitialization;
 
-  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-  /* Enable GPIO TX/RX clock */
-  SPI3_SCK_GPIO_CLK_ENABLE();
-  SPI3_MISO_GPIO_CLK_ENABLE();
-  SPI3_MOSI_GPIO_CLK_ENABLE();
-  SPI3_CS_GPIO_CLK_ENABLE();
-  /* Enable SPI clock */
-  SPI3_CLK_ENABLE();
+  if (spiHandle == &spi3Handle) {
+    SPI3_SCK_GPIO_CLK_ENABLE();
+    SPI3_MISO_GPIO_CLK_ENABLE();
+    SPI3_MOSI_GPIO_CLK_ENABLE();
+    SPI3_CS_GPIO_CLK_ENABLE();
+    SPI3_CLK_ENABLE();
 
-  /*##-2- Configure peripheral GPIO ##########################################*/
-  /* SPI SCK GPIO pin configuration  */
-  gpioInitialization.Pin       = SPI3_SCK_PIN;
-  gpioInitialization.Mode      = GPIO_MODE_AF_PP;
-  gpioInitialization.Pull      = GPIO_PULLUP;
-  gpioInitialization.Speed     = GPIO_SPEED_FAST;
-  gpioInitialization.Alternate = SPI3_SCK_AF;
+    gpioInitialization.Pin       = SPI3_SCK_PIN;
+    gpioInitialization.Mode      = GPIO_MODE_AF_PP;
+    gpioInitialization.Pull      = GPIO_PULLUP;
+    gpioInitialization.Speed     = GPIO_SPEED_FAST;
+    gpioInitialization.Alternate = SPI3_SCK_AF;
+    HAL_GPIO_Init(SPI3_SCK_GPIO_PORT, &gpioInitialization);
 
-  HAL_GPIO_Init(SPI3_SCK_GPIO_PORT, &gpioInitialization);
+    gpioInitialization.Pin = SPI3_MISO_PIN;
+    gpioInitialization.Alternate = SPI3_MISO_AF;
+    HAL_GPIO_Init(SPI3_MISO_GPIO_PORT, &gpioInitialization);
 
-  /* SPI MISO GPIO pin configuration  */
-  gpioInitialization.Pin = SPI3_MISO_PIN;
-  gpioInitialization.Alternate = SPI3_MISO_AF;
+    gpioInitialization.Pin = SPI3_MOSI_PIN;
+    gpioInitialization.Alternate = SPI3_MOSI_AF;
+    HAL_GPIO_Init(SPI3_MOSI_GPIO_PORT, &gpioInitialization);
 
-  HAL_GPIO_Init(SPI3_MISO_GPIO_PORT, &gpioInitialization);
+    gpioInitialization.Pin    = SPI3_CS_PIN;
+    gpioInitialization.Mode   = GPIO_MODE_OUTPUT_PP;
+    gpioInitialization.Speed  = GPIO_SPEED_FAST;
+    gpioInitialization.Pull   = GPIO_NOPULL;
+    HAL_GPIO_Init(SPI3_CS_PORT, &gpioInitialization);
+    HAL_GPIO_WritePin(SPI3_CS_PORT, SPI3_CS_PIN, GPIO_PIN_SET);
+  }
 
-  /* SPI MOSI GPIO pin configuration  */
-  gpioInitialization.Pin = SPI3_MOSI_PIN;
-  gpioInitialization.Alternate = SPI3_MOSI_AF;
-
-  HAL_GPIO_Init(SPI3_MOSI_GPIO_PORT, &gpioInitialization);
-
-  gpioInitialization.Pin    = SPI3_CS_PIN;
-  gpioInitialization.Mode   = GPIO_MODE_OUTPUT_PP;
-  gpioInitialization.Speed  = GPIO_SPEED_FAST;
-  gpioInitialization.Pull   = GPIO_NOPULL;
-  HAL_GPIO_Init(SPI3_CS_PORT, &gpioInitialization);
-
-  HAL_GPIO_WritePin(SPI3_CS_PORT, SPI3_CS_PIN, GPIO_PIN_SET); // Set SS line
 }
-
 /**
-  * @brief SPI MSP De-Initialization
-  *        This function frees the hardware resources used in this example:
-  *          - Disable the Peripheral's clock
-  *          - Revert GPIO configuration to its default state
-  * @param hspi: SPI handle pointer
-  * @retval None
-  */
-void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi) {
-  /*##-1- Reset peripherals ##################################################*/
-  SPI3_FORCE_RESET();
-  SPI3_RELEASE_RESET();
+ * @brief Deinitalize SPI HAL driver
+ * @param spiHandle Handle of SPI
+ */
+void HAL_SPI_MspDeInit(SPI_HandleTypeDef *spiHandle) {
+  if (spiHandle == &spi3Handle) {
+    SPI3_FORCE_RESET();
+    SPI3_RELEASE_RESET();
 
-  /*##-2- Disable peripherals and GPIO Clocks ################################*/
-  /* Configure SPI SCK as alternate function  */
-  HAL_GPIO_DeInit(SPI3_SCK_GPIO_PORT, SPI3_SCK_PIN);
-  /* Configure SPI MISO as alternate function  */
-  HAL_GPIO_DeInit(SPI3_MISO_GPIO_PORT, SPI3_MISO_PIN);
-  /* Configure SPI MOSI as alternate function  */
-  HAL_GPIO_DeInit(SPI3_MOSI_GPIO_PORT, SPI3_MOSI_PIN);
+    HAL_GPIO_DeInit(SPI3_SCK_GPIO_PORT, SPI3_SCK_PIN);
+    HAL_GPIO_DeInit(SPI3_MISO_GPIO_PORT, SPI3_MISO_PIN);
+    HAL_GPIO_DeInit(SPI3_MOSI_GPIO_PORT, SPI3_MOSI_PIN);
+    HAL_GPIO_DeInit(SPI3_CS_PORT, SPI3_CS_PIN);
+  }
 }
-
 /**
  * @}
  */

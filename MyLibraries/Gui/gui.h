@@ -28,8 +28,8 @@
  * @{
  */
 
-void GUI_AddButton(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
-    void (*cb)(uint16_t x, uint16_t y), const char* text);
+void GUI_AddButton(int x, int y, int width, int height,
+    void (*eventCb)(int x, int y), const char* buttonText);
 void GUI_Init(void);
 
 /**

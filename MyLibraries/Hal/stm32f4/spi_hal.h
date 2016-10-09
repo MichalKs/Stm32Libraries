@@ -1,6 +1,6 @@
 /**
  * @file    spi_hal.h
- * @brief	  
+ * @brief	  HAL driver for SPI
  * @date    09.10.2016
  * @author  Michal Ksiezopolski
  *
@@ -14,8 +14,8 @@
  * http://www.gnu.org/licenses/gpl.html
  * @endverbatim
  */
-#ifndef INC_SPI3_H_
-#define INC_SPI3_H_
+#ifndef INC_SPI_HAL_H_
+#define INC_SPI_HAL_H_
 
 #include <inttypes.h>
 
@@ -28,23 +28,25 @@
  * @addtogroup SPI
  * @{
  */
-
+/**
+ * @brief Used SPI ID
+ */
 typedef enum {
-  SPI_HAL_SPI1,
-  SPI_HAL_SPI2,
-  SPI_HAL_SPI3,
+  SPI_HAL_SPI1,//!< SPI_HAL_SPI1
+  SPI_HAL_SPI2,//!< SPI_HAL_SPI2
+  SPI_HAL_SPI3,//!< SPI_HAL_SPI3
 } SPI_HAL_Typedef;
 
-void    SPI_HAL_Init        (SPI_HAL_Typedef spi);
-void    SPI_HAL_Select      (SPI_HAL_Typedef spi);
-void    SPI_HAL_Deselect    (SPI_HAL_Typedef spi);
-void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length);
-void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length);
-void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
+void SPI_HAL_Init           (SPI_HAL_Typedef spi);
+void SPI_HAL_Select         (SPI_HAL_Typedef spi);
+void SPI_HAL_Deselect       (SPI_HAL_Typedef spi);
+void SPI_HAL_ReadBuffer     (SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length);
+void SPI_HAL_SendBuffer     (SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length);
+void SPI_HAL_TransmitBuffer (SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
     uint8_t* transmitBuffer, int length);
 
 /**
  * @}
  */
 
-#endif /* INC_SPI3_H_ */
+#endif /* INC_SPI_HAL_H_ */
