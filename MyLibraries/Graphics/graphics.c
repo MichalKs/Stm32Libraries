@@ -161,15 +161,12 @@ void GRAPH_DrawChar(char character, int x, int y, unsigned int foregroundColor,
     return;
   }
 
-//  lcdDriver.setWindow(x, y, currentFont.columnCount,
-//      currentFont.bytesPerColumn * BITS_PER_BYTE);
-//  lcdDriver.setGramAddress(x, y);
-
-  lcdDriver.setWindow(0,0,lcdDriver.width, lcdDriver.height);
+  lcdDriver.setWindow(x, y, currentFont.bytesPerColumn * BITS_PER_BYTE ,
+      currentFont.columnCount);
+  lcdDriver.setGramAddress(x, y);
 
   const int currentPosition = currentFont.columnCount *
       currentFont.bytesPerColumn * rowInCharacterTable; // first byte of row
-
 
   int bitmask;
 
@@ -178,9 +175,9 @@ void GRAPH_DrawChar(char character, int x, int y, unsigned int foregroundColor,
       bitmask = 0x01; // start from lowest bit
       for (int k = 0; k < BITS_PER_BYTE; k++, bitmask <<= 1) { // for 8 bits in byte
         if (currentFont.data[currentPosition + i * currentFont.bytesPerColumn + j] & bitmask) {
-          lcdDriver.drawPixel(x+j*BITS_PER_BYTE+k, y+i, foregroundColor);
+          lcdDriver.drawNextPixel(foregroundColor);
         } else {
-          lcdDriver.drawPixel(x+j*BITS_PER_BYTE+k, y+i, backgroundColor);
+          lcdDriver.drawNextPixel(backgroundColor);
         }
       }
     }
