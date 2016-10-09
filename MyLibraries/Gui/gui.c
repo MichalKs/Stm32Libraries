@@ -38,6 +38,8 @@ void GUI_Init(void) {
   lcdDriver.initialize = ILI9320_Initializtion;
   lcdDriver.setWindow = ILI9320_SetWindow;
   lcdDriver.drawPixel = ILI9320_DrawPixel;
+  lcdDriver.drawNextPixel = ILI9320_DrawNextPixel;
+  lcdDriver.setGramAddress = ILI9320_SetCursor;
   lcdDriver.width = 320;
   lcdDriver.height = 240;
   GRAPH_Initialize(&lcdDriver);

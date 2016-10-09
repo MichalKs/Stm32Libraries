@@ -114,7 +114,7 @@ void ILI9320_Initializtion(void) {
   ILI9320_HAL_ResetOff();
   TIMER_DelayMillis(RESET_DELAY);
 
-  ILI9320_HAL_WriteReg(ILI9320_START_OSCILLATION, 0x0001);
+  ILI9320_HAL_WriteReg(ILI9320_START_OSCILLATION, TRUE);
   TIMER_DelayMillis(RESET_DELAY);
 
   int id = ILI9320_HAL_ReadReg(ILI9320_READ_ID);
@@ -123,16 +123,32 @@ void ILI9320_Initializtion(void) {
 
   // Add more LCD init codes here
   if (id == ILI9320_ID) {
+    // SS = 1 - Data displayed from left to right
+    const int SS_BIT = 0x0100;
+    const int SM_BIT = 0x0400;
+    ILI9320_HAL_WriteReg(ILI9320_DRIVER_OUTPUT, SS_BIT);
 
-    ILI9320_HAL_WriteReg(ILI9320_DRIVER_OUTPUT, 0x0100); // SS = 1 - coordinates from left to right
-    ILI9320_HAL_WriteReg(ILI9320_DRIVING_WAVE, 0x0700);  // Line inversion
-    ILI9320_HAL_WriteReg(ILI9320_ENTRY_MODE, 0x1018);    //
-    ILI9320_HAL_WriteReg(ILI9320_RESIZE, 0x0000);
+    // Line inversion - dunno what this does yet
+    const int BC_BIT = 0x0600;
+    const int EOR_BIT = 0x0100;
+    ILI9320_HAL_WriteReg(ILI9320_DRIVING_WAVE, BC_BIT | EOR_BIT);
+
+    const int GRAM_VERTICAL_UPDATE_DIRECTION_BIT = 0x0008;
+    const int SWAP_RGB_TO_BGR_IN_GRAM_BIT = 0x1000;
+    const int HORIZONTAL_INCREMENT_VERTICAL_DECREMENT = 0x0010;
+    ILI9320_HAL_WriteReg(ILI9320_ENTRY_MODE, GRAM_VERTICAL_UPDATE_DIRECTION_BIT |
+        SWAP_RGB_TO_BGR_IN_GRAM_BIT | HORIZONTAL_INCREMENT_VERTICAL_DECREMENT);
+
+    const int NO_RESIZE = 0;
+    ILI9320_HAL_WriteReg(ILI9320_RESIZE, NO_RESIZE);
+
     ILI9320_HAL_WriteReg(ILI9320_DISP1, 0x0000);
     ILI9320_HAL_WriteReg(ILI9320_DISP2, 0x0202); // two lines back porch, two line front porch
     ILI9320_HAL_WriteReg(ILI9320_DISP3, 0x0000);
     ILI9320_HAL_WriteReg(ILI9320_DISP4, 0x0000);
+
     ILI9320_HAL_WriteReg(ILI9320_RGB_DISP1, 0x0001);
+
     ILI9320_HAL_WriteReg(ILI9320_FRAME_MARKER, 0x0000); // 0th line for frame marker
     ILI9320_HAL_WriteReg(ILI9320_RGB_DISP2, 0x0000);
     ILI9320_HAL_WriteReg(ILI9320_DISP1, 0x0101);
@@ -169,17 +185,6 @@ void ILI9320_Initializtion(void) {
   TIMER_DelayMillis(INIT_DELAY);
 }
 /**
- * @brief Convert RGB value to ILI9320 format.
- * @param rgbColor Color
- * @return Converted value of color in ILI9320 format.
- */
-unsigned int ILI9320_RGBDecode(unsigned int rgbColor) {
-  unsigned int red    = (rgbColor >> 19) & 0x1f;
-  unsigned int green  = (rgbColor >> 10) & 0x3f;
-  unsigned int blue   = (rgbColor >> 3) & 0x1f;
-  return (red << 11) | (green << 5) | (blue);
-}
-/**
  * @brief Move cursor to given coordinates.
  * @param x X coordinate
  * @param y Y coordinate
@@ -196,7 +201,14 @@ void ILI9320_SetCursor(int x, int y) {
  */
 void ILI9320_DrawPixel(int x, int y, unsigned int rgbColor) {
   ILI9320_SetCursor(x, y);
-  ILI9320_HAL_WriteReg(ILI9320_WRITE_TO_GRAM, ILI9320_RGBDecode(rgbColor));
+  ILI9320_HAL_WriteReg(ILI9320_WRITE_TO_GRAM, rgbColor);
+}
+/**
+ * @brief Draws a pixel on the LCD in the next address of the GRAM
+ * @param rgbColor Color value.
+ */
+void ILI9320_DrawNextPixel(unsigned int rgbColor) {
+  ILI9320_HAL_WriteReg(ILI9320_WRITE_TO_GRAM, rgbColor);
 }
 /**
  * @brief Set work window to draw data.

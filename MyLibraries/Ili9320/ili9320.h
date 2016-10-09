@@ -33,6 +33,8 @@
 void          ILI9320_Initializtion (void);
 void          ILI9320_SetWindow     (int x, int y, int width, int height);
 void          ILI9320_DrawPixel     (int x, int y, unsigned int color);
+void          ILI9320_SetCursor     (int x, int y);
+void          ILI9320_DrawNextPixel (unsigned int rgbColor);
 unsigned int  ILI9320_RGBDecode     (unsigned int rgbColor);
 
 /**

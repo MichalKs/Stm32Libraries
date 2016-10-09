@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "ili9320.h"
 
 static void tscEvent1(int x, int y);
 static void tscEvent2(int x, int y);
@@ -49,7 +50,7 @@ static void tscEvent2(int x, int y);
 #endif
 
 //#define TEST_SD
-#define USE_GUI
+//#define USE_GUI
 
 /**
  * @brief Callback for performing periodic tasks
@@ -104,23 +105,31 @@ int main(void) {
 
 
 #ifndef USE_GUI
+  GRAPH_LcdDriverTypedef lcdDriver;
+  lcdDriver.initialize = ILI9320_Initializtion;
+  lcdDriver.setWindow = ILI9320_SetWindow;
+  lcdDriver.drawPixel = ILI9320_DrawPixel;
+  lcdDriver.drawNextPixel = ILI9320_DrawNextPixel;
+  lcdDriver.setGramAddress = ILI9320_SetCursor;
+  lcdDriver.width = 320;
+  lcdDriver.height = 240;
+  GRAPH_Initialize(&lcdDriver);
 
-  GRAPH_Init();
-
-  GRAPH_SetColor(GRAPH_BLUE);
-  GRAPH_SetBgColor(GRAPH_RED);
-  GRAPH_DrawBox(100, 100, 100, 100, 5);
-  GRAPH_DrawFilledCircle(50, 50, 50);
-  GRAPH_SetColor(GRAPH_WHITE);
+  GRAPH_DrawRectangle(100, 100, 50, 100, GRAPH_RED);
   GRAPH_SetFont(font21x39Info);
-  GRAPH_DrawChar('A', 120, 50);
-  GRAPH_DrawString("Hello World", 200, 0);
-  GRAPH_SetFont(font14x27Info);
-  GRAPH_DrawString("A mouse is", 240, 0);
-  GRAPH_SetFont(font10x20Info);
-  GRAPH_DrawString("not a lion.", 280, 0);
-  GRAPH_SetFont(font8x16Info);
-  GRAPH_DrawString("To be or not to be", 170, 0);
+  GRAPH_DrawChar('A', 50, 50, GRAPH_WHITE, GRAPH_BLUE);
+
+//  GRAPH_DrawBox(100, 100, 100, 100, 5, GRAPH_BLUE);
+//  GRAPH_DrawFilledCircle(50, 50, 50, GRAPH_BLUE);
+//  GRAPH_SetFont(font21x39Info);
+//  GRAPH_DrawChar('A', 120, 50, GRAPH_WHITE, GRAPH_RED);
+//  GRAPH_DrawString("Hello World", 200, 0, GRAPH_WHITE, GRAPH_RED);
+//  GRAPH_SetFont(font14x27Info);
+//  GRAPH_DrawString("A mouse is", 240, 0, GRAPH_WHITE, GRAPH_RED);
+//  GRAPH_SetFont(font10x20Info);
+//  GRAPH_DrawString("not a lion.", 280, 0, GRAPH_WHITE, GRAPH_RED);
+//  GRAPH_SetFont(font8x16Info);
+//  GRAPH_DrawString("To be or not to be", 170, 0, GRAPH_WHITE, GRAPH_RED);
 
   // draw image test
 //  TIMER_DelayMillis(3000);
@@ -144,7 +153,7 @@ int main(void) {
 //  GRAPH_ClearScreen(0);
 //  GRAPH_DrawBarChart(graphData+30, 32, 0, 0, 5);
 
-  TSC2046_Init();
+  TSC2046_Initialize();
   // register an event for a given region
   TSC2046_RegisterEvent(0, 0, 1500, 4000, tscEvent1);
   TSC2046_RegisterEvent(0, 0, 4000, 1500, tscEvent2);

@@ -64,13 +64,22 @@ typedef struct {
 static GRAPH_FontTypedef currentFont;         ///< Currently set font
 
 /**
+ * @brief Convert RGB value to 565 format.
+ * @param rgbColor Color
+ * @return Converted value of color in 565 format.
+ */
+unsigned int GRAPH_ConvertRgbTo565(unsigned int rgbColor) {
+  unsigned int red    = (rgbColor >> 19) & 0x1f;
+  unsigned int green  = (rgbColor >> 10) & 0x3f;
+  unsigned int blue   = (rgbColor >> 3) & 0x1f;
+  return (red << 11) | (green << 5) | (blue);
+}
+/**
  * @brief Initialized graphics - TFT LCD ILI9320.
  */
 void GRAPH_Initialize(GRAPH_LcdDriverTypedef * driver) {
   lcdDriver = *driver;
   lcdDriver.initialize();
-  // window occupies whole LCD screen
-  lcdDriver.setWindow(0, 0, lcdDriver.width, lcdDriver.height);
   GRAPH_ClearScreen(GRAPH_BLACK);
 }
 /**
@@ -78,6 +87,23 @@ void GRAPH_Initialize(GRAPH_LcdDriverTypedef * driver) {
  */
 void GRAPH_ClearScreen(unsigned int rgbColor) {
   GRAPH_DrawRectangle(0, 0, lcdDriver.width, lcdDriver.height, rgbColor);
+}
+/**
+ * @brief Draws a rectangle (filled).
+ * @param x X coordinate of start point
+ * @param y Y coordinate of start point
+ * @param w Width
+ * @param h Height
+ */
+void GRAPH_DrawRectangle(int x, int y, int width, int height, unsigned int color) {
+
+  color = GRAPH_ConvertRgbTo565(color);
+
+  lcdDriver.setWindow(x, y, width, height);
+  lcdDriver.setGramAddress(x, y);
+  for (int i = 0; i < width * height; i++) {
+    lcdDriver.drawNextPixel(color);
+  }
 }
 /**
  * @brief Sets the currently used font.
@@ -104,7 +130,7 @@ void GRAPH_DrawImage(int x, int y) {
       red = displayedImage.data[currentPosition];
       green = displayedImage.data[currentPosition+1];
       blue = displayedImage.data[currentPosition+2];
-      lcdDriver.drawPixel(j+x, i+y, RGB_TO_UNSIGNED_INT(red, green, blue));
+      lcdDriver.drawPixel(j+x, i+y, GRAPH_ConvertRgbTo565(RGB_TO_UNSIGNED_INT(red, green, blue)));
     }
   }
 }
@@ -117,24 +143,33 @@ void GRAPH_DrawImage(int x, int y) {
 void GRAPH_DrawChar(char character, int x, int y, unsigned int foregroundColor,
     unsigned int backgroundColor) {
 
+  const int BITS_PER_BYTE = 8;
+
   // no font set
   if (currentFont.data == 0) {
     return;
   }
 
+  foregroundColor = GRAPH_ConvertRgbTo565(foregroundColor);
+  backgroundColor = GRAPH_ConvertRgbTo565(backgroundColor);
+
   // Font usually skips first chars (useless)
-  const int row = character - currentFont.firstCharacter;
-  const int BITS_PER_BYTE = 8;
+  int rowInCharacterTable = character - currentFont.firstCharacter;
 
   // if nonexisting char
-  if (row >= currentFont.numberOfCharacters) {
+  if (rowInCharacterTable >= currentFont.numberOfCharacters) {
     return;
   }
 
-  const int pos = currentFont.columnCount *
-      currentFont.bytesPerColumn * row; // first byte of row
+//  lcdDriver.setWindow(x, y, currentFont.columnCount,
+//      currentFont.bytesPerColumn * BITS_PER_BYTE);
+//  lcdDriver.setGramAddress(x, y);
 
-  const uint8_t const * FONT_DATA = currentFont.data;
+  lcdDriver.setWindow(0,0,lcdDriver.width, lcdDriver.height);
+
+  const int currentPosition = currentFont.columnCount *
+      currentFont.bytesPerColumn * rowInCharacterTable; // first byte of row
+
 
   int bitmask;
 
@@ -142,7 +177,7 @@ void GRAPH_DrawChar(char character, int x, int y, unsigned int foregroundColor,
     for (int j = 0; j < currentFont.bytesPerColumn; j++) {
       bitmask = 0x01; // start from lowest bit
       for (int k = 0; k < BITS_PER_BYTE; k++, bitmask <<= 1) { // for 8 bits in byte
-        if (FONT_DATA[pos + i * currentFont.bytesPerColumn + j] & bitmask) {
+        if (currentFont.data[currentPosition + i * currentFont.bytesPerColumn + j] & bitmask) {
           lcdDriver.drawPixel(x+j*BITS_PER_BYTE+k, y+i, foregroundColor);
         } else {
           lcdDriver.drawPixel(x+j*BITS_PER_BYTE+k, y+i, backgroundColor);
@@ -165,20 +200,6 @@ void GRAPH_DrawString(const char* stringToDisplay, int x, int y,
       i < strlen(stringToDisplay);
       i++, y += currentFont.columnCount) {
     GRAPH_DrawChar(stringToDisplay[i], x, y, foregroundColor, backgroundColor);
-  }
-}
-/**
- * @brief Draws a rectangle (filled).
- * @param x X coordinate of start point
- * @param y Y coordinate of start point
- * @param w Width
- * @param h Height
- */
-void GRAPH_DrawRectangle(int x, int y, int width, int height, unsigned int color) {
-  for (int i = x; i < x + width; i++) {
-    for (int j = y; j < y + height; j++) {
-      lcdDriver.drawPixel(i, j, color);
-    }
   }
 }
 /**

@@ -74,6 +74,8 @@ typedef struct {
   int height;
   void (*initialize)(void);
   void (*drawPixel)(int x, int y, unsigned int rgbColor);
+  void (*setGramAddress)(int x, int y);
+  void (*drawNextPixel)(unsigned int rgbColor);
   void (*setWindow)(int x, int y, int width, int height);
 } GRAPH_LcdDriverTypedef;
 
