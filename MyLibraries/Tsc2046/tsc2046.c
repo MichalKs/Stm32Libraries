@@ -16,13 +16,13 @@
  * @endverbatim
  */
 
-#include <tsc2046.h>
-#include <spi3.h>
-#include <tsc2046_hal.h>
-#include <utils.h>
+#include "tsc2046.h"
+#include "spi_hal.h"
+#include "tsc2046_hal.h"
+#include "utils.h"
+#include "led.h"
+#include "timers.h"
 #include <stdio.h>
-#include <led.h>
-#include <timers.h>
 
 #define DEBUG
 
@@ -108,6 +108,8 @@ static uint8_t penirqAsserted; ///< Is PENIRQ low?
 static void penirqCallback(void);
 void TSC2046_ReadPos(uint16_t *x, uint16_t *y);
 
+#define TSC2046_SPI SPI_HAL_SPI3
+
 /**
  * @brief Initialize the touchscreen library.
  */
@@ -121,7 +123,7 @@ void TSC2046_Init(void) {
 //  T_IRQ  - PD2
 
   // initialize SPI interface
-  SPI3_Init();
+  SPI_HAL_Init(SPI_HAL_SPI3);
   // initialize PENIRQ signal handling
   TSC2046_HAL_PenirqInit(penirqCallback);
 
@@ -138,9 +140,9 @@ void TSC2046_Init(void) {
   uint8_t buf[3] = {0};
   buf[0] = ctrl.byte;
 
-  SPI3_Select();
-  SPI3_SendBuffer(buf,3);
-  SPI3_Deselect();
+  SPI_HAL_Select(SPI_HAL_SPI3);
+  SPI_HAL_SendBuffer(SPI_HAL_SPI3, buf,3);
+  SPI_HAL_Deselect(SPI_HAL_SPI3);
 }
 /**
  * @brief Registers a given region of the touchscreen
@@ -224,7 +226,7 @@ void TSC2046_Update(void) {
 void TSC2046_ReadPos(uint16_t *x, uint16_t *y) {
 
   TSC2046_HAL_DisablePenirq(); // disable IRQ during read
-  SPI3_Select();
+  SPI_HAL_Select(SPI_HAL_SPI3);
 
   // control byte
   ControlByteTypedef ctrl;
@@ -240,7 +242,7 @@ void TSC2046_ReadPos(uint16_t *x, uint16_t *y) {
   uint8_t rxBuffer[3] = {0};
   uint8_t txBuffer[3] = {0};
   txBuffer[0] = ctrl.byte;
-  SPI3_TransmitBuffer(rxBuffer, txBuffer, 3);
+  SPI_HAL_TransmitBuffer(SPI_HAL_SPI3, rxBuffer, txBuffer, 3);
 
   tmpY = ((uint16_t)rxBuffer[1])<<8;
   tmpY |= rxBuffer[2];
@@ -249,7 +251,7 @@ void TSC2046_ReadPos(uint16_t *x, uint16_t *y) {
 
   // read X
   txBuffer[0] = ctrl.byte;
-  SPI3_TransmitBuffer(rxBuffer, txBuffer, 3);
+  SPI_HAL_TransmitBuffer(SPI_HAL_SPI3, rxBuffer, txBuffer, 3);
 
   tmpX = ((uint16_t)rxBuffer[1])<<8;
   tmpX |= rxBuffer[2];
@@ -259,7 +261,7 @@ void TSC2046_ReadPos(uint16_t *x, uint16_t *y) {
 
   println("Data from TSC: x=%u y=%u", *x, *y);
 
-  SPI3_Deselect();
+  SPI_HAL_Deselect(SPI_HAL_SPI3);
   TSC2046_HAL_EnablePenirq(); // reenable IRQ
 
 }
