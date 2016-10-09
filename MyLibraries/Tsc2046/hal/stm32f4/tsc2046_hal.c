@@ -21,6 +21,12 @@
 
 static void (*penirqCallback)(void); ///< PENIRQ interrupt callback function
 
+#define PENIRQ_CLK_ENABLE() __HAL_RCC_GPIOD_CLK_ENABLE()
+#define PENIRQ_PIN          GPIO_PIN_2
+#define PENIRQ_PORT         GPIOD
+#define PENIRQ_IRQ_NUMBER   EXTI2_IRQn
+#define PENIRQ_PRIORITY     2
+
 /**
  * @brief Initialize PENIRQ signal and interrupt.
  * @param penirqCb Callback function for PENIRQ interrupt
@@ -29,47 +35,42 @@ void TSC2046_HAL_PenirqInit(void (*penirqCb)(void)) {
 
   penirqCallback = penirqCb;
 
-  GPIO_InitTypeDef   GPIO_InitStructure;
+  PENIRQ_CLK_ENABLE();
+  GPIO_InitTypeDef   gpioInitialization;
+  gpioInitialization.Mode = GPIO_MODE_IT_FALLING;
+  gpioInitialization.Pull = GPIO_PULLUP;
+  gpioInitialization.Pin = PENIRQ_PIN;
+  HAL_GPIO_Init(PENIRQ_PORT, &gpioInitialization);
 
-  /* Enable GPIOC clock */
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-
-  /* Configure PC.13 pin as input floating */
-  GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStructure.Pull = GPIO_PULLUP;
-  GPIO_InitStructure.Pin = GPIO_PIN_2;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-  /* Enable and set EXTI lines 15 to 10 Interrupt to the lowest priority */
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
+  HAL_NVIC_SetPriority(PENIRQ_IRQ_NUMBER, PENIRQ_PRIORITY, 0);
+  HAL_NVIC_EnableIRQ(PENIRQ_IRQ_NUMBER);
 }
 /**
- * @brief
- * @return
+ * @brief Read PENIRQ state
+ * @retval TRUE PENIRQ is high
+ * @retval FALSE PENIRQ is low
  */
-uint8_t TSC2046_HAL_ReadPenirq(void) {
-  return HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_2);
+Boolean TSC2046_HAL_ReadPenirq(void) {
+  return HAL_GPIO_ReadPin(PENIRQ_PORT, PENIRQ_PIN);
 }
 /**
  * @brief Clear PENIRQ flag and enable PENIRQ interrupt.
  */
 void TSC2046_HAL_EnablePenirq(void) {
-  NVIC_ClearPendingIRQ(EXTI2_IRQn);
-  NVIC_EnableIRQ(EXTI2_IRQn);
+  NVIC_ClearPendingIRQ(PENIRQ_IRQ_NUMBER);
+  NVIC_EnableIRQ(PENIRQ_IRQ_NUMBER);
 }
 /**
  * @brief Disable PENIRQ interrupt.
  */
 void TSC2046_HAL_DisablePenirq(void) {
-  NVIC_DisableIRQ(EXTI2_IRQn);
+  NVIC_DisableIRQ(PENIRQ_IRQ_NUMBER);
 }
 /**
  * @brief Handler for PENIRQ interrupt.
  */
 void EXTI2_IRQHandler(void) {
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+  HAL_GPIO_EXTI_IRQHandler(PENIRQ_PIN);
 }
 /**
   * @brief EXTI line detection callbacks
@@ -77,7 +78,7 @@ void EXTI2_IRQHandler(void) {
   * @retval None
   */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == GPIO_PIN_2) {
+  if (GPIO_Pin == PENIRQ_PIN) {
     penirqCallback();
   }
 }

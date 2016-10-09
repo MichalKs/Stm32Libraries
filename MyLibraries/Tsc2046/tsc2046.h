@@ -1,12 +1,11 @@
 /**
  * @file    tsc2046.h
- * @brief   TSC2046 touchscreen library
- * @date    14 gru 2014
+ * @brief   TSC2046 touch screen library
+ * @date    09.10.2016
  * @author  Michal Ksiezopolski
  *
- *
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the
  * accompanying materials are made available
  * under the terms of the GNU Public License
@@ -22,19 +21,17 @@
 
 /**
  * @defgroup  TSC2046 TSC2046
- * @brief     TSC2046 touchscreen library
+ * @brief     TSC2046 touch screen library
  */
 
 /**
  * @addtogroup TSC2046
  * @{
  */
-
-void  TSC2046_Init(void);
-void  TSC2046_Update(void);
-int   TSC2046_RegisterEvent(int x, int y, int width, int height,
+void  TSC2046_Initialize    (void);
+void  TSC2046_Update        (void);
+int   TSC2046_RegisterEvent (int x, int y, int width, int height,
         void (*eventCb)(int x, int y));
-
 /**
  * @}
  */

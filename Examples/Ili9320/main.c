@@ -16,9 +16,6 @@
  * @endverbatim
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include "timers.h"
 #include "led.h"
 #include "comm.h"
@@ -34,9 +31,12 @@
 #include "fat.h"
 #include "sdcard.h"
 #include "utils.h"
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
-void tscEvent1(uint16_t x, uint16_t y);
-void tscEvent2(uint16_t x, uint16_t y);
+static void tscEvent1(int x, int y);
+static void tscEvent2(int x, int y);
 
 #define DEBUG
 
@@ -49,7 +49,7 @@ void tscEvent2(uint16_t x, uint16_t y);
 #endif
 
 //#define TEST_SD
-//#define USE_GUI
+#define USE_GUI
 
 /**
  * @brief Callback for performing periodic tasks
@@ -201,8 +201,8 @@ int main(void) {
  * @param x X coordinate of touch.
  * @param y Y coordinate of touch.
  */
-void tscEvent1(uint16_t x, uint16_t y) {
-  println("event 1");
+void tscEvent1(int x, int y) {
+  println("Event 1");
   LED_Toggle(_LED0);
 }
 /**
@@ -210,7 +210,7 @@ void tscEvent1(uint16_t x, uint16_t y) {
  * @param x X coordinate of touch.
  * @param y Y coordinate of touch.
  */
-void tscEvent2(uint16_t x, uint16_t y) {
-  println("event 2");
+void tscEvent2(int x, int y) {
+  println("Event 2");
   LED_Toggle(_LED1);
 }

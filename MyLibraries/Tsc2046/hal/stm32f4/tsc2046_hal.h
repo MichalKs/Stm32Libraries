@@ -18,11 +18,11 @@
 #ifndef INC_TSC2046_HAL_H_
 #define INC_TSC2046_HAL_H_
 
-#include <inttypes.h>
+#include "utils.h"
 
-void TSC2046_HAL_EnablePenirq(void);
-void TSC2046_HAL_DisablePenirq(void);
-void TSC2046_HAL_PenirqInit(void (*penirqCb)(void));
-uint8_t TSC2046_HAL_ReadPenirq(void);
+void    TSC2046_HAL_EnablePenirq  (void);
+void    TSC2046_HAL_DisablePenirq (void);
+void    TSC2046_HAL_PenirqInit    (void (*penirqCb)(void));
+Boolean TSC2046_HAL_ReadPenirq    (void);
 
 #endif /* INC_TSC2046_HAL_H_ */

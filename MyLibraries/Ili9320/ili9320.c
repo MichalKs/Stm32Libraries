@@ -174,10 +174,10 @@ void ILI9320_Initializtion(void) {
  * @return Converted value of color in ILI9320 format.
  */
 unsigned int ILI9320_RGBDecode(unsigned int rgbColor) {
-  unsigned int red    = (rgbColor >> 16) & 0xff;
-  unsigned int green  = (rgbColor >> 8) & 0xff;
-  unsigned int blue   = (rgbColor >> 0) & 0xff;
-  return ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1f);
+  unsigned int red    = (rgbColor >> 19) & 0x1f;
+  unsigned int green  = (rgbColor >> 10) & 0x3f;
+  unsigned int blue   = (rgbColor >> 3) & 0x1f;
+  return (red << 11) | (green << 5) | (blue);
 }
 /**
  * @brief Move cursor to given coordinates.

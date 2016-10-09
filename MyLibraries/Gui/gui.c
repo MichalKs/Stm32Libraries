@@ -33,9 +33,9 @@ static void GUI_ConvertLCD2TSC(int *x, int *y, int *width, int *height);
  */
 void GUI_Init(void) {
 
-  TSC2046_Init(); // initialize touchscreen
+  TSC2046_Initialize();
   GRAPH_Init();
-  GRAPH_SetColor(0xffff00);
+  GRAPH_SetColor(0x605454);
   GRAPH_SetBgColor(GRAPH_RED);
   GRAPH_SetFont(font8x16Info);
 }

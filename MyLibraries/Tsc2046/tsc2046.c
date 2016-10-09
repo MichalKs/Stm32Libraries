@@ -1,6 +1,6 @@
 /**
  * @file    tsc2046.c
- * @brief   TSC2046 touchscreen library
+ * @brief   TSC2046 touch screen library
  * @date    09.10.2016
  * @author  Michal Ksiezopolski
  *
@@ -14,12 +14,10 @@
  * http://www.gnu.org/licenses/gpl.html
  * @endverbatim
  */
-
 #include "tsc2046.h"
 #include "spi_hal.h"
 #include "tsc2046_hal.h"
 #include "utils.h"
-#include "led.h"
 #include "timers.h"
 #include <stdio.h>
 
@@ -101,9 +99,9 @@ static void touchInterruptCallback(void);
 static void readTouchPosition(int *x, int *y);
 
 /**
- * @brief Initialize the touchscreen library.
+ * @brief Initialize the touch screen library.
  */
-void TSC2046_Init(void) {
+void TSC2046_Initialize(void) {
 
   const int TOUCHSCREEN_COMMAND_LENGTH = 3;
   const int POSITION_COMMAND = 0;
@@ -283,7 +281,7 @@ void readTouchPosition(int *x, int *y) {
  * PENIRQ signal is asserted. This signalizes that the
  * touch screen was pressed.
  */
-static void touchInterruptCallback(void) {
+void touchInterruptCallback(void) {
   wasTouchDetected = TRUE;
 }
 /**
