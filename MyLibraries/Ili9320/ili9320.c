@@ -126,7 +126,7 @@ void ILI9320_Initializtion(void) {
     // SS = 1 - Data displayed from left to right
     const int SS_BIT = 0x0100;
     const int SM_BIT = 0x0400;
-    ILI9320_HAL_WriteReg(ILI9320_DRIVER_OUTPUT, SS_BIT);
+    ILI9320_HAL_WriteReg(ILI9320_DRIVER_OUTPUT, 0);
 
     // Line inversion - dunno what this does yet
     const int BC_BIT = 0x0600;
@@ -135,8 +135,8 @@ void ILI9320_Initializtion(void) {
 
     const int GRAM_VERTICAL_UPDATE_DIRECTION_BIT = 0x0008;
     const int SWAP_RGB_TO_BGR_IN_GRAM_BIT = 0x1000;
-    const int HORIZONTAL_INCREMENT_VERTICAL_DECREMENT = 0x0010;
-    ILI9320_HAL_WriteReg(ILI9320_ENTRY_MODE, GRAM_VERTICAL_UPDATE_DIRECTION_BIT |
+    const int HORIZONTAL_INCREMENT_VERTICAL_DECREMENT = 0x0030;
+    ILI9320_HAL_WriteReg(ILI9320_ENTRY_MODE,
         SWAP_RGB_TO_BGR_IN_GRAM_BIT | HORIZONTAL_INCREMENT_VERTICAL_DECREMENT);
 
     const int NO_RESIZE = 0;

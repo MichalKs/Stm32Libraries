@@ -161,8 +161,8 @@ void GRAPH_DrawChar(char character, int x, int y, unsigned int foregroundColor,
     return;
   }
 
-  lcdDriver.setWindow(x, y, currentFont.bytesPerColumn * BITS_PER_BYTE ,
-      currentFont.columnCount);
+  lcdDriver.setWindow(x, y,
+      currentFont.columnCount, currentFont.bytesPerColumn * BITS_PER_BYTE);
   lcdDriver.setGramAddress(x, y);
 
   const int currentPosition = currentFont.columnCount *
@@ -195,7 +195,7 @@ void GRAPH_DrawString(const char* stringToDisplay, int x, int y,
   // skip columnCount pixel columns for next char
   for (unsigned int i = 0;
       i < strlen(stringToDisplay);
-      i++, y += currentFont.columnCount) {
+      i++, x += currentFont.columnCount) {
     GRAPH_DrawChar(stringToDisplay[i], x, y, foregroundColor, backgroundColor);
   }
 }

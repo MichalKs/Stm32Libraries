@@ -117,7 +117,7 @@ int main(void) {
 
   GRAPH_DrawRectangle(100, 100, 50, 100, GRAPH_RED);
   GRAPH_SetFont(font21x39Info);
-  GRAPH_DrawChar('A', 50, 50, GRAPH_WHITE, GRAPH_BLUE);
+  GRAPH_DrawString("Hello World", 50, 50, GRAPH_WHITE, GRAPH_BLUE);
 
 //  GRAPH_DrawBox(100, 100, 100, 100, 5, GRAPH_BLUE);
 //  GRAPH_DrawFilledCircle(50, 50, 50, GRAPH_BLUE);
