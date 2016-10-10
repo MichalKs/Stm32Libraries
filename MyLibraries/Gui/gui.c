@@ -61,7 +61,7 @@ void GUI_AddButton(int x, int y, int width, int height,
     void (*eventCb)(int x, int y), const char* buttonText, unsigned int buttonColor,
     unsigned int textColor) {
 
-  GRAPH_DrawRectangle(x,y,width,height, buttonColor);
+  GRAPH_DrawFilledRectangle(x,y,width,height, buttonColor);
 
   // TODO Derive position of button text from string and font size
   GRAPH_DrawString(buttonText, x+width/4, y+height/4, textColor, buttonColor);

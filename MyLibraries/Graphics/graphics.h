@@ -18,7 +18,7 @@
 #ifndef GRAPHICS_H_
 #define GRAPHICS_H_
 
-#include <inttypes.h>
+#include "utils.h"
 
 /**
  * @defgroup  GRAPHICS GRAPHICS
@@ -77,6 +77,8 @@ typedef struct {
   void (*setGramAddress)(int x, int y);
   void (*drawNextPixel)(unsigned int rgbColor);
   void (*setWindow)(int x, int y, int width, int height);
+  void (*horizontalGramUpdate)(void);
+  void (*verticalGramUpdate)(void);
 } GRAPH_LcdDriverTypedef;
 
 typedef enum {
@@ -95,12 +97,12 @@ void GRAPH_DrawChar(char character, int x, int y, unsigned int foregroundColor,
 void GRAPH_DrawString(const char* s, int x, int y, unsigned int foregroundColor,
     unsigned int backgroundColor);
 void GRAPH_DrawLine(int x1, int y1, int x2, int y2, unsigned int foregroundColor);
-void GRAPH_DrawRectangle(int x, int y, int width, int height, unsigned int color);
-void GRAPH_DrawBox(int x, int y, int width, int height,
+void GRAPH_DrawFilledRectangle(int x, int y, int width, int height, unsigned int color);
+void GRAPH_DrawRectangle(int x, int y, int width, int height,
     int lineWidth, unsigned int color);
 void GRAPH_DrawCircle(int x, int y, int radius, unsigned int color);
 void GRAPH_DrawFilledCircle(int x, int y, int radius, unsigned int color);
-void GRAPH_DrawImage(int x, int y);
+void GRAPH_DrawImage(int x, int y, GRAPH_ImageTypedef * image, Boolean flipped);
 void GRAPH_DrawGraph(const uint8_t* data, int len, int x, int y,
     unsigned int foregroundColor, unsigned int backgroundColor);
 void GRAPH_DrawBarChart(const uint8_t* data, int lengthOfData,

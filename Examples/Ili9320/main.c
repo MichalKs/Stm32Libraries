@@ -35,6 +35,7 @@
 #include <string.h>
 #include <math.h>
 #include "ili9320.h"
+#include "example_bmp.h"
 
 static void tscEvent1(int x, int y);
 static void tscEvent2(int x, int y);
@@ -111,14 +112,19 @@ int main(void) {
   lcdDriver.drawPixel = ILI9320_DrawPixel;
   lcdDriver.drawNextPixel = ILI9320_DrawNextPixel;
   lcdDriver.setGramAddress = ILI9320_SetCursor;
+  lcdDriver.horizontalGramUpdate = ILI9320_SetHorizontalGramUpdateDirection;
+  lcdDriver.verticalGramUpdate = ILI9320_SetVerticalGramUpdateDirection;
   lcdDriver.width = 320;
   lcdDriver.height = 240;
   GRAPH_Initialize(&lcdDriver);
-
-  GRAPH_DrawRectangle(100, 100, 50, 100, GRAPH_RED);
+  GRAPH_DrawFilledCircle(100, 100, 50, 0x00ff00ul);
+  GRAPH_DrawFilledRectangle(10, 100, 50, 100, GRAPH_RED);
+  GRAPH_DrawRectangle(70, 100, 50, 100, 10, GRAPH_RED);
   GRAPH_SetFont(font21x39Info);
   GRAPH_DrawString("Hello World", 50, 50, GRAPH_WHITE, GRAPH_BLUE);
-
+  GRAPH_DrawFilledRectangle(10, 100, 50, 100, GRAPH_RED);
+  GRAPH_DrawLine(50, 50, 200, 200, GRAPH_RED);
+//  GRAPH_DrawFilledCircle(100, 100, 50, 0x00ff00ul);
 //  GRAPH_DrawBox(100, 100, 100, 100, 5, GRAPH_BLUE);
 //  GRAPH_DrawFilledCircle(50, 50, 50, GRAPH_BLUE);
 //  GRAPH_SetFont(font21x39Info);
@@ -133,20 +139,32 @@ int main(void) {
 
   // draw image test
 //  TIMER_DelayMillis(3000);
-//  GRAPH_ClearScreen(0);
-//  GRAPH_DrawImage(30, 30);
+//  /**
+//   * @brief Example image to be drawn on screen.
+//   */
+//  GRAPH_ImageTypedef displayedImage = {
+//      example_bmp,
+//      192,
+//      256,
+//      3
+//  };
+//  GRAPH_ClearScreen(GRAPH_BLACK);
+//  GRAPH_DrawImage(30, 30, &displayedImage, FALSE);
 
   // data for example graph - sinusoidal signal
-//  uint8_t graphData[320];
-//  double x = 0.0;
-//
-//  for (int i = 0; i < 320; i++, x+=0.01*M_PI) {
-//    graphData[i] = (uint8_t)(sin(x)*100 + 100);
-//  }
-//
-//  TIMER_DelayMillis(3000);
-//  GRAPH_ClearScreen(0);
-//  GRAPH_DrawGraph(graphData, 290, 0, 0);
+  uint8_t graphData[320];
+  double x = 0.0;
+
+  for (int i = 0; i < 320; i++, x+=0.01*M_PI) {
+    graphData[i] = (uint8_t)(sin(x)*100 + 100);
+  }
+
+  TIMER_DelayMillis(3000);
+  GRAPH_ClearScreen(GRAPH_WHITE);
+  GRAPH_DrawGraph(graphData, 290, 0, 0, GRAPH_RED, GRAPH_BLUE);
+
+  GRAPH_DrawLine(50, 50, 200, 200, GRAPH_RED);
+
 
 //   draw example bar chart
 //  TIMER_DelayMillis(3000);
@@ -200,9 +218,13 @@ int main(void) {
 
 #endif
 
+  int position = 0;
   while (TRUE) {
-    TSC2046_Update(); // run touchscreen functions
-    TIMER_SoftTimersUpdate(); // run timers
+//    GRAPH_DrawRectangle(position, 100, 50, 100, GRAPH_RED);
+//    position+=1;
+//    GRAPH_DrawRectangle(position-1, 100, 1, 100, GRAPH_BLACK);
+//    TSC2046_Update(); // run touchscreen functions
+//    TIMER_SoftTimersUpdate(); // run timers
   }
 }
 /**

@@ -36,7 +36,8 @@ void          ILI9320_DrawPixel     (int x, int y, unsigned int color);
 void          ILI9320_SetCursor     (int x, int y);
 void          ILI9320_DrawNextPixel (unsigned int rgbColor);
 unsigned int  ILI9320_RGBDecode     (unsigned int rgbColor);
-
+void ILI9320_SetHorizontalGramUpdateDirection(void);
+void ILI9320_SetVerticalGramUpdateDirection(void);
 /**
  * @}
  */

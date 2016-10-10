@@ -184,6 +184,16 @@ void ILI9320_Initializtion(void) {
 
   TIMER_DelayMillis(INIT_DELAY);
 }
+void ILI9320_SetHorizontalGramUpdateDirection(void) {
+  ILI9320_HAL_WriteReg(ILI9320_ENTRY_MODE, 0x1000 | 0x0038);
+}
+void ILI9320_SetVerticalGramUpdateDirection(void) {
+  const int GRAM_VERTICAL_UPDATE_DIRECTION_BIT = 0x0008;
+  const int SWAP_RGB_TO_BGR_IN_GRAM_BIT = 0x1000;
+  const int HORIZONTAL_INCREMENT_VERTICAL_DECREMENT = 0x0030;
+  ILI9320_HAL_WriteReg(ILI9320_ENTRY_MODE,
+      SWAP_RGB_TO_BGR_IN_GRAM_BIT | HORIZONTAL_INCREMENT_VERTICAL_DECREMENT);
+}
 /**
  * @brief Move cursor to given coordinates.
  * @param x X coordinate
