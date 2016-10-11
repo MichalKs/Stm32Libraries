@@ -1015,7 +1015,7 @@ static int FAT_FindFile(FAT_File* file) {
       }
       *namePtr = 0;
       println("%s: Long file name", __FUNCTION__);
-      hexdump16C(longFilename, 14);
+      UTILS_Hexdump16(longFilename, 14);
 
       return file->id;
     }

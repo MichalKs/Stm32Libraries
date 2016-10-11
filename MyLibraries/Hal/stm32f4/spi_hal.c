@@ -42,6 +42,25 @@
 #define SPI3_CS_PIN                      GPIO_PIN_15
 #define SPI3_CS_PORT                     GPIOA
 
+#define SPI1_CLK_ENABLE()                __HAL_RCC_SPI1_CLK_ENABLE()
+#define SPI1_SCK_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOA_CLK_ENABLE()
+#define SPI1_MISO_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define SPI1_MOSI_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define SPI1_CS_GPIO_CLK_ENABLE()        __HAL_RCC_GPIOA_CLK_ENABLE()
+#define SPI1_FORCE_RESET()               __HAL_RCC_SPI1_FORCE_RESET()
+#define SPI1_RELEASE_RESET()             __HAL_RCC_SPI1_RELEASE_RESET()
+#define SPI1_SCK_PIN                     GPIO_PIN_5
+#define SPI1_SCK_GPIO_PORT               GPIOA
+#define SPI1_SCK_AF                      GPIO_AF5_SPI1
+#define SPI1_MISO_PIN                    GPIO_PIN_6
+#define SPI1_MISO_GPIO_PORT              GPIOA
+#define SPI1_MISO_AF                     GPIO_AF5_SPI1
+#define SPI1_MOSI_PIN                    GPIO_PIN_7
+#define SPI1_MOSI_GPIO_PORT              GPIOA
+#define SPI1_MOSI_AF                     GPIO_AF5_SPI1
+#define SPI1_CS_PIN                      GPIO_PIN_4
+#define SPI1_CS_PORT                     GPIOA
+
 static SPI_HandleTypeDef spi1Handle;
 static SPI_HandleTypeDef spi3Handle;
 
@@ -93,6 +112,10 @@ void SPI_HAL_Select(SPI_HAL_Typedef spi) {
     HAL_GPIO_WritePin(SPI3_CS_PORT, SPI3_CS_PIN, GPIO_PIN_RESET);
     break;
 
+  case SPI_HAL_SPI1:
+    HAL_GPIO_WritePin(SPI1_CS_PORT, SPI1_CS_PIN, GPIO_PIN_RESET);
+    break;
+
   default:
     return;
   }
@@ -104,6 +127,10 @@ void SPI_HAL_Deselect(SPI_HAL_Typedef spi) {
   switch(spi) {
   case SPI_HAL_SPI3:
     HAL_GPIO_WritePin(SPI3_CS_PORT, SPI3_CS_PIN, GPIO_PIN_SET);
+    break;
+
+  case SPI_HAL_SPI1:
+    HAL_GPIO_WritePin(SPI1_CS_PORT, SPI1_CS_PIN, GPIO_PIN_SET);
     break;
 
   default:
@@ -118,7 +145,22 @@ void SPI_HAL_Deselect(SPI_HAL_Typedef spi) {
  */
 void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length) {
 
-  if (HAL_SPI_Transmit(&spi3Handle, (uint8_t*)transmitBuffer,
+  SPI_HAL_Typedef * spiHandle;
+
+  switch (spi) {
+  case SPI_HAL_SPI3:
+    spiHandle = &spi3Handle;
+    break;
+
+  case SPI_HAL_SPI1:
+    spiHandle = &spi1Handle;
+    break;
+
+  default:
+    return;
+  }
+
+  if (HAL_SPI_Transmit(spiHandle, (uint8_t*)transmitBuffer,
        length, SPI_MAX_DELAY_TIME) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
@@ -131,7 +173,22 @@ void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length
  */
 void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length) {
 
-  if (HAL_SPI_Receive(&spi3Handle, (uint8_t*)receiveBuffer,
+  SPI_HAL_Typedef * spiHandle;
+
+  switch (spi) {
+  case SPI_HAL_SPI3:
+    spiHandle = &spi3Handle;
+    break;
+
+  case SPI_HAL_SPI1:
+    spiHandle = &spi1Handle;
+    break;
+
+  default:
+    return;
+  }
+
+  if (HAL_SPI_Receive(spiHandle, (uint8_t*)receiveBuffer,
        length, SPI_MAX_DELAY_TIME) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
@@ -146,7 +203,22 @@ void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length)
 void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
     uint8_t* transmitBuffer, int length) {
 
-  if (HAL_SPI_TransmitReceive(&spi3Handle, (uint8_t*)transmitBuffer,
+  SPI_HAL_Typedef * spiHandle;
+
+  switch (spi) {
+  case SPI_HAL_SPI3:
+    spiHandle = &spi3Handle;
+    break;
+
+  case SPI_HAL_SPI1:
+    spiHandle = &spi1Handle;
+    break;
+
+  default:
+    return;
+  }
+
+  if (HAL_SPI_TransmitReceive(spiHandle, (uint8_t*)transmitBuffer,
       (uint8_t *)receiveBuffer, length, SPI_MAX_DELAY_TIME) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
@@ -186,6 +258,35 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *spiHandle) {
     gpioInitialization.Pull   = GPIO_NOPULL;
     HAL_GPIO_Init(SPI3_CS_PORT, &gpioInitialization);
     HAL_GPIO_WritePin(SPI3_CS_PORT, SPI3_CS_PIN, GPIO_PIN_SET);
+
+  } else if (spiHandle == &spi1Handle) {
+    SPI1_SCK_GPIO_CLK_ENABLE();
+    SPI1_MISO_GPIO_CLK_ENABLE();
+    SPI1_MOSI_GPIO_CLK_ENABLE();
+    SPI1_CS_GPIO_CLK_ENABLE();
+    SPI1_CLK_ENABLE();
+
+    gpioInitialization.Pin       = SPI1_SCK_PIN;
+    gpioInitialization.Mode      = GPIO_MODE_AF_PP;
+    gpioInitialization.Pull      = GPIO_PULLUP;
+    gpioInitialization.Speed     = GPIO_SPEED_FAST;
+    gpioInitialization.Alternate = SPI1_SCK_AF;
+    HAL_GPIO_Init(SPI1_SCK_GPIO_PORT, &gpioInitialization);
+
+    gpioInitialization.Pin = SPI1_MISO_PIN;
+    gpioInitialization.Alternate = SPI1_MISO_AF;
+    HAL_GPIO_Init(SPI1_MISO_GPIO_PORT, &gpioInitialization);
+
+    gpioInitialization.Pin = SPI1_MOSI_PIN;
+    gpioInitialization.Alternate = SPI1_MOSI_AF;
+    HAL_GPIO_Init(SPI1_MOSI_GPIO_PORT, &gpioInitialization);
+
+    gpioInitialization.Pin    = SPI1_CS_PIN;
+    gpioInitialization.Mode   = GPIO_MODE_OUTPUT_PP;
+    gpioInitialization.Speed  = GPIO_SPEED_FAST;
+    gpioInitialization.Pull   = GPIO_NOPULL;
+    HAL_GPIO_Init(SPI1_CS_PORT, &gpioInitialization);
+    HAL_GPIO_WritePin(SPI1_CS_PORT, SPI1_CS_PIN, GPIO_PIN_SET);
   }
 
 }
@@ -202,6 +303,12 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *spiHandle) {
     HAL_GPIO_DeInit(SPI3_MISO_GPIO_PORT, SPI3_MISO_PIN);
     HAL_GPIO_DeInit(SPI3_MOSI_GPIO_PORT, SPI3_MOSI_PIN);
     HAL_GPIO_DeInit(SPI3_CS_PORT, SPI3_CS_PIN);
+
+  } else if (spiHandle == &spi1Handle) {
+    HAL_GPIO_DeInit(SPI1_SCK_GPIO_PORT, SPI1_SCK_PIN);
+    HAL_GPIO_DeInit(SPI1_MISO_GPIO_PORT, SPI1_MISO_PIN);
+    HAL_GPIO_DeInit(SPI1_MOSI_GPIO_PORT, SPI1_MOSI_PIN);
+    HAL_GPIO_DeInit(SPI1_CS_PORT, SPI1_CS_PIN);
   }
 }
 /**

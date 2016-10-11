@@ -188,7 +188,7 @@ int main(void) {
 
   int i = FAT_ReadFile(hello, data, 5);
   i += FAT_ReadFile(hello, data+i, 60);
-  hexdumpC(data, i);
+  UTILS_HexdumpWithCharacters(data, i);
 
   int hamlet = FAT_OpenFile("HAMLET  TXT");
 
@@ -196,7 +196,7 @@ int main(void) {
 
   i = FAT_ReadFile(hamlet, data, 5);
   i += FAT_ReadFile(hamlet, data+i, 30);
-  hexdumpC(data, i);
+  UTILS_HexdumpWithCharacters(data, i);
 
   for (int k = 0; k < 5; k++) {
     data[k] = 'y';
