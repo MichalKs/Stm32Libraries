@@ -133,9 +133,7 @@
 		<configuration configurationName="Release">
 			<resource resourceType="PROJECT" workspacePath="/Ili9320"/>
 		</configuration>
-		<configuration configurationName="stm32f4">
-			<resource resourceType="PROJECT" workspacePath="/Ili9320"/>
-		</configuration>
+		<configuration configurationName="stm32f4"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>

@@ -30,7 +30,14 @@
  * @{
  */
 
-void    SD_Init         (void);
+typedef enum {
+  SD_NO_ERROR = 0,
+  SD_RESPONSE_ERROR,
+  SD_INIT_FAILED,
+
+} SD_CardErrorsTypedef;
+
+int     SD_Init         (void);
 uint8_t SD_ReadBlock    (uint32_t block, uint8_t* buf);
 uint8_t SD_ReadSectors  (uint8_t* buf, uint32_t sector, uint32_t count);
 uint8_t SD_WriteSectors (uint8_t* buf, uint32_t sector, uint32_t count);

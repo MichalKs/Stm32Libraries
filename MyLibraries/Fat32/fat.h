@@ -30,7 +30,7 @@
  * @{
  */
 
-int8_t FAT_Init(void (*phyInit)(void),
+int8_t FAT_Init(int (*phyInit)(void),
     uint8_t (*phyReadSectors)(uint8_t* buf, uint32_t sector, uint32_t count),
     uint8_t (*phyWriteSectors)(uint8_t* buf, uint32_t sector, uint32_t count));
 
