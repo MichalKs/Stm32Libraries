@@ -76,28 +76,29 @@ void SPI_HAL_Init(SPI_HAL_Typedef spi) {
   switch (spi) {
   case SPI_HAL_SPI1:
     currentHandle = &spi1Handle;
-    spi3Handle.Instance = SPI1;
+    currentHandle->Instance = SPI1;
+    currentHandle->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
     break;
   case SPI_HAL_SPI3:
     currentHandle = &spi3Handle;
-    spi3Handle.Instance = SPI3;
+    currentHandle->Instance = SPI3;
+    currentHandle->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
     break;
 
   default:
     return;
   }
 
-  spi3Handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
-  spi3Handle.Init.Direction         = SPI_DIRECTION_2LINES;
-  spi3Handle.Init.CLKPhase          = SPI_PHASE_1EDGE;
-  spi3Handle.Init.CLKPolarity       = SPI_POLARITY_LOW;
-  spi3Handle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
-  spi3Handle.Init.CRCPolynomial     = 7;
-  spi3Handle.Init.DataSize          = SPI_DATASIZE_8BIT;
-  spi3Handle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-  spi3Handle.Init.NSS               = SPI_NSS_SOFT;
-  spi3Handle.Init.TIMode            = SPI_TIMODE_DISABLE;
-  spi3Handle.Init.Mode              = SPI_MODE_MASTER;
+  currentHandle->Init.Direction         = SPI_DIRECTION_2LINES;
+  currentHandle->Init.CLKPhase          = SPI_PHASE_1EDGE;
+  currentHandle->Init.CLKPolarity       = SPI_POLARITY_LOW;
+  currentHandle->Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
+  currentHandle->Init.CRCPolynomial     = 7;
+  currentHandle->Init.DataSize          = SPI_DATASIZE_8BIT;
+  currentHandle->Init.FirstBit          = SPI_FIRSTBIT_MSB;
+  currentHandle->Init.NSS               = SPI_NSS_SOFT;
+  currentHandle->Init.TIMode            = SPI_TIMODE_DISABLE;
+  currentHandle->Init.Mode              = SPI_MODE_MASTER;
 
   if(HAL_SPI_Init(currentHandle) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
@@ -145,7 +146,7 @@ void SPI_HAL_Deselect(SPI_HAL_Typedef spi) {
  */
 void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length) {
 
-  SPI_HAL_Typedef * spiHandle;
+  SPI_HandleTypeDef * spiHandle;
 
   switch (spi) {
   case SPI_HAL_SPI3:
@@ -173,7 +174,7 @@ void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length
  */
 void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length) {
 
-  SPI_HAL_Typedef * spiHandle;
+  SPI_HandleTypeDef * spiHandle;
 
   switch (spi) {
   case SPI_HAL_SPI3:
@@ -203,7 +204,7 @@ void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length)
 void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
     uint8_t* transmitBuffer, int length) {
 
-  SPI_HAL_Typedef * spiHandle;
+  SPI_HandleTypeDef * spiHandle;
 
   switch (spi) {
   case SPI_HAL_SPI3:
@@ -268,8 +269,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *spiHandle) {
 
     gpioInitialization.Pin       = SPI1_SCK_PIN;
     gpioInitialization.Mode      = GPIO_MODE_AF_PP;
-    gpioInitialization.Pull      = GPIO_PULLUP;
-    gpioInitialization.Speed     = GPIO_SPEED_FAST;
+    gpioInitialization.Pull      = GPIO_NOPULL;
+    gpioInitialization.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
     gpioInitialization.Alternate = SPI1_SCK_AF;
     HAL_GPIO_Init(SPI1_SCK_GPIO_PORT, &gpioInitialization);
 
@@ -283,7 +284,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *spiHandle) {
 
     gpioInitialization.Pin    = SPI1_CS_PIN;
     gpioInitialization.Mode   = GPIO_MODE_OUTPUT_PP;
-    gpioInitialization.Speed  = GPIO_SPEED_FAST;
+    gpioInitialization.Speed  = GPIO_SPEED_FREQ_VERY_HIGH;
     gpioInitialization.Pull   = GPIO_NOPULL;
     HAL_GPIO_Init(SPI1_CS_PORT, &gpioInitialization);
     HAL_GPIO_WritePin(SPI1_CS_PORT, SPI1_CS_PIN, GPIO_PIN_SET);

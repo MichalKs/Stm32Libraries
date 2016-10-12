@@ -114,7 +114,7 @@ typedef union {
     uint8_t reserved            :1; ///< Reserved (always 0)
   } flags;
 
-  uint8_t responseR1; ///< R1 response fields as byte
+  uint8_t byte; ///< R1 response fields as byte
 } SD_ResponseR1;
 /**
  * @brief SD Card R2 response structure
@@ -263,7 +263,7 @@ void SD_Init(void) {
   SPI_HAL_Select(SPI_HAL_SPI1);
 
   // Synchronize card with SPI
-  for (i = 0; i < 20; i++) {
+  for (i = 0; i < 40; i++) {
     spiRxBuffer[i] = 0xff;
   }
   SPI_HAL_SendBuffer(SPI_HAL_SPI1, spiRxBuffer, 20);
@@ -271,22 +271,22 @@ void SD_Init(void) {
   SD_ResponseR1 resp; // response R1 token
 
   // send CMD0
-  resp.responseR1 = SD_SendCommand(SD_GO_IDLE_STATE, 0);
+  resp.byte = SD_SendCommand(SD_GO_IDLE_STATE, 0);
 
   // Check response errors
-  if (resp.responseR1 != 0x01) {
+  if (resp.byte != 0x01) {
     println("GO_IDLE_STATE error");
   }
 
   // send CMD8
-  resp.responseR1 = SD_SendCommand(SD_SEND_IF_COND,
+  resp.byte = SD_SendCommand(SD_SEND_IF_COND,
       SD_IF_COND_VOLT | SD_IF_COND_CHECK); // voltage range and check pattern
 
   // CMD8 gets more info
   SD_GetResponseR3orR7(buf);
 
   // Check response errors
-  if (resp.responseR1 != 0x01) {
+  if (resp.byte != 0x01) {
     println("SEND_IF_COND error");
   }
 
@@ -304,19 +304,19 @@ void SD_Init(void) {
   resp = SD_ReadOCR(&ocr);;
 
   // Check response errors
-  if (resp.responseR1 != 0x01) {
+  if (resp.byte != 0x01) {
     println("READ_OCR error");
   }
 
   // Send ACMD41 until card goes out of IDLE state
   for (i=0; i<10; i++) {
 
-    resp.responseR1 = SD_SendCommand(SD_APP_CMD, 0);
-    resp.responseR1 = SD_SendCommand(SD_ACMD_SEND_OP_COND, SD_ACMD41_HCS);
+    resp.byte = SD_SendCommand(SD_APP_CMD, 0);
+    resp.byte = SD_SendCommand(SD_ACMD_SEND_OP_COND, SD_ACMD41_HCS);
     // Without this delay card wouldn't initialize the first time after
     // power was connected.
     TIMER_DelayMillis(20);
-    if (resp.responseR1 == 0x00) { // Card left IDLE state and no errors
+    if (resp.byte == 0x00) { // Card left IDLE state and no errors
       break;
     }
 
@@ -336,7 +336,7 @@ void SD_Init(void) {
   // Read Card Capacity Status - SDSC or SDHC?
   resp = SD_ReadOCR(&ocr);
 
-  if (resp.responseR1 != 0x00) {
+  if (resp.byte != 0x00) {
     println("READ_OCR error");
   }
 
@@ -370,6 +370,9 @@ uint64_t SD_ReadCapacity(void) {
  */
 uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
+  const int MAX_BUFFER_LENGTH = 20;
+  uint8_t spiCommandBuffer[MAX_BUFFER_LENGTH];
+
   SD_ResponseR1 resp;
 
   // SDSC cards use byte addressing, SDHC use block addressing
@@ -379,27 +382,39 @@ uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
   SPI_HAL_Select(SPI_HAL_SPI1);
 
-  resp.responseR1 = SD_SendCommand(SD_READ_MULTIPLE_BLOCK, sector);
+  resp.byte = SD_SendCommand(SD_READ_MULTIPLE_BLOCK, sector);
 
-  if (resp.responseR1 != 0x00) {
+  if (resp.byte != 0x00) {
     println("SD_READ_MULTIPLE_BLOCK error");
     SPI_HAL_Deselect(SPI_HAL_SPI1);
     return 1;
   }
 
   while (count) {
-    while (SD_HAL_TransmitData(0xff) != SD_TOKEN_SBR_MBR_SBW); // wait for data token
-    SD_HAL_ReadBuffer(buf, 512);
-    SD_HAL_TransmitData(0xff);
-    SD_HAL_TransmitData(0xff); // two bytes CRC
+    // wait for data token
+    while(TRUE) {
+      SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 1);
+      if (spiCommandBuffer[0] == SD_TOKEN_SBR_MBR_SBW) {
+        break;
+      }
+    }
+
+    SPI_HAL_ReadBuffer(SPI_HAL_SPI1, buf, 512);
+    // two bytes CRC
+    SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 2);
     count--;
     buf += 512; // move buffer pointer forward
   }
 
-  resp.responseR1 = SD_SendCommand(SD_STOP_TRANSMISSION, 0);
+  resp.byte = SD_SendCommand(SD_STOP_TRANSMISSION, 0);
 
   // R1b response - check busy flag
-  while(!SD_HAL_TransmitData(0xff));
+  while(TRUE) {
+    SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 1);
+    if (spiCommandBuffer[0]) {
+      break;
+    }
+  }
 
   SPI_HAL_Deselect(SPI_HAL_SPI1);
 
@@ -415,6 +430,9 @@ uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
  */
 uint8_t SD_WriteSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
+  const int MAX_BUFFER_LENGTH = 20;
+  uint8_t spiCommandBuffer[MAX_BUFFER_LENGTH];
+
   SD_ResponseR1 resp;
 
   // SDSC cards use byte addressing, SDHC use block addressing
@@ -424,31 +442,46 @@ uint8_t SD_WriteSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
   SPI_HAL_Select(SPI_HAL_SPI1);
 
-  resp.responseR1 = SD_SendCommand(SD_WRITE_MULTIPLE_BLOCK, sector);
+  resp.byte = SD_SendCommand(SD_WRITE_MULTIPLE_BLOCK, sector);
 
-  if (resp.responseR1 != 0x00) {
+  if (resp.byte != 0x00) {
     println("SD_WRITE_MULTIPLE_BLOCK error");
     SPI_HAL_Deselect(SPI_HAL_SPI1);
     return 1;
   }
 
   while (count) {
-    SD_HAL_TransmitData(0xfc); // send start block token
-    SD_HAL_WriteBuffer(buf, 512);
-    SD_HAL_TransmitData(0xff);
-    SD_HAL_TransmitData(0xff); // two bytes CRC
+    spiCommandBuffer[0] = 0xfc;
+    SPI_HAL_SendBuffer(SPI_HAL_SPI1, spiCommandBuffer, 1);
+    SPI_HAL_SendBuffer(SPI_HAL_SPI1, buf, 512);
+    spiCommandBuffer[0] = 0xff;
+    spiCommandBuffer[1] = 0xff;
+    SPI_HAL_SendBuffer(SPI_HAL_SPI1, spiCommandBuffer, 2);
     count--;
     buf += 512; // move buffer pointer forward
 
     // data response
-    SD_HAL_TransmitData(0xff);
+    SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 1);
+    // wait while card is busy
+    while(TRUE) {
+      SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 1);
+      if (spiCommandBuffer[0]) {
+        break;
+      }
+    }
 
-    while(!SD_HAL_TransmitData(0xff)); // wait while card is busy
   }
-
-  SD_HAL_TransmitData(0xfd); // stop transmission token
-  SD_HAL_TransmitData(0xff);
-  while(!SD_HAL_TransmitData(0xff)); // wait while card is busy
+  // stop transmission token
+  spiCommandBuffer[0] = 0xfd;
+  spiCommandBuffer[1] = 0xff;
+  SPI_HAL_SendBuffer(SPI_HAL_SPI1, spiCommandBuffer, 2);
+  // wait while card is busy
+  while(TRUE) {
+    SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 1);
+    if (spiCommandBuffer[0]) {
+      break;
+    }
+  }
 
   SPI_HAL_Deselect(SPI_HAL_SPI1);
 
@@ -469,7 +502,7 @@ static SD_ResponseR1 SD_ReadOCR(SD_OCR* ocr) {
 
   SD_ResponseR1 resp; // response R1
 
-  resp.responseR1 = SD_SendCommand(SD_READ_OCR, 0);
+  resp.byte = SD_SendCommand(SD_READ_OCR, 0);
   // OCR has more data
   SD_GetResponseR3orR7(tmp);
 
@@ -501,19 +534,22 @@ static void SD_ReadCID(SD_CID* cid) {
   uint8_t buf[16];
   SD_ResponseR1 resp;
 
-  resp.responseR1 = SD_SendCommand(SD_SEND_CID, 0);
+  resp.byte = SD_SendCommand(SD_SEND_CID, 0);
 
-  if (resp.responseR1 != 0x00) {
+  if (resp.byte != 0x00) {
     println("SD_SEND_CID error");
     return;
   }
 
   // Read CID implemented as read block
   // So do the same as for read block
-  while (SD_HAL_TransmitData(0xff) != SD_TOKEN_SBR_MBR_SBW); // wait for data token
-  SD_HAL_ReadBuffer(buf, 16);
-  SD_HAL_TransmitData(0xff);
-  SD_HAL_TransmitData(0xff); // two bytes CRC
+  while(TRUE) {
+    SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 1);
+    if (spiCommandBuffer[0] == SD_TOKEN_SBR_MBR_SBW) {
+      break;
+    }
+  }
+  SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 18);
 
   uint8_t* ptr = (uint8_t*)cid;
   for (int i = 0; i < 16; i++) {
@@ -546,9 +582,9 @@ static void SD_ReadCSD(SD_CSD* csd) {
 
   SD_ResponseR1 resp;
 
-  resp.responseR1 = SD_SendCommand(SD_SEND_CSD, 0);
+  resp.byte = SD_SendCommand(SD_SEND_CSD, 0);
 
-  if (resp.responseR1 != 0x00) {
+  if (resp.byte != 0x00) {
     println("SD_SEND_CSD error");
     return;
   }
@@ -600,7 +636,7 @@ static void SD_ReadCSD(SD_CSD* csd) {
  * @param args Command arguments: 4 bytes as a 32-bit number
  * @return Returns R1 response token
  */
-static uint8_t SD_SendCommand(uint8_t cmd, uint32_t args) {
+uint8_t SD_SendCommand(uint8_t cmd, uint32_t args) {
 
   const int MAX_BUFFER_LENGTH = 20;
   uint8_t spiCommandBuffer[MAX_BUFFER_LENGTH];
@@ -628,6 +664,10 @@ static uint8_t SD_SendCommand(uint8_t cmd, uint32_t args) {
   // is sent as the second byte by the card.
   // So, we send a dummy byte first.
   SPI_HAL_ReadBuffer(SPI_HAL_SPI1, spiCommandBuffer, 2);
+//  for (int i = 0; i < 5; i++) {
+//    printf("%02x ", spiCommandBuffer [i]);
+//  }
+//  printf("\r\n");
   uint8_t ret = spiCommandBuffer[1];
   println("Response to cmd %d is %02x", cmd, ret);
 

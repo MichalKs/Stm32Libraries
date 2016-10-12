@@ -50,8 +50,8 @@ static void tscEvent2(int x, int y);
 #define println(str, args...) (void)0
 #endif
 
-//#define TEST_SD
-//#define USE_GUI
+#define TEST_SD
+#define USE_GUI
 
 /**
  * @brief Callback for performing periodic tasks
@@ -152,18 +152,18 @@ int main(void) {
 //  GRAPH_DrawImage(30, 30, &displayedImage, FALSE);
 
   // data for example graph - sinusoidal signal
-  uint8_t graphData[320];
-  double x = 0.0;
-
-  for (int i = 0; i < 320; i++, x+=0.01*M_PI) {
-    graphData[i] = (uint8_t)(sin(x)*100 + 100);
-  }
-
-  TIMER_DelayMillis(3000);
-  GRAPH_ClearScreen(GRAPH_WHITE);
-  GRAPH_DrawGraph(graphData, 290, 0, 0, GRAPH_RED, GRAPH_BLUE);
-
-  GRAPH_DrawLine(50, 50, 200, 200, GRAPH_RED);
+//  uint8_t graphData[320];
+//  double x = 0.0;
+//
+//  for (int i = 0; i < 320; i++, x+=0.01*M_PI) {
+//    graphData[i] = (uint8_t)(sin(x)*100 + 100);
+//  }
+//
+//  TIMER_DelayMillis(3000);
+//  GRAPH_ClearScreen(GRAPH_WHITE);
+//  GRAPH_DrawGraph(graphData, 290, 0, 0, GRAPH_RED, GRAPH_BLUE);
+//
+//  GRAPH_DrawLine(50, 50, 200, 200, GRAPH_RED);
 
 
 //   draw example bar chart
@@ -198,15 +198,11 @@ int main(void) {
   i += FAT_ReadFile(hamlet, data+i, 30);
   UTILS_HexdumpWithCharacters(data, i);
 
-  for (int k = 0; k < 5; k++) {
-    data[k] = 'y';
-  }
+  char message[] = "Hello world, from STM32 to FAT driver new one"; // length 37
 
-  char message[] = "Hello world, from STM32 to FAT driver"; // length 37
-
-  FAT_MoveWrPtr(hello, 500);
-
-  FAT_WriteFile(hello, (uint8_t*)message, strlen(message));
+//  FAT_MoveWrPtr(hello, 500);
+//
+//  FAT_WriteFile(hello, (uint8_t*)message, strlen(message));
 #endif
 
 
@@ -223,8 +219,8 @@ int main(void) {
 //    GRAPH_DrawRectangle(position, 100, 50, 100, GRAPH_RED);
 //    position+=1;
 //    GRAPH_DrawRectangle(position-1, 100, 1, 100, GRAPH_BLACK);
-//    TSC2046_Update(); // run touchscreen functions
-//    TIMER_SoftTimersUpdate(); // run timers
+    TSC2046_Update(); // run touchscreen functions
+    TIMER_SoftTimersUpdate(); // run timers
   }
 }
 /**
