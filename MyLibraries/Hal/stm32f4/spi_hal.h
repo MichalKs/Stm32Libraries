@@ -44,6 +44,7 @@ void SPI_HAL_ReadBuffer     (SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int le
 void SPI_HAL_SendBuffer     (SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length);
 void SPI_HAL_TransmitBuffer (SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
     uint8_t* transmitBuffer, int length);
+uint8_t SPI_HAL_TransmitByte(SPI_HAL_Typedef spi, uint8_t dataToSend);
 
 /**
  * @}

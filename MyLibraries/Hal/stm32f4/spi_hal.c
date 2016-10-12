@@ -144,27 +144,34 @@ void SPI_HAL_Deselect(SPI_HAL_Typedef spi) {
  * @param length Number of bytes to send.
  * @warning Blocking function!
  */
-void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length) {
+void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer,
+    int length) {
 
-  SPI_HandleTypeDef * spiHandle;
-
-  switch (spi) {
-  case SPI_HAL_SPI3:
-    spiHandle = &spi3Handle;
-    break;
-
-  case SPI_HAL_SPI1:
-    spiHandle = &spi1Handle;
-    break;
-
-  default:
-    return;
+  while (length--) {
+    SPI_HAL_TransmitByte(spi, *transmitBuffer++);
   }
+  return;
 
-  if (HAL_SPI_Transmit(spiHandle, (uint8_t*)transmitBuffer,
-       length, SPI_MAX_DELAY_TIME) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
-  }
+//  SPI_HandleTypeDef * spiHandle;
+//
+//  switch (spi) {
+//  case SPI_HAL_SPI3:
+//    spiHandle = &spi3Handle;
+//    break;
+//
+//  case SPI_HAL_SPI1:
+//    spiHandle = &spi1Handle;
+//    break;
+//
+//  default:
+//    return;
+//  }
+//
+//  if (HAL_SPI_Transmit(spiHandle, (uint8_t*)transmitBuffer,
+//       length, SPI_MAX_DELAY_TIME) != HAL_OK) {
+//    COMMON_HAL_ErrorHandler();
+//  }
+
 }
 /**
  * @brief Read multiple data on SPI.
@@ -172,27 +179,33 @@ void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length
  * @param length Number of bytes to read.
  * @warning Blocking function!
  */
-void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length) {
+void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
+    int length) {
 
-  SPI_HandleTypeDef * spiHandle;
-
-  switch (spi) {
-  case SPI_HAL_SPI3:
-    spiHandle = &spi3Handle;
-    break;
-
-  case SPI_HAL_SPI1:
-    spiHandle = &spi1Handle;
-    break;
-
-  default:
-    return;
+  while (length--) {
+    *receiveBuffer++ = SPI_HAL_TransmitByte(spi, 0xff);
   }
+  return;
 
-  if (HAL_SPI_Receive(spiHandle, (uint8_t*)receiveBuffer,
-       length, SPI_MAX_DELAY_TIME) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
-  }
+//  SPI_HandleTypeDef * spiHandle;
+//
+//  switch (spi) {
+//  case SPI_HAL_SPI3:
+//    spiHandle = &spi3Handle;
+//    break;
+//
+//  case SPI_HAL_SPI1:
+//    spiHandle = &spi1Handle;
+//    break;
+//
+//  default:
+//    return;
+//  }
+//
+//  if (HAL_SPI_Receive(spiHandle, (uint8_t*)receiveBuffer,
+//       length, SPI_MAX_DELAY_TIME) != HAL_OK) {
+//    COMMON_HAL_ErrorHandler();
+//  }
 }
 /**
  * @brief Transmit multiple data on SPI3.
@@ -223,6 +236,33 @@ void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
       (uint8_t *)receiveBuffer, length, SPI_MAX_DELAY_TIME) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
+}
+uint8_t SPI_HAL_TransmitByte(SPI_HAL_Typedef spi, uint8_t dataToSend) {
+
+  const uint8_t INVALID_DATA = 0xff;
+
+  SPI_HandleTypeDef * spiHandle;
+
+  switch (spi) {
+  case SPI_HAL_SPI3:
+    spiHandle = &spi3Handle;
+    break;
+
+  case SPI_HAL_SPI1:
+    spiHandle = &spi1Handle;
+    break;
+
+  default:
+    return INVALID_DATA;
+  }
+
+  uint8_t receivedData;
+
+  if (HAL_SPI_TransmitReceive(spiHandle, &dataToSend,
+      &receivedData, 1, SPI_MAX_DELAY_TIME) != HAL_OK) {
+    COMMON_HAL_ErrorHandler();
+  }
+  return receivedData;
 }
 /**
  * @brief Initalize SPI HAL driver
