@@ -35,7 +35,8 @@ typedef enum {
   SD_RESPONSE_ERROR,
   SD_INIT_FAILED,
   SD_CMD_ERROR,
-
+  SD_BLOCK_READ_ERROR,
+  SD_BLOCK_WRITE_ERROR,
 } SD_CardErrorsTypedef;
 
 int     SD_Init         (void);
