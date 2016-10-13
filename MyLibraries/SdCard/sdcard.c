@@ -234,11 +234,11 @@ typedef struct {
 
 } __attribute((packed)) SD_CSD;
 
-static uint8_t sendCommand(uint8_t cmd, uint32_t args);
+static SD_CardErrorsTypedef sendCommand(uint8_t cmd, uint32_t args);
 static void getResponseR3orR7(uint8_t* buf);
-static SD_ResponseR1 SD_ReadOCR(SD_OCR* asUint32);
-static void SD_ReadCID(SD_CID* cid);
-static void SD_ReadCSD(SD_CSD* csd);
+static SD_CardErrorsTypedef SD_ReadOCR(SD_OCR* asUint32);
+static SD_CardErrorsTypedef SD_ReadCID(SD_CID* cid);
+static SD_CardErrorsTypedef SD_ReadCSD(SD_CSD* csd);
 
 #define DUMMY_BYTE 0xff ///< Dummy byte for reading data
 #define NO_ERRORS_IN_IDLE_STATE   0x01
@@ -252,7 +252,7 @@ int SD_Init(void) {
 
   const int BUFFER_LENGTH = 10;
   uint8_t sdCommandsBuffer[BUFFER_LENGTH];
-  SD_ResponseR1 commandResponse; // response R1 token
+  SD_CardErrorsTypedef result;
 
   SPI_HAL_Init(SPI_HAL_SPI1);
   SPI_HAL_Select(SPI_HAL_SPI1);
@@ -266,26 +266,12 @@ int SD_Init(void) {
   isCardInIdleState = TRUE;
 
   // send CMD0
-  commandResponse.asUint8 = sendCommand(SD_GO_IDLE_STATE, 0);
-
-  // Check response errors
-  if (commandResponse.asUint8 != NO_ERRORS_IN_IDLE_STATE) {
-    println("GO_IDLE_STATE error");
-    return SD_RESPONSE_ERROR;
-  }
-
+  sendCommand(SD_GO_IDLE_STATE, 0);
   // send CMD8
-  commandResponse.asUint8 = sendCommand(SD_SEND_IF_COND,
+  sendCommand(SD_SEND_IF_COND,
       SD_IF_COND_VOLT | SD_IF_COND_CHECK); // voltage range and check pattern
-
   // CMD8 gets more info
   getResponseR3orR7(sdCommandsBuffer);
-
-  // Check response errors
-  if (commandResponse.asUint8 != NO_ERRORS_IN_IDLE_STATE) {
-    println("SEND_IF_COND error");
-    return SD_RESPONSE_ERROR;
-  }
 
   // Check if card supports given voltage range
   if ((sdCommandsBuffer[3] != SD_IF_COND_CHECK) ||
@@ -300,24 +286,20 @@ int SD_Init(void) {
 
   // CMD58
   SD_OCR ocr;
-  commandResponse = SD_ReadOCR(&ocr);;
-  // Check response errors
-  if (commandResponse.asUint8 != NO_ERRORS_IN_IDLE_STATE) {
-    println("READ_OCR error");
-    return SD_RESPONSE_ERROR;
-  }
+  SD_ReadOCR(&ocr);;
 
   // Send ACMD41 until card goes out of IDLE state
   const int MAXIMUM_ACMD41_TRIES = 10;
   const int SD_INITIAL_DELAY = 20;
+  isCardInIdleState = FALSE;
   for (int i = 0; i < MAXIMUM_ACMD41_TRIES; i++) {
-    commandResponse.asUint8 = sendCommand(SD_APP_CMD, 0);
-    commandResponse.asUint8 = sendCommand(SD_ACMD_SEND_OP_COND, SD_ACMD41_HCS);
+    result = sendCommand(SD_APP_CMD, 0);
+    result = sendCommand(SD_ACMD_SEND_OP_COND, SD_ACMD41_HCS);
     // Without this delay card wouldn't initialize the first time after
     // power was connected.
     TIMER_DelayMillis(SD_INITIAL_DELAY);
 
-    if (commandResponse.asUint8 == NO_ERRORS_LEFT_IDLE_STATE) { // Card left IDLE state and no errors
+    if (result == SD_NO_ERROR) { // Card left IDLE state and no errors
       break;
     }
 
@@ -335,12 +317,7 @@ int SD_Init(void) {
   SD_ReadCSD(&csd);
 
   // Read Card Capacity Status - SDSC or SDHC?
-  commandResponse = SD_ReadOCR(&ocr);
-
-  if (commandResponse.asUint8 != NO_ERRORS_LEFT_IDLE_STATE) {
-    println("READ_OCR error");
-    return SD_RESPONSE_ERROR;
-  }
+  SD_ReadOCR(&ocr);
 
   // check capacity
   if (ocr.bits.cardCapacityStatus == TRUE) {
@@ -371,9 +348,9 @@ uint64_t SD_ReadCapacity(void) {
  * @retval 0 Read was successful
  * @retval 1 Error occurred
  */
-uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
+SD_CardErrorsTypedef SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
-  SD_ResponseR1 resp;
+  SD_CardErrorsTypedef result;
 
   // SDSC cards use byte addressing, SDHC use block addressing
   if (!isSDHC) {
@@ -382,9 +359,9 @@ uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
   SPI_HAL_Select(SPI_HAL_SPI1);
 
-  resp.asUint8 = sendCommand(SD_READ_MULTIPLE_BLOCK, sector);
+  result = sendCommand(SD_READ_MULTIPLE_BLOCK, sector);
 
-  if (resp.asUint8 != 0x00) {
+  if (result != SD_NO_ERROR) {
     println("SD_READ_MULTIPLE_BLOCK error");
     SPI_HAL_Deselect(SPI_HAL_SPI1);
     return 1;
@@ -399,7 +376,7 @@ uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
     buf += 512; // move buffer pointer forward
   }
 
-  resp.asUint8 = sendCommand(SD_STOP_TRANSMISSION, 0);
+  sendCommand(SD_STOP_TRANSMISSION, 0);
 
   // R1b response - check busy flag
   while(!SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
@@ -416,9 +393,9 @@ uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
  * @retval 0 Read was successful
  * @retval 1 Error occurred
  */
-uint8_t SD_WriteSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
+SD_CardErrorsTypedef SD_WriteSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
-  SD_ResponseR1 resp;
+  SD_CardErrorsTypedef result;
 
   // SDSC cards use byte addressing, SDHC use block addressing
   if (!isSDHC) {
@@ -427,9 +404,9 @@ uint8_t SD_WriteSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
   SPI_HAL_Select(SPI_HAL_SPI1);
 
-  resp.asUint8 = sendCommand(SD_WRITE_MULTIPLE_BLOCK, sector);
+  result = sendCommand(SD_WRITE_MULTIPLE_BLOCK, sector);
 
-  if (resp.asUint8 != 0x00) {
+  if (result != SD_NO_ERROR) {
     println("SD_WRITE_MULTIPLE_BLOCK error");
     SPI_HAL_Deselect(SPI_HAL_SPI1);
     return 1;
@@ -466,13 +443,10 @@ uint8_t SD_WriteSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
  *
  * @return OCR register value
  */
-static SD_ResponseR1 SD_ReadOCR(SD_OCR* asUint32) {
+SD_CardErrorsTypedef SD_ReadOCR(SD_OCR* asUint32) {
 
   uint8_t tmp[4];
-
-  SD_ResponseR1 resp; // response R1
-
-  resp.asUint8 = sendCommand(SD_READ_OCR, 0);
+  sendCommand(SD_READ_OCR, 0);
   // OCR has more data
   getResponseR3orR7(tmp);
 
@@ -490,23 +464,17 @@ static SD_ResponseR1 SD_ReadOCR(SD_OCR* asUint32) {
   }
   print("\r\n");
 
-  return resp;
+  return 0;
 }
 /**
  * @brief Read CID register of SD card
  * @param cid Structure for filling CID register.
  */
-static void SD_ReadCID(SD_CID* cid) {
+SD_CardErrorsTypedef SD_ReadCID(SD_CID* cid) {
 
   uint8_t buf[16];
-  SD_ResponseR1 resp;
 
-  resp.asUint8 = sendCommand(SD_SEND_CID, 0);
-
-  if (resp.asUint8 != 0x00) {
-    println("SD_SEND_CID error");
-    return;
-  }
+  sendCommand(SD_SEND_CID, 0);
 
   // Read CID implemented as read block
   // So do the same as for read block
@@ -534,17 +502,11 @@ static void SD_ReadCID(SD_CID* cid) {
  *
  * @param csd Structure for filling CSD register.
  */
-static void SD_ReadCSD(SD_CSD* csd) {
+SD_CardErrorsTypedef SD_ReadCSD(SD_CSD* csd) {
 
   uint8_t buf[16];
-  SD_ResponseR1 resp;
 
-  resp.asUint8 = sendCommand(SD_SEND_CSD, 0);
-
-  if (resp.asUint8 != 0x00) {
-    println("SD_SEND_CSD error");
-    return;
-  }
+  sendCommand(SD_SEND_CSD, 0);
 
   // Read CID implemented as read block
   // So do the same as for read block
@@ -585,7 +547,7 @@ static void SD_ReadCSD(SD_CSD* csd) {
  * @param args Command arguments: 4 bytes as a 32-bit number
  * @return Returns R1 response token
  */
-static uint8_t sendCommand(uint8_t cmd, uint32_t args) {
+SD_CardErrorsTypedef sendCommand(uint8_t cmd, uint32_t args) {
 
   SPI_HAL_TransmitByte(SPI_HAL_SPI1, 0x40 | cmd);
   SPI_HAL_TransmitByte(SPI_HAL_SPI1, args >> 24); // MSB first
@@ -608,12 +570,24 @@ static uint8_t sendCommand(uint8_t cmd, uint32_t args) {
   // is sent as the second byte by the card.
   // So, we send a dummy byte first.
   SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-  uint8_t ret = SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-  println("Response to cmd %d is %02x", cmd, ret);
+  SD_ResponseR1 commandResponse;
+  commandResponse.asUint8 = SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+  println("Response to cmd %d is %02x", cmd, commandResponse.asUint8);
 
+  // Check response errors
+  uint8_t okResponse;
+  if (isCardInIdleState) {
+    okResponse = NO_ERRORS_IN_IDLE_STATE;
+  } else {
+    okResponse = NO_ERRORS_LEFT_IDLE_STATE;
+  }
 
+  if (commandResponse.asUint8 != okResponse) {
+    println("Commands %d error", cmd);
+    return SD_RESPONSE_ERROR;
+  }
 
-  return ret;
+  return SD_NO_ERROR;
 }
 /**
  * @brief Get R3 or R7 response from card
@@ -624,7 +598,7 @@ static uint8_t sendCommand(uint8_t cmd, uint32_t args) {
  *
  * @param buf Buffer for response
  */
-static void getResponseR3orR7(uint8_t* buf) {
+void getResponseR3orR7(uint8_t* buf) {
 
   uint8_t i = 0;
   buf[i++] = SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
