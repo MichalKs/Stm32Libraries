@@ -58,8 +58,6 @@ static void tscEvent2(int x, int y);
  */
 void softTimerCallback(void) {
 
-//  println("Hello world");
-
   const int FRAME_MAX_SIZE = 10;
   char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
   int length;                         // length of command
@@ -208,9 +206,9 @@ int main(void) {
 
 #ifdef USE_GUI
   GUI_Init();
-
-  GUI_AddButton(50, 50, 50, 100, tscEvent1, "LED 0", 0x867474, GRAPH_WHITE);
-  GUI_AddButton(200, 50, 50, 100, tscEvent2, "LED 1", 0x867474, GRAPH_WHITE);
+  const unsigned int BUTTON_COLOR = 0x867474;
+  GUI_AddButton(50, 50, 100, 50, tscEvent1, "LED 0", BUTTON_COLOR, GRAPH_WHITE);
+  GUI_AddButton(200, 50, 100, 50, tscEvent2, "LED 1", BUTTON_COLOR, GRAPH_WHITE);
 
 #endif
 

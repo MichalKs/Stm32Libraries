@@ -20,7 +20,7 @@
 #include <stm32f4xx.h>
 
 /**
- * @addtogroup SPI
+ * @addtogroup SPI_HAL
  * @{
  */
 #define SPI3_CLK_ENABLE()                __HAL_RCC_SPI3_CLK_ENABLE()
@@ -143,6 +143,7 @@ void SPI_HAL_Deselect(SPI_HAL_Typedef spi) {
  * @param transmitBuffer Buffer to send.
  * @param length Number of bytes to send.
  * @warning Blocking function!
+ * FIXME SD card not working with the commented out code
  */
 void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer,
     int length) {
@@ -178,6 +179,7 @@ void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer,
  * @param receiveBuffer Buffer to place read data.
  * @param length Number of bytes to read.
  * @warning Blocking function!
+ * FIXME SD card not working with the commented out code
  */
 void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
     int length) {
@@ -237,6 +239,12 @@ void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
     COMMON_HAL_ErrorHandler();
   }
 }
+/**
+ * @brief Sends and receives one byte to the SPI slave
+ * @param spi SPI to send data on
+ * @param dataToSend Data to send
+ * @return Received data
+ */
 uint8_t SPI_HAL_TransmitByte(SPI_HAL_Typedef spi, uint8_t dataToSend) {
 
   const uint8_t INVALID_DATA = 0xff;

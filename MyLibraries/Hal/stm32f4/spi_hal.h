@@ -20,14 +20,15 @@
 #include <inttypes.h>
 
 /**
- * @defgroup  SPI SPI
+ * @defgroup  SPI_HAL SPI_HAL
  * @brief     SPI control functions
  */
 
 /**
- * @addtogroup SPI
+ * @addtogroup SPI_HAL
  * @{
  */
+
 /**
  * @brief Used SPI ID
  */
@@ -37,14 +38,14 @@ typedef enum {
   SPI_HAL_SPI3,//!< SPI_HAL_SPI3
 } SPI_HAL_Typedef;
 
-void SPI_HAL_Init           (SPI_HAL_Typedef spi);
-void SPI_HAL_Select         (SPI_HAL_Typedef spi);
-void SPI_HAL_Deselect       (SPI_HAL_Typedef spi);
-void SPI_HAL_ReadBuffer     (SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length);
-void SPI_HAL_SendBuffer     (SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length);
-void SPI_HAL_TransmitBuffer (SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
-    uint8_t* transmitBuffer, int length);
-uint8_t SPI_HAL_TransmitByte(SPI_HAL_Typedef spi, uint8_t dataToSend);
+void    SPI_HAL_Init          (SPI_HAL_Typedef spi);
+void    SPI_HAL_Select        (SPI_HAL_Typedef spi);
+void    SPI_HAL_Deselect      (SPI_HAL_Typedef spi);
+uint8_t SPI_HAL_TransmitByte  (SPI_HAL_Typedef spi, uint8_t dataToSend);
+void    SPI_HAL_ReadBuffer    (SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length);
+void    SPI_HAL_SendBuffer    (SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length);
+void    SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
+        uint8_t* transmitBuffer, int length);
 
 /**
  * @}

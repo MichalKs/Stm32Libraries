@@ -18,7 +18,7 @@
 #ifndef SDCARD_H_
 #define SDCARD_H_
 
-#include <stm32f4xx.h>
+#include <inttypes.h>
 
 /**
  * @defgroup  SD_CARD SD CARD
@@ -34,6 +34,7 @@ typedef enum {
   SD_NO_ERROR = 0,
   SD_RESPONSE_ERROR,
   SD_INIT_FAILED,
+  SD_CMD_ERROR,
 
 } SD_CardErrorsTypedef;
 

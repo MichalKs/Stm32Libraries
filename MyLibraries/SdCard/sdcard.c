@@ -38,51 +38,49 @@
   #define println(str, args...) (void)0
 #endif
 
-/*
- * SD commands (SPI command subset) as per SanDisk Secure Digital Card product manual.
- * TODO Add all commands
+/**
+ * @brief SD commands (SPI command subset) as per SanDisk Secure Digital Card
+ * product manual.
  */
-#define SD_GO_IDLE_STATE            0   ///< Resets SD Card.
-#define SD_SEND_OP_COND             1   ///< Activates the card initialization process, sends host capacity.
-#define SD_SEND_IF_COND             8   ///< Asks card whether it can operate in given voltage range.
-#define SD_SEND_CSD                 9   ///< Ask for card specific data (CSD).
-#define SD_SEND_CID                 10  ///< Ask for card identification (CID).
-#define SD_STOP_TRANSMISSION        12  ///< Forces a card to stop transmission during a multiple block read operation.
-#define SD_SEND_STATUS              13  ///< Ask for status register contents.
-#define SD_SET_BLOCKLEN             16  ///< Selects block length in bytes for all following block commands
-#define SD_READ_SINGLE_BLOCK        17  ///< Reads a block of size set by SET_BLOCKLEN
-#define SD_READ_MULTIPLE_BLOCK      18  ///< Continuously transfers data blocks from card to host until interrupted by STOP_TRANSMISSION
-#define SD_WRITE_BLOCK              24  ///< Writes a block of size set by SET_BLOCKLEN
-#define SD_WRITE_MULTIPLE_BLOCK     25  ///< Continuously writes blocks of data until a stop transmission token is sent
-#define SD_PROGRAM_CSD              27  ///< Programs the programmable bits of CSD
-#define SD_ERASE_WR_BLK_START_ADDR  32  ///< Sets the address of the first write block to be erased
-#define SD_ERASE_WR_BLK_END_ADDR    33  ///< Sets the address of the last write block of the continuous range to be erased
-#define SD_ERASE                    38  ///< Erases all previously selected write blocks
-#define SD_APP_CMD                  55  ///< Next command is application specific command
-#define SD_READ_OCR                 58  ///< Reads OCR register
-#define SD_CRC_ON_OFF               59  ///< Turns CRC on or off
+typedef enum {
+  SD_GO_IDLE_STATE           = 0 ,  ///< Resets SD Card.
+  SD_SEND_OP_COND            = 1 ,  ///< Activates the card initialization process, sends host capacity.
+  SD_SEND_IF_COND            = 8 ,  ///< Asks card whether it can operate in given voltage range.
+  SD_SEND_CSD                = 9 ,  ///< Ask for card specific data (CSD).
+  SD_SEND_CID                = 10,  ///< Ask for card identification (CID).
+  SD_STOP_TRANSMISSION       = 12,  ///< Forces a card to stop transmission during a multiple block read operation.
+  SD_SEND_STATUS             = 13,  ///< Ask for status register contents.
+  SD_SET_BLOCKLEN            = 16,  ///< Selects block length in bytes for all following block commands
+  SD_READ_SINGLE_BLOCK       = 17,  ///< Reads a block of size set by SET_BLOCKLEN
+  SD_READ_MULTIPLE_BLOCK     = 18,  ///< Continuously transfers data blocks from card to host until interrupted by STOP_TRANSMISSION
+  SD_WRITE_BLOCK             = 24,  ///< Writes a block of size set by SET_BLOCKLEN
+  SD_WRITE_MULTIPLE_BLOCK    = 25,  ///< Continuously writes blocks of data until a stop transmission token is sent
+  SD_PROGRAM_CSD             = 27,  ///< Programs the programmable bits of CSD
+  SD_ERASE_WR_BLK_START_ADDR = 32,  ///< Sets the address of the first write block to be erased
+  SD_ERASE_WR_BLK_END_ADDR   = 33,  ///< Sets the address of the last write block of the continuous range to be erased
+  SD_ERASE                   = 38,  ///< Erases all previously selected write blocks
+  SD_APP_CMD                 = 55,  ///< Next command is application specific command
+  SD_READ_OCR                = 58,  ///< Reads OCR register
+  SD_CRC_ON_OFF              = 59,  ///< Turns CRC on or off
+} SD_CommandTypedef;
 /*
  * Application specific commands, ACMD
  */
 #define SD_ACMD_SEND_OP_COND        41  ///< Activates the card initialization process, sends host capacity.
 #define SD_ACMD_SEND_SCR            51  ///< Reads SD Configuration register
 #define SD_SEND_NUM_WR_BLOCKS       22  ///< Gets number of well written blocks
-
 /*
  * Other SD defines
  */
 #define SD_IF_COND_CHECK  0xaa    ///< Check pattern for SEND_IF_COND command
 #define SD_IF_COND_VOLT   (1<<8)  ///< Signifies voltage range 2.7-3.6V
 #define SD_ACMD41_HCS     (1<<30) ///< Host can handle SDSC and SDHC cards
-
 /*
  * Control tokens
  */
-
 #define SD_TOKEN_SBR_MBR_SBW  0xfe ///< Start block for single block read, multiple block read, single block write. This token is sent, then 2-513 bytes of data, two bytes CRC
 #define SD_TOKEN_MBW_START    0xfc ///< Start block token for multiple block write - data will be transferred
 #define SD_TOKEN_MBW_STOP     0xfd ///< Stop transmission token for multiple block write
-
 /*
  * Every data block sent to SD card will be acknowledged by data response token.
  * In case of error during Multiple Block Write host shall stop transmission
@@ -95,6 +93,7 @@
 
 static Boolean isSDHC; ///< Is the card SDHC?
 static uint64_t cardCapacity; ///< Capacity of SD card in bytes
+static Boolean isCardInIdleState; ///< Is card in IDLE state
 
 /**
  * @brief SD Card R1 response structure
@@ -114,12 +113,11 @@ typedef union {
     uint8_t reserved            :1; ///< Reserved (always 0)
   } flags;
 
-  uint8_t byte; ///< R1 response fields as byte
+  uint8_t asUint8; ///< R1 response fields as byte
 } SD_ResponseR1;
 /**
  * @brief SD Card R2 response structure
  * @details This token is sent in response to SEND_STATUS command.
- *
  */
 typedef union {
 
@@ -142,7 +140,7 @@ typedef union {
     uint16_t reserved            :1; ///< Reserved (always 0)
   } flags;
 
-  uint16_t responseR2; ///< R1 response fields as byte
+  uint16_t asUint16; ///< R1 response fields as byte
 
 } SD_ResponseR2;
 /**
@@ -167,7 +165,7 @@ typedef union {
     uint32_t cardPowerUpStatus  :1; ///< Set to 0 if card has not finished power up routine
   } bits;
 
-  uint32_t ocr;
+  uint32_t asUint32;
 
 } SD_OCR;
 /**
@@ -216,10 +214,8 @@ typedef struct {
     uint32_t eraseSingleBlkEna :1;
     uint32_t reserved5 :1;
     uint32_t deviceSize :22; ///< Capacity of the card
-//    uint32_t deviceSize1 :16;
 
   // second uint32_t
-//    uint32_t deviceSize2 :6;
     uint32_t reserved6 : 6;
     uint32_t DSR :1;
     uint32_t rdBlkMisalign :1;
@@ -240,14 +236,13 @@ typedef struct {
 
 static uint8_t sendCommand(uint8_t cmd, uint32_t args);
 static void getResponseR3orR7(uint8_t* buf);
-static SD_ResponseR1 SD_ReadOCR(SD_OCR* ocr);
+static SD_ResponseR1 SD_ReadOCR(SD_OCR* asUint32);
 static void SD_ReadCID(SD_CID* cid);
 static void SD_ReadCSD(SD_CSD* csd);
 
-#define DUMMY_BYTE 0xff
-#define COMMAND_OK 0x01
-
-
+#define DUMMY_BYTE 0xff ///< Dummy byte for reading data
+#define NO_ERRORS_IN_IDLE_STATE   0x01
+#define NO_ERRORS_LEFT_IDLE_STATE 0x00
 /**
  * @brief Initialize the SD card.
  * @details This function initializes both SDSC and SDHC cards.
@@ -257,6 +252,7 @@ int SD_Init(void) {
 
   const int BUFFER_LENGTH = 10;
   uint8_t sdCommandsBuffer[BUFFER_LENGTH];
+  SD_ResponseR1 commandResponse; // response R1 token
 
   SPI_HAL_Init(SPI_HAL_SPI1);
   SPI_HAL_Select(SPI_HAL_SPI1);
@@ -267,26 +263,26 @@ int SD_Init(void) {
     SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
   }
 
-  SD_ResponseR1 commandResponse; // response R1 token
+  isCardInIdleState = TRUE;
 
   // send CMD0
-  commandResponse.byte = sendCommand(SD_GO_IDLE_STATE, 0);
+  commandResponse.asUint8 = sendCommand(SD_GO_IDLE_STATE, 0);
 
   // Check response errors
-  if (commandResponse.byte != COMMAND_OK) {
+  if (commandResponse.asUint8 != NO_ERRORS_IN_IDLE_STATE) {
     println("GO_IDLE_STATE error");
     return SD_RESPONSE_ERROR;
   }
 
   // send CMD8
-  commandResponse.byte = sendCommand(SD_SEND_IF_COND,
+  commandResponse.asUint8 = sendCommand(SD_SEND_IF_COND,
       SD_IF_COND_VOLT | SD_IF_COND_CHECK); // voltage range and check pattern
 
   // CMD8 gets more info
   getResponseR3orR7(sdCommandsBuffer);
 
   // Check response errors
-  if (commandResponse.byte != COMMAND_OK) {
+  if (commandResponse.asUint8 != NO_ERRORS_IN_IDLE_STATE) {
     println("SEND_IF_COND error");
     return SD_RESPONSE_ERROR;
   }
@@ -305,26 +301,27 @@ int SD_Init(void) {
   // CMD58
   SD_OCR ocr;
   commandResponse = SD_ReadOCR(&ocr);;
-
   // Check response errors
-  if (commandResponse.byte != COMMAND_OK) {
+  if (commandResponse.asUint8 != NO_ERRORS_IN_IDLE_STATE) {
     println("READ_OCR error");
     return SD_RESPONSE_ERROR;
   }
 
   // Send ACMD41 until card goes out of IDLE state
-  for (int i=0; i<10; i++) {
-
-    commandResponse.byte = sendCommand(SD_APP_CMD, 0);
-    commandResponse.byte = sendCommand(SD_ACMD_SEND_OP_COND, SD_ACMD41_HCS);
+  const int MAXIMUM_ACMD41_TRIES = 10;
+  const int SD_INITIAL_DELAY = 20;
+  for (int i = 0; i < MAXIMUM_ACMD41_TRIES; i++) {
+    commandResponse.asUint8 = sendCommand(SD_APP_CMD, 0);
+    commandResponse.asUint8 = sendCommand(SD_ACMD_SEND_OP_COND, SD_ACMD41_HCS);
     // Without this delay card wouldn't initialize the first time after
     // power was connected.
-    TIMER_DelayMillis(20);
-    if (commandResponse.byte == 0x00) { // Card left IDLE state and no errors
+    TIMER_DelayMillis(SD_INITIAL_DELAY);
+
+    if (commandResponse.asUint8 == NO_ERRORS_LEFT_IDLE_STATE) { // Card left IDLE state and no errors
       break;
     }
 
-    if (i == 9) {
+    if (i == MAXIMUM_ACMD41_TRIES - 1) {
       println("Failed to initialize SD card");
       return SD_INIT_FAILED;
     }
@@ -340,7 +337,7 @@ int SD_Init(void) {
   // Read Card Capacity Status - SDSC or SDHC?
   commandResponse = SD_ReadOCR(&ocr);
 
-  if (commandResponse.byte != 0x00) {
+  if (commandResponse.asUint8 != NO_ERRORS_LEFT_IDLE_STATE) {
     println("READ_OCR error");
     return SD_RESPONSE_ERROR;
   }
@@ -385,9 +382,9 @@ uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
   SPI_HAL_Select(SPI_HAL_SPI1);
 
-  resp.byte = sendCommand(SD_READ_MULTIPLE_BLOCK, sector);
+  resp.asUint8 = sendCommand(SD_READ_MULTIPLE_BLOCK, sector);
 
-  if (resp.byte != 0x00) {
+  if (resp.asUint8 != 0x00) {
     println("SD_READ_MULTIPLE_BLOCK error");
     SPI_HAL_Deselect(SPI_HAL_SPI1);
     return 1;
@@ -402,7 +399,7 @@ uint8_t SD_ReadSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
     buf += 512; // move buffer pointer forward
   }
 
-  resp.byte = sendCommand(SD_STOP_TRANSMISSION, 0);
+  resp.asUint8 = sendCommand(SD_STOP_TRANSMISSION, 0);
 
   // R1b response - check busy flag
   while(!SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
@@ -430,9 +427,9 @@ uint8_t SD_WriteSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
 
   SPI_HAL_Select(SPI_HAL_SPI1);
 
-  resp.byte = sendCommand(SD_WRITE_MULTIPLE_BLOCK, sector);
+  resp.asUint8 = sendCommand(SD_WRITE_MULTIPLE_BLOCK, sector);
 
-  if (resp.byte != 0x00) {
+  if (resp.asUint8 != 0x00) {
     println("SD_WRITE_MULTIPLE_BLOCK error");
     SPI_HAL_Deselect(SPI_HAL_SPI1);
     return 1;
@@ -469,19 +466,19 @@ uint8_t SD_WriteSectors(uint8_t* buf, uint32_t sector, uint32_t count) {
  *
  * @return OCR register value
  */
-static SD_ResponseR1 SD_ReadOCR(SD_OCR* ocr) {
+static SD_ResponseR1 SD_ReadOCR(SD_OCR* asUint32) {
 
   uint8_t tmp[4];
 
   SD_ResponseR1 resp; // response R1
 
-  resp.byte = sendCommand(SD_READ_OCR, 0);
+  resp.asUint8 = sendCommand(SD_READ_OCR, 0);
   // OCR has more data
   getResponseR3orR7(tmp);
 
   // SD sends this commands MSB first
   // so reverse byte order
-  uint32_t* ptr = (uint32_t*)ocr;
+  uint32_t* ptr = (uint32_t*)asUint32;
   uint32_t* ptrBuf = (uint32_t*)tmp;
 
   *ptr = UTILS_ConvertUnsignedIntToHostEndianness(*ptrBuf); // convert to little endian if necessary
@@ -504,9 +501,9 @@ static void SD_ReadCID(SD_CID* cid) {
   uint8_t buf[16];
   SD_ResponseR1 resp;
 
-  resp.byte = sendCommand(SD_SEND_CID, 0);
+  resp.asUint8 = sendCommand(SD_SEND_CID, 0);
 
-  if (resp.byte != 0x00) {
+  if (resp.asUint8 != 0x00) {
     println("SD_SEND_CID error");
     return;
   }
@@ -542,9 +539,9 @@ static void SD_ReadCSD(SD_CSD* csd) {
   uint8_t buf[16];
   SD_ResponseR1 resp;
 
-  resp.byte = sendCommand(SD_SEND_CSD, 0);
+  resp.asUint8 = sendCommand(SD_SEND_CSD, 0);
 
-  if (resp.byte != 0x00) {
+  if (resp.asUint8 != 0x00) {
     println("SD_SEND_CSD error");
     return;
   }
@@ -613,6 +610,8 @@ static uint8_t sendCommand(uint8_t cmd, uint32_t args) {
   SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
   uint8_t ret = SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
   println("Response to cmd %d is %02x", cmd, ret);
+
+
 
   return ret;
 }
