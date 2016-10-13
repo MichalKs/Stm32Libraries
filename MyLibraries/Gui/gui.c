@@ -16,11 +16,21 @@
  * @endverbatim
  */
 
-
-#include <graphics.h>
-#include <tsc2046.h>
-#include <font_8x16.h>
+#include "graphics.h"
+#include "tsc2046.h"
+#include "font_8x16.h"
 #include "ili9320.h"
+#include <stdio.h>
+
+#define DEBUG
+
+#ifdef DEBUG
+#define print(str, args...) printf(""str"%s",##args,"")
+#define println(str, args...) printf("GUI--> "str"%s",##args,"\r\n")
+#else
+#define print(str, args...) (void)0
+#define println(str, args...) (void)0
+#endif
 
 /**
  * @addtogroup GUI
@@ -67,6 +77,8 @@ void GUI_AddButton(int x, int y, int width, int height,
   GRAPH_DrawString(buttonText, x+width/4, y+height/4, textColor, buttonColor);
 
   convertLCD2TSC(&x, &y, &width, &height);
+  println("Creating button on event on x=%d,y=%d,w=%d,h=%d",
+      x, y, width, height);
 
   TSC2046_RegisterEvent(x, y, width, height, eventCb);
 
@@ -89,7 +101,7 @@ void GUI_AddLabel(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
  *
  * @details The axes are interchanged between the two devices in
  * my setting. The X axis on the LCD corresponds to -Y on the TSC
- * and the Y axis on the LCD to the X axis on the TSC.
+ * and the Y axis on the LCD to the -X axis on the TSC.
  *
  * @param x X coordinate
  * @param y Y coordinate
@@ -98,38 +110,36 @@ void GUI_AddLabel(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
  */
 static void convertLCD2TSC(int *x, int *y, int *width, int *height) {
 
-  uint16_t tmpX, tmpY, tmpW, tmpH;
-  uint16_t startX, startY;
-
-  startY = *x + *width;
-  startX = *y;
-  tmpW = *height;
-  tmpH = *width;
-
-  const uint16_t lcdWidth = 320;
-  const uint16_t lcdHeight = 240;
-
   // basically I derived those manually
   // by analyzing touchscreen readings
+  const int TSC_MAX_Y = 3800;
+  const int TSC_MIN_Y = 400;
+  const int TSC_MAX_X = 3700;
+  const int TSC_MIN_X = 300;
+  const int TSC_X_TOTAL_LENGTH = TSC_MAX_X - TSC_MIN_X;
+  const int TSC_Y_TOTAL_LENGTH = TSC_MAX_Y - TSC_MIN_Y;
 
-  const uint16_t tscMaxY = 3800;
-  const uint16_t tscMinY = 400;
-  const uint16_t tscMaxX = 3700;
-  const uint16_t tscMinX = 300;
+  const int LCD_WIDTH = 320;
+  const int LCD_HEIGHT = 240;
 
-  const uint16_t tscDX = tscMaxX - tscMinX;
-  const uint16_t tscDY = tscMaxY - tscMinY;
+  int touchscreenX, touchscreenY, touchscreenWidth, touchscreenHeight;
+  int startPositionOnTouchscreenX, startPositionOnTouchscreenY;
+
+  startPositionOnTouchscreenY = *x + *width;
+  startPositionOnTouchscreenX = *y + *height;
+  touchscreenWidth = *height;
+  touchscreenHeight = *width;
 
   // Y axis is inverted X axis of the LCD
-  tmpY = tscMaxY - startY * tscDY/lcdWidth;
-  // X axis is Y axis of the LCD
-  tmpX = tscMinX + startX * tscDX/lcdHeight;
+  touchscreenY = TSC_MAX_Y - startPositionOnTouchscreenY * TSC_Y_TOTAL_LENGTH/LCD_WIDTH;
+  // X axis is inverted Y axis of the LCD
+  touchscreenX = TSC_MAX_X - startPositionOnTouchscreenX * TSC_X_TOTAL_LENGTH/LCD_HEIGHT;
 
-  *y = tmpY;
-  *x = tmpX;
+  *y = touchscreenY;
+  *x = touchscreenX;
 
-  *height = tmpH * tscDY/lcdWidth;
-  *width = tmpW * tscDX/lcdHeight;
+  *height = touchscreenHeight * TSC_Y_TOTAL_LENGTH/LCD_WIDTH;
+  *width = touchscreenWidth * TSC_X_TOTAL_LENGTH/LCD_HEIGHT;
 
 }
 
