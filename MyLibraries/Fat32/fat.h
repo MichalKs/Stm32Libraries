@@ -30,9 +30,16 @@
  * @{
  */
 
-int8_t FAT_Init(int (*phyInit)(void),
-    uint8_t (*phyReadSectors)(uint8_t* buf, uint32_t sector, uint32_t count),
-    uint8_t (*phyWriteSectors)(uint8_t* buf, uint32_t sector, uint32_t count));
+typedef enum {
+  FAT_NO_ERROR = 0,
+  FAT_INVALID_MBR_ERROR,
+  FAT_INVALID_PARTITION_ERROR,
+
+} FAT_ErrorTypedef;
+
+int FAT_Init(int (*phyInit)(void),
+    int (*phyReadSectors)(uint8_t* buf, uint32_t sector, uint32_t count),
+    int (*phyWriteSectors)(uint8_t* buf, uint32_t sector, uint32_t count));
 
 int FAT_OpenFile(const char* filename);
 int FAT_ReadFile(int file, uint8_t* data, int count);

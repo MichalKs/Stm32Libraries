@@ -64,6 +64,21 @@
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Hal/stm32f4"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Led"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Led/hal/stm32f4"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Fat32"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Fonts"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Graphics"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Gui"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Ili9320"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Ili9320/hal/stm32f4"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Keyboard"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Keyboard/hal/stm32f4"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Media"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/SdCard"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/SdCard/hal/stm32f4"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Tsc2046"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Tsc2046/hal/stm32f4"/>
+									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/inc"/>
+									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/Config"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.677838452" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -106,7 +121,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="libs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="libs"/>
+						<entry excluding="STM32F4/STM32_USB_Device_Library|STM32F4/STemWin" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="libs"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
