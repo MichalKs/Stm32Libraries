@@ -23,9 +23,6 @@
 #define ILI9320_RST_PIN   GPIO_PIN_4            ///< Reset pin
 #define ILI9320_RST_CLK_ENABLE() __HAL_RCC_GPIOB_CLK_ENABLE()  ///< Clock for reset pin
 
-#define ILI9320_ADDRESS   (*((volatile unsigned short *) 0x60000000)) ///< Address for writing register number
-#define ILI9320_DATA      (*((volatile unsigned short *) 0x60020000)) ///< Address for writing data
-
 /**
  * @brief Initialize ILI9320 hardware layer.
  */
@@ -116,24 +113,6 @@ void ILI9320_HAL_Initialize(void) {
   if(HAL_SRAM_Init(&sramHandle, &timing, &timing) != HAL_OK) {
     COMMON_HAL_ErrorHandler();
   }
-}
-/**
- * @brief Function for writing data to ILI9320 through FSMC.
- * @param address Register address.
- * @param data Data to write.
- */
-void ILI9320_HAL_WriteReg(uint16_t address, uint16_t data) {
-  ILI9320_ADDRESS = address;
-  ILI9320_DATA = data;
-}
-/**
- * @brief Function for reading a given register.
- * @param address Register address.
- * @return Contents of register.
- */
-uint16_t ILI9320_HAL_ReadReg(uint16_t address) {
-  ILI9320_ADDRESS = address;
-  return ILI9320_DATA;
 }
 /**
  * @brief Turn reset on.

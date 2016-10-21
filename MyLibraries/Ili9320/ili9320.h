@@ -30,6 +30,9 @@
  * @{
  */
 
+#define ILI9320_DISPLAY_SIZE_X 320
+#define ILI9320_DISPLAY_SIZE_Y 240
+
 void          ILI9320_Initializtion (void);
 void          ILI9320_SetWindow     (int x, int y, int width, int height);
 void          ILI9320_DrawPixel     (int x, int y, unsigned int color);

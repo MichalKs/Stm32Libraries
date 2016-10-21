@@ -42,7 +42,7 @@ static void convertLCD2TSC(int *x, int *y, int *width, int *height);
 /**
  * @brief Initialize GUI.
  */
-void GUI_Init(void) {
+void GUI_Initialize(void) {
   TSC2046_Initialize();
   GRAPH_LcdDriverTypedef lcdDriver;
   lcdDriver.initialize = ILI9320_Initializtion;

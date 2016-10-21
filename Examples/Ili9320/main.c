@@ -36,6 +36,9 @@
 #include <math.h>
 #include "ili9320.h"
 #include "example_bmp.h"
+#include <GUI.h>
+#include <WM.h>
+#include <stm32f4xx.h>
 
 static void tscEvent1(int x, int y);
 static void tscEvent2(int x, int y);
@@ -50,7 +53,7 @@ static void tscEvent2(int x, int y);
 #define println(str, args...) (void)0
 #endif
 
-#define TEST_SD
+//#define TEST_SD
 #define USE_GUI
 
 /**
@@ -205,10 +208,14 @@ int main(void) {
 
 
 #ifdef USE_GUI
+//  GUI_Initialize();
+//  const unsigned int BUTTON_COLOR = 0x867474;
+//  GUI_AddButton(50, 50, 100, 50, tscEvent1, "LED 0", BUTTON_COLOR, GRAPH_WHITE);
+//  GUI_AddButton(200, 50, 100, 50, tscEvent2, "LED 1", BUTTON_COLOR, GRAPH_WHITE);
+
+  __HAL_RCC_CRC_CLK_ENABLE();
   GUI_Init();
-  const unsigned int BUTTON_COLOR = 0x867474;
-  GUI_AddButton(50, 50, 100, 50, tscEvent1, "LED 0", BUTTON_COLOR, GRAPH_WHITE);
-  GUI_AddButton(200, 50, 100, 50, tscEvent2, "LED 1", BUTTON_COLOR, GRAPH_WHITE);
+  WM_SetDesktopColor(GUI_GREEN);
 
 #endif
 
