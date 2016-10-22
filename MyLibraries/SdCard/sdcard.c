@@ -91,9 +91,10 @@ typedef enum {
 #define SD_TOKEN_DATA_CRC       0x0b ///< Data rejected due to CRC error
 #define SD_TOKEN_DATA_WRITE_ERR 0x0d ///< Data rejected due to write error
 
-static Boolean isSDHC; ///< Is the card SDHC?
-static uint64_t cardCapacity; ///< Capacity of SD card in bytes
+static Boolean isSDHC;            ///< Is the card SDHC?
+static uint64_t cardCapacity;     ///< Capacity of SD card in bytes
 static Boolean isCardInIdleState; ///< Is card in IDLE state
+static Boolean isCardInitalized;  ///< Is the card initalized
 
 /**
  * @brief SD Card R1 response structure
@@ -243,12 +244,13 @@ static SD_CardErrorsTypedef readCsd(SD_CSD* csd);
 #define DUMMY_BYTE 0xff ///< Dummy byte for reading data
 #define NO_ERRORS_IN_IDLE_STATE   0x01
 #define NO_ERRORS_LEFT_IDLE_STATE 0x00
+
 /**
  * @brief Initialize the SD card.
  * @details This function initializes both SDSC and SDHC cards.
  * It uses low-level SPI functions.
  */
-int SD_Init(void) {
+int SD_Initialize(void) {
 
   const int BUFFER_LENGTH = 10;
   uint8_t sdCommandsBuffer[BUFFER_LENGTH];
@@ -326,7 +328,7 @@ int SD_Init(void) {
   }
 
   SPI_HAL_Deselect(SPI_HAL_SPI1);
-
+  isCardInitalized = TRUE;
   return SD_NO_ERROR;
 
 }
@@ -345,8 +347,12 @@ uint64_t SD_ReadCapacity(void) {
  * @retval SD_NO_ERROR Read was successful
  * @retval SD_BLOCK_READ_ERROR Error occurred
  */
-SD_CardErrorsTypedef SD_ReadSectors(uint8_t* readDataBuffer, uint32_t startSector,
+int SD_ReadSectors(uint8_t* readDataBuffer, uint32_t startSector,
     uint32_t sectorsToRead) {
+
+  if (!isCardInitalized) {
+    return SD_CARD_NOT_INITALIZED;
+  }
 
   const int NUMBER_OF_BYTES_IN_SECTOR = 512;
   SD_CardErrorsTypedef result;
@@ -393,8 +399,12 @@ SD_CardErrorsTypedef SD_ReadSectors(uint8_t* readDataBuffer, uint32_t startSecto
  * @retval 0 Read was successful
  * @retval 1 Error occurred
  */
-SD_CardErrorsTypedef SD_WriteSectors(uint8_t* writeDataBuffer, uint32_t startSector,
+int SD_WriteSectors(uint8_t* writeDataBuffer, uint32_t startSector,
     uint32_t sectorsToWrite) {
+
+  if (!isCardInitalized) {
+    return SD_CARD_NOT_INITALIZED;
+  }
 
   const int NUMBER_OF_BYTES_IN_SECTOR = 512;
   const uint8_t START_BLOCK_TOKEN = 0xfc;
@@ -492,7 +502,7 @@ SD_CardErrorsTypedef readCid(SD_CID* cid) {
     ptr[i] = cidBuffer[i];
   }
 
-  UTILS_HexdumpWithCharacters(cidBuffer, CID_LENGTH);
+//  UTILS_HexdumpWithCharacters(cidBuffer, CID_LENGTH);
 
   // R1b response - check busy flag
   while(!SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
@@ -530,7 +540,7 @@ SD_CardErrorsTypedef readCsd(SD_CSD* csd) {
     ptr[i] = UTILS_ConvertUnsignedIntToHostEndianness(ptrBuf[3-i]);
   }
 
-  UTILS_HexdumpWithCharacters(csdBuffer, CSD_LENGTH);
+//  UTILS_HexdumpWithCharacters(csdBuffer, CSD_LENGTH);
 
   println("CSD type: 0x%02x", (unsigned int) csd->csdType);
   println("CSD device size: %u", (unsigned int) csd->deviceSize);
@@ -578,7 +588,7 @@ SD_CardErrorsTypedef sendCommand(uint8_t cmd, uint32_t args) {
   SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
   SD_ResponseR1 commandResponse;
   commandResponse.asUint8 = SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-  println("Response to cmd %d is %02x", cmd, commandResponse.asUint8);
+//  println("Response to cmd %d is %02x", cmd, commandResponse.asUint8);
 
   // Check response errors
   uint8_t okResponse;
@@ -589,7 +599,7 @@ SD_CardErrorsTypedef sendCommand(uint8_t cmd, uint32_t args) {
   }
 
   if (commandResponse.asUint8 != okResponse) {
-    println("Commands %d error", cmd);
+//    println("Commands %d error", cmd);
     return SD_RESPONSE_ERROR;
   }
 

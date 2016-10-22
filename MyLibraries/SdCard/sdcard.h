@@ -37,12 +37,12 @@ typedef enum {
   SD_CMD_ERROR,
   SD_BLOCK_READ_ERROR,
   SD_BLOCK_WRITE_ERROR,
+  SD_CARD_NOT_INITALIZED,
 } SD_CardErrorsTypedef;
 
-int     SD_Init         (void);
-uint8_t SD_ReadBlock    (uint32_t block, uint8_t* buf);
-uint8_t SD_ReadSectors  (uint8_t* buf, uint32_t sector, uint32_t count);
-uint8_t SD_WriteSectors (uint8_t* buf, uint32_t sector, uint32_t count);
+int SD_Initialize   (void);
+int SD_ReadSectors  (uint8_t* buf, uint32_t sector, uint32_t count);
+int SD_WriteSectors (uint8_t* buf, uint32_t sector, uint32_t count);
 uint64_t SD_ReadCapacity(void);
 
 /**

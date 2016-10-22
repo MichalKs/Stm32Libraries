@@ -1,12 +1,11 @@
 /**
  * @file    main.c
- * @brief   LED test
- * @date    9 kwi 2014
+ * @brief   Blinky test
+ * @date    07.10.2016
  * @author  Michal Ksiezopolski
  *
- *
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2016 Michal Ksiezopolski.
  * All rights reserved. This program and the
  * accompanying materials are made available
  * under the terms of the GNU Public License
@@ -16,16 +15,13 @@
  * @endverbatim
  */
 
-#include "timers.h"
-#include "led.h"
-#include "comm.h"
-#include "common_hal.h"
-#include "keys.h"
-#include "fat.h"
-#include "sdcard.h"
-#include "utils.h"
 #include <stdio.h>
 #include <string.h>
+#include "common_hal.h"
+#include "timers.h"
+#include "comm.h"
+#include "led.h"
+#include "utils.h"
 
 #define DEBUG
 
@@ -41,6 +37,9 @@
  * @brief Callback for performing periodic tasks
  */
 void softTimerCallback(void) {
+
+  LED_Toggle(_LED2);
+  println("Hello world");
 
   const int FRAME_MAX_SIZE = 10;
   char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
@@ -65,10 +64,9 @@ void softTimerCallback(void) {
     }
   }
 }
-
 /**
- * @brief Main function
- */
+  * @brief  Main program
+  */
 int main(void) {
 
   COMMON_HAL_Init();
@@ -86,31 +84,10 @@ int main(void) {
   int timerId = TIMER_AddSoftTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
   TIMER_StartSoftTimer(timerId);
 
-  FAT_Init(SD_Initialize, SD_ReadSectors, SD_WriteSectors);
-  int hello = FAT_OpenFile("HELLO   TXT");
-  uint8_t data[100];
-
-  FAT_MoveRdPtr(hello, 500);
-
-  int i = FAT_ReadFile(hello, data, 5);
-  i += FAT_ReadFile(hello, data+i, 60);
-  UTILS_HexdumpWithCharacters(data, i);
-
-  int hamlet = FAT_OpenFile("HAMLET  TXT");
-
-  FAT_MoveRdPtr(hamlet, 184120);
-
-  i = FAT_ReadFile(hamlet, data, 5);
-  i += FAT_ReadFile(hamlet, data+i, 30);
-  UTILS_HexdumpWithCharacters(data, i);
-
-  char message[] = "Hello world, from STM32 to FAT driver new one"; // length 37
-
-//  FAT_MoveWrPtr(hello, 500);
-//
-//  FAT_WriteFile(hello, (uint8_t*)message, strlen(message));
-
   while (TRUE) {
-    TIMER_SoftTimersUpdate(); // run timers
+    TIMER_SoftTimersUpdate();
   }
+
+  return 0;
 }
+
