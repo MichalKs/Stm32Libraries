@@ -16,6 +16,7 @@
  * @endverbatim
  */
 
+#include "mk_gui.h"
 #include "graphics.h"
 #include "tsc2046.h"
 #include "font_8x16.h"
@@ -42,7 +43,7 @@ static void convertLCD2TSC(int *x, int *y, int *width, int *height);
 /**
  * @brief Initialize GUI.
  */
-void GUI_Initialize(void) {
+void MK_GUI_Initialize(void) {
   TSC2046_Initialize();
   GRAPH_LcdDriverTypedef lcdDriver;
   lcdDriver.initialize = ILI9320_Initializtion;
@@ -67,7 +68,7 @@ void GUI_Initialize(void) {
  * @param cb Callback for button press event.
  * @param text Description of button (shown on screen).
  */
-void GUI_AddButton(int x, int y, int width, int height,
+void MK_GUI_AddButton(int x, int y, int width, int height,
     void (*eventCb)(int x, int y), const char* buttonText, unsigned int buttonColor,
     unsigned int textColor) {
 
@@ -91,7 +92,7 @@ void GUI_AddButton(int x, int y, int width, int height,
  * @param h Maximum height of label
  * @param text Label contents
  */
-void GUI_AddLabel(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
+void MK_GUI_AddLabel(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
     const char* text) {
 
 }

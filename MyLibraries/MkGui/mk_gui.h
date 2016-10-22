@@ -28,10 +28,10 @@
  * @{
  */
 
-void GUI_AddButton(int x, int y, int width, int height,
+void MK_GUI_AddButton(int x, int y, int width, int height,
     void (*eventCb)(int x, int y), const char* buttonText, unsigned int buttonColor,
     unsigned int textColor);
-void GUI_Initialize(void);
+void MK_GUI_Initialize(void);
 
 /**
  * @}

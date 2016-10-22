@@ -28,26 +28,18 @@
 #include "font_8x16.h"
 #include "tsc2046.h"
 #include "fat.h"
-#include "sdcard.h"
 #include "utils.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "ili9320.h"
 #include "example_bmp.h"
-#include <GUI.h>
-#include <WM.h>
-#include <stm32f4xx.h>
-#include <FRAMEWIN.h>
+#include "stemwin_gui.h"
+#include "mk_gui.h"
 
-#include "../../MyLibraries/MkGui/mk_gui.h"
+#define DEBUG_MAIN
 
-static void tscEvent1(int x, int y);
-static void tscEvent2(int x, int y);
-
-#define DEBUG
-
-#ifdef DEBUG
+#ifdef DEBUG_MAIN
 #define print(str, args...) printf(""str"%s",##args,"")
 #define println(str, args...) printf("MAIN--> "str"%s",##args,"\r\n")
 #else
@@ -55,8 +47,12 @@ static void tscEvent2(int x, int y);
 #define println(str, args...) (void)0
 #endif
 
-//#define TEST_SD
-#define USE_GUI
+//#define USE_BARE_GRAPHICS
+//#define USE_MKGUI
+#define USE_STEMWIN
+
+static void tscEvent1(int x, int y);
+static void tscEvent2(int x, int y);
 
 /**
  * @brief Callback for performing periodic tasks
@@ -87,14 +83,6 @@ void softTimerCallback(void) {
   }
 }
 
-void frameCb(WM_MESSAGE * message) {
-  switch(message->MsgId) {
-    default:
-      FRAMEWIN_Callback(message);
-      break;
-  }
-}
-
 /**
  * @brief Main function
  */
@@ -115,8 +103,7 @@ int main(void) {
   int timerId = TIMER_AddSoftTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
   TIMER_StartSoftTimer(timerId);
 
-
-#ifndef USE_GUI
+#ifdef USE_BARE_GRAPHICS
   GRAPH_LcdDriverTypedef lcdDriver;
   lcdDriver.initialize = ILI9320_Initializtion;
   lcdDriver.setWindow = ILI9320_SetWindow;
@@ -189,58 +176,22 @@ int main(void) {
 
 #endif
 
-
-#ifdef TEST_SD
-  FAT_Init(SD_Init, SD_ReadSectors, SD_WriteSectors);
-  int hello = FAT_OpenFile("HELLO   TXT");
-  uint8_t data[100];
-
-  FAT_MoveRdPtr(hello, 500);
-
-  int i = FAT_ReadFile(hello, data, 5);
-  i += FAT_ReadFile(hello, data+i, 60);
-  UTILS_HexdumpWithCharacters(data, i);
-
-  int hamlet = FAT_OpenFile("HAMLET  TXT");
-
-  FAT_MoveRdPtr(hamlet, 184120);
-
-  i = FAT_ReadFile(hamlet, data, 5);
-  i += FAT_ReadFile(hamlet, data+i, 30);
-  UTILS_HexdumpWithCharacters(data, i);
-
-  char message[] = "Hello world, from STM32 to FAT driver new one"; // length 37
-
-//  FAT_MoveWrPtr(hello, 500);
-//
-//  FAT_WriteFile(hello, (uint8_t*)message, strlen(message));
+#ifdef USE_MKGUI
+  MK_GUI_Initialize();
+  const unsigned int BUTTON_COLOR = 0x867474;
+  MK_GUI_AddButton(50, 50, 100, 50, tscEvent1, "LED 0", BUTTON_COLOR, GRAPH_WHITE);
+  MK_GUI_AddButton(200, 50, 100, 50, tscEvent2, "LED 1", BUTTON_COLOR, GRAPH_WHITE);
 #endif
 
-
-#ifdef USE_GUI
-//  GUI_Initialize();
-//  const unsigned int BUTTON_COLOR = 0x867474;
-//  GUI_AddButton(50, 50, 100, 50, tscEvent1, "LED 0", BUTTON_COLOR, GRAPH_WHITE);
-//  GUI_AddButton(200, 50, 100, 50, tscEvent2, "LED 1", BUTTON_COLOR, GRAPH_WHITE);
-
-  __HAL_RCC_CRC_CLK_ENABLE();
-  GUI_Init();
-  WM_SetDesktopColor(GUI_RED);
-  FRAMEWIN_Handle frame = FRAMEWIN_CreateEx(0, 0, 100, 100,
-      0, WM_CF_SHOW, 0, GUI_ID_EDIT0, " ", &frameCb);
-
-  FRAMEWIN_AddMaxButton(frame, FRAMEWIN_BUTTON_RIGHT, FALSE);
-
+#ifdef USE_STEMWIN
+  ST_GUI_Init();
 #endif
 
-  int position = 0;
   while (TRUE) {
-//    GRAPH_DrawRectangle(position, 100, 50, 100, GRAPH_RED);
-//    position+=1;
-//    GRAPH_DrawRectangle(position-1, 100, 1, 100, GRAPH_BLACK);
-    TSC2046_Update(); // run touchscreen functions
     TIMER_SoftTimersUpdate(); // run timers
-    GUI_Exec();
+  #ifdef USE_STEMWIN
+    ST_GUI_Run();
+  #endif
   }
 }
 /**

@@ -66,7 +66,6 @@
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Fat32"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Fonts"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Graphics"/>
-									<listOptionValue builtIn="false" value="../../../MyLibraries/Gui"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Ili9320"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Ili9320/hal/stm32f4"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Keyboard"/>
@@ -78,6 +77,7 @@
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Tsc2046/hal/stm32f4"/>
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/inc"/>
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/Config"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/MkGui"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1003898860" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
