@@ -34,7 +34,6 @@
 #include <math.h>
 #include "ili9320.h"
 #include "example_bmp.h"
-#include "stemwin_gui.h"
 #include "mk_gui.h"
 
 #define DEBUG_MAIN
@@ -48,8 +47,7 @@
 #endif
 
 //#define USE_BARE_GRAPHICS
-//#define USE_MKGUI
-#define USE_STEMWIN
+#define USE_MKGUI
 
 static void tscEvent1(int x, int y);
 static void tscEvent2(int x, int y);
@@ -183,15 +181,9 @@ int main(void) {
   MK_GUI_AddButton(200, 50, 100, 50, tscEvent2, "LED 1", BUTTON_COLOR, GRAPH_WHITE);
 #endif
 
-#ifdef USE_STEMWIN
-  ST_GUI_Init();
-#endif
-
   while (TRUE) {
     TIMER_SoftTimersUpdate(); // run timers
-  #ifdef USE_STEMWIN
-    ST_GUI_Run();
-  #endif
+    TSC2046_Update();
   }
 }
 /**
