@@ -53,6 +53,11 @@ static inline void ILI9320_HAL_WriteAddress(uint16_t address) {
 static inline void ILI9320_HAL_WriteData(uint16_t data) {
   ILI9320_DATA = data;
 }
+static inline void ILI9320_HAL_WriteAddressMultiple(uint16_t* dataToWrite, int length) {
+  for (int i = 0; i < length; i++) {
+    ILI9320_ADDRESS = dataToWrite[i];
+  }
+}
 /**
  * @brief Sends data buffer to display
  * @param dataToWrite Data to write

@@ -27,7 +27,6 @@
 #include "font_10x20.h"
 #include "font_8x16.h"
 #include "tsc2046.h"
-#include "gui.h"
 #include "fat.h"
 #include "sdcard.h"
 #include "utils.h"
@@ -39,6 +38,9 @@
 #include <GUI.h>
 #include <WM.h>
 #include <stm32f4xx.h>
+#include <FRAMEWIN.h>
+
+#include "../../MyLibraries/MkGui/mk_gui.h"
 
 static void tscEvent1(int x, int y);
 static void tscEvent2(int x, int y);
@@ -82,6 +84,14 @@ void softTimerCallback(void) {
     if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
       LED_ChangeState(_LED1, LED_OFF);
     }
+  }
+}
+
+void frameCb(WM_MESSAGE * message) {
+  switch(message->MsgId) {
+    default:
+      FRAMEWIN_Callback(message);
+      break;
   }
 }
 
@@ -215,7 +225,11 @@ int main(void) {
 
   __HAL_RCC_CRC_CLK_ENABLE();
   GUI_Init();
-  WM_SetDesktopColor(GUI_GREEN);
+  WM_SetDesktopColor(GUI_RED);
+  FRAMEWIN_Handle frame = FRAMEWIN_CreateEx(0, 0, 100, 100,
+      0, WM_CF_SHOW, 0, GUI_ID_EDIT0, " ", &frameCb);
+
+  FRAMEWIN_AddMaxButton(frame, FRAMEWIN_BUTTON_RIGHT, FALSE);
 
 #endif
 
@@ -226,6 +240,7 @@ int main(void) {
 //    GRAPH_DrawRectangle(position-1, 100, 1, 100, GRAPH_BLACK);
     TSC2046_Update(); // run touchscreen functions
     TIMER_SoftTimersUpdate(); // run timers
+    GUI_Exec();
   }
 }
 /**
