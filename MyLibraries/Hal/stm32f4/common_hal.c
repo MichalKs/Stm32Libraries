@@ -63,7 +63,7 @@ static void systemClockConfig(void) {
   RCC_OscInitStruct.PLL.PLLP        = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ        = 7;
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
 
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
@@ -74,7 +74,7 @@ static void systemClockConfig(void) {
   RCC_ClkInitStruct.APB1CLKDivider  = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider  = RCC_HCLK_DIV2;
   if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
 
   /* STM32F405x/407x/415x/417x Revision Z devices: prefetch is supported  */
@@ -87,11 +87,11 @@ static void systemClockConfig(void) {
 /**
  * @brief Initialize HAL layer
  */
-void COMMON_HAL_Init(void) {
+void CommonHal_initialize(void) {
 
   // Initialize LED for signaling errors
-  LED_HAL_Init(HAL_ERROR_LED_NUMBER);
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, FALSE);
+  LedHal_initialize(HAL_ERROR_LED_NUMBER);
+  LedHal_changeLedState(HAL_ERROR_LED_NUMBER, FALSE);
 
   /* STM32F4xx HAL library initialization:
        - Configure the Flash prefetch, instruction and Data caches
@@ -108,8 +108,8 @@ void COMMON_HAL_Init(void) {
 /**
  * @brief Error handler for HAL
  */
-void COMMON_HAL_ErrorHandler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
+void CommonHal_errorHandler(void) {
+  LedHal_changeLedState(HAL_ERROR_LED_NUMBER, TRUE);
   while(TRUE) {
 
   }
@@ -124,7 +124,7 @@ void NMI_Handler(void) {
   * @brief  This function handles Hard Fault exception.
   */
 void HardFault_Handler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
+  LedHal_changeLedState(HAL_ERROR_LED_NUMBER, TRUE);
   while (TRUE) {
 
   }
@@ -133,7 +133,7 @@ void HardFault_Handler(void) {
   * @brief  This function handles Memory Manage exception.
   */
 void MemManage_Handler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
+  LedHal_changeLedState(HAL_ERROR_LED_NUMBER, TRUE);
   while (TRUE) {
 
   }
@@ -142,7 +142,7 @@ void MemManage_Handler(void) {
   * @brief  This function handles Bus Fault exception.
   */
 void BusFault_Handler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
+  LedHal_changeLedState(HAL_ERROR_LED_NUMBER, TRUE);
   while (TRUE) {
 
   }
@@ -153,7 +153,7 @@ void BusFault_Handler(void) {
   * @retval None
   */
 void UsageFault_Handler(void) {
-  LED_HAL_ChangeState(HAL_ERROR_LED_NUMBER, TRUE);
+  LedHal_changeLedState(HAL_ERROR_LED_NUMBER, TRUE);
   while (TRUE) {
 
   }

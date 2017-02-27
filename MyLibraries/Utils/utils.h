@@ -40,6 +40,11 @@ typedef enum {
   TRUE = 1  //!< TRUE
 } Boolean;
 
+typedef enum {
+  RESULT_OK,
+  RESULT_OUT_OF_BOUNDS,
+} ResultCode;
+
 void UTILS_Hexdump(const uint8_t const *dataBuffer, int length);
 void UTILS_HexdumpWithCharacters(const uint8_t const *dataBuffer, int length);
 void UTILS_Hexdump16(const uint16_t const *dataBuffer, int length);

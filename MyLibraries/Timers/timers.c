@@ -59,7 +59,7 @@ static int softTimerCount; ///< Count number of soft timers
  * @brief Returns the system time.
  * @return System time
  */
-unsigned int TIMER_GetTimeMillis(void) {
+unsigned int Timer_getTimeMillis(void) {
   return SYSTICK_GetTimeMillis();
 }
 /**
@@ -67,13 +67,13 @@ unsigned int TIMER_GetTimeMillis(void) {
  * @param millis Milliseconds to delay.
  * @warning This is a blocking function. Use with care!
  */
-void TIMER_DelayMillis(unsigned int millis) {
+void Timer_delayMillis(unsigned int millis) {
 
-  unsigned int startTimeMillis = TIMER_GetTimeMillis();
+  unsigned int startTimeMillis = Timer_getTimeMillis();
   unsigned int currentTimeMillis;
 
   while (TRUE) {
-    currentTimeMillis = TIMER_GetTimeMillis();
+    currentTimeMillis = Timer_getTimeMillis();
     if ((currentTimeMillis >= startTimeMillis) &&
         (currentTimeMillis-startTimeMillis > millis)) {
       break;
@@ -92,9 +92,9 @@ void TIMER_DelayMillis(unsigned int millis) {
  * @retval FALSE Delay value has not been reached (wait longer)
  * @retval TRUE Delay value has been reached
  */
-Boolean TIMER_DelayTimer(unsigned int millis, unsigned int startTimeMillis) {
+Boolean Timer_delayTimer(unsigned int millis, unsigned int startTimeMillis) {
 
-  unsigned int currentTimeMillis = TIMER_GetTimeMillis();
+  unsigned int currentTimeMillis = Timer_getTimeMillis();
 
   if ((currentTimeMillis >= startTimeMillis) && (currentTimeMillis-startTimeMillis > millis)) {
     return TRUE;
@@ -114,7 +114,7 @@ Boolean TIMER_DelayTimer(unsigned int millis, unsigned int startTimeMillis) {
  * @return Returns the ID of the new counter or error code
  * @retval TIMER_TOO_MANY_TIMERS Too many timers
  */
-int TIMER_AddSoftTimer(unsigned int overflowValue,
+int Timer_addSoftwareTimer(unsigned int overflowValue,
     void (*overflowCb)(void)) {
 
   if (softTimerCount > MAX_SOFT_TIMERS) {
@@ -135,7 +135,7 @@ int TIMER_AddSoftTimer(unsigned int overflowValue,
  * @brief Starts the timer (zeroes out current count value).
  * @param id Timer ID
  */
-void TIMER_StartSoftTimer(int id) {
+void Timer_startSoftwareTimer(int id) {
   softTimers[ID_TO_ARRAY_INDEX(id)].currentCount = 0;
   softTimers[ID_TO_ARRAY_INDEX(id)].isActive = TRUE; // start timer
 }
@@ -143,14 +143,14 @@ void TIMER_StartSoftTimer(int id) {
  * @brief Pauses given timer (current count value unchanged)
  * @param id Timer ID
  */
-void TIMER_PauseSoftTimer(int id) {
+void Timer_pauseSoftwareTimer(int id) {
   softTimers[ID_TO_ARRAY_INDEX(id)].isActive = FALSE; // pause timer
 }
 /**
  * @brief Resumes a timer (starts counting from last value).
  * @param id Timer ID
  */
-void TIMER_ResumeSoftTimer(int id) {
+void Timer_resumeSoftwareTimer(int id) {
   softTimers[ID_TO_ARRAY_INDEX(id)].isActive = TRUE; // start timer
 }
 /**
@@ -159,7 +159,7 @@ void TIMER_ResumeSoftTimer(int id) {
  * @details This function can be called periodically in the main
  * loop of the program
  */
-void TIMER_SoftTimersUpdate(void) {
+void Timer_softwareTimersUpdate(void) {
 
   static unsigned int previousTimeMillis;
   unsigned int deltaMillis;

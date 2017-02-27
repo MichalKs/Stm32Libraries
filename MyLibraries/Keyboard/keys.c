@@ -86,7 +86,7 @@ uint8_t KEYS_Update(void) {
   // if a key press has been recognized
   if (row != -1) {
     currentKey = (currentColumn << 4) | row;
-  } else if (TIMER_DelayTimer(REPEAT_TIME, repeatTimer)) { // repeat timeout
+  } else if (Timer_delayTimer(REPEAT_TIME, repeatTimer)) { // repeat timeout
     repeatFlag = 0;
     lastKey = KEY_NONE;
   }
@@ -95,12 +95,12 @@ uint8_t KEYS_Update(void) {
   if (keyId != currentKey && currentKey != KEY_NONE) {
 
     if (lastKey == currentKey &&
-        !TIMER_DelayTimer(REPEAT_TIME, repeatTimer)) { // if last key still pressed
+        !Timer_delayTimer(REPEAT_TIME, repeatTimer)) { // if last key still pressed
       repeatFlag = 1;
-      repeatTimer = TIMER_GetTime();
+      repeatTimer = Timer_getTimeMillis();
     } else { // new key
       keyId = currentKey; // store the new key
-      debounceTimer = TIMER_GetTime(); // start debounce timer
+      debounceTimer = Timer_getTimeMillis(); // start debounce timer
       lastKey = KEY_NONE;
       repeatFlag = 0;
     }
@@ -108,12 +108,12 @@ uint8_t KEYS_Update(void) {
   }
   // if debounce finished, the key is valid
   if (!repeatFlag && keyId != KEY_NONE &&
-      TIMER_DelayTimer(DEBOUNCE_TIME, debounceTimer)) {
+      Timer_delayTimer(DEBOUNCE_TIME, debounceTimer)) {
     keyValid = keyId;
     println("You pressed a key 0x%02x.", keyValid);
     lastKey = keyId; // store new last pressed key
     keyId = KEY_NONE;
-    repeatTimer = TIMER_GetTime(); // start repeatTimer
+    repeatTimer = Timer_getTimeMillis(); // start repeatTimer
   } else if (repeatFlag) {
     keyValid = lastKey;
   }

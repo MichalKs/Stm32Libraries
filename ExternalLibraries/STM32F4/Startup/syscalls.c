@@ -13,9 +13,9 @@
 #include <sys/times.h>
 #include <sys/errno.h>
 #include <reent.h>
+#include <serial_port.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include "comm.h"
 
 //#define FreeRTOS
 //#define MAX_STACK_SIZE 0x200
@@ -92,7 +92,7 @@ void _exit (int status) {
 int _write(int file, char *ptr, int len) {
 
   for (int i = 0; i < len; i++) {
-    COMM_PutCharacter(*ptr++);
+    SerialPort_putCharacter(*ptr++);
   }
 	return len;
 }

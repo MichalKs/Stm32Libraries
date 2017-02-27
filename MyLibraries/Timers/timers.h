@@ -40,12 +40,12 @@ typedef enum {
   TIMER_TOO_MANY_TIMERS = -100,//!< TIMER_TOO_MANY_TIMERS
 } TIMER_ErrorTypedef;
 
-void         TIMER_DelayMillis     (unsigned int millis);
-void         TIMER_StartSoftTimer  (int id);
-void         TIMER_SoftTimersUpdate(void);
-Boolean      TIMER_DelayTimer      (unsigned int millis, unsigned int startTimeMillis);
-unsigned int TIMER_GetTimeMillis   (void);
-int          TIMER_AddSoftTimer    (unsigned int overflowValue, void (*overflowCb)(void));
+void         Timer_delayMillis          (unsigned int millis);
+void         Timer_startSoftwareTimer   (int id);
+void         Timer_softwareTimersUpdate (void);
+Boolean      Timer_delayTimer           (unsigned int millis, unsigned int startTimeMillis);
+unsigned int Timer_getTimeMillis        (void);
+int          Timer_addSoftwareTimer     (unsigned int overflowValue, void (*overflowCb)(void));
 /**
  * @}
  */

@@ -33,17 +33,17 @@
  * @brief Communication errors
  */
 typedef enum {
-  COMM_GOT_FRAME,      //!< COMM_GOT_FRAME
-  COMM_NO_FRAME_READY, //!< COMM_NO_FRAME_READY
-  COMM_FRAME_ERROR,    //!< COMM_FRAME_ERROR
-  COMM_FRAME_TOO_LARGE,//!< COMM_FRAME_TOO_LARGE
-} COMM_ErrorTypedef;
+  SERIAL_PORT_GOT_FRAME,      //!< COMM_GOT_FRAME
+  SERIAL_PORT_NO_FRAME_READY, //!< SERIAL_PORT_NO_FRAME_READY
+  SERIAL_PORT_FRAME_ERROR,    //!< SERIAL_PORT_FRAME_ERROR
+  SERIAL_PORT_FRAME_TOO_LARGE,//!< SERIAL_PORT_FRAME_TOO_LARGE
+} SerialPortResultCode;
 
-void              COMM_Initialize   (int baudRate);
-void              COMM_PutCharacter (char characterToSend);
-char              COMM_GetCharacter (void);
-COMM_ErrorTypedef COMM_GetFrame     (char* frameBuffer, int* length, int maximumLength);
-void              COMM_PrintLine    (char* line);
+void                 SerialPort_initialize   (int baudRate);
+void                 SerialPort_putCharacter (char characterToSend);
+char                 SerialPort_getCharacter (void);
+SerialPortResultCode SerialPort_getFrame     (char* frameBuffer, int* length, int maximumLength);
+void                 SerialPort_printLine    (char* line);
 /**
  * @}
  */

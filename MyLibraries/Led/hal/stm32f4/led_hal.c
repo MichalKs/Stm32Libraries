@@ -18,7 +18,6 @@
 #include "led_hal.h"
 #include <stm32f4xx_hal.h>
 
-
 /**
  * @addtogroup LED_HAL
  * @{
@@ -45,8 +44,7 @@ static uint32_t ledPin[MAX_LEDS] = {
  * @brief Add an LED.
  * @param led LED number.
  */
-void LED_HAL_Init(int led) {
-
+void LedHal_initialize(int led) {
   if (ledPort[led] == GPIOA) {
     __HAL_RCC_GPIOA_CLK_ENABLE();
   } else if (ledPort[led] == GPIOB) {
@@ -62,35 +60,28 @@ void LED_HAL_Init(int led) {
   } else if (ledPort[led] == GPIOG) {
     __HAL_RCC_GPIOG_CLK_ENABLE();
   }
-
   GPIO_InitTypeDef gpioInitialization;
-
   gpioInitialization.Mode  = GPIO_MODE_OUTPUT_PP;
   gpioInitialization.Pull  = GPIO_PULLUP;
   gpioInitialization.Speed = GPIO_SPEED_FREQ_LOW;
-
   gpioInitialization.Pin = ledPin[led];
-
   HAL_GPIO_Init(ledPort[led], &gpioInitialization);
-
   HAL_GPIO_WritePin(ledPort[led], ledPin[led], GPIO_PIN_RESET); // turn LED off
-
 }
 /**
  * @brief Toggle an LED.
  * @param led LED number.
  */
-void LED_HAL_Toggle(int led) {
-
+void LedHal_toggle(int led) {
   ledPort[led]->ODR ^= ledPin[led];
 }
 /**
  * @brief Change the state of an LED.
  * @param led LED number.
- * @param state New state.
+ * @param isLedOn Is LED on
  */
-void LED_HAL_ChangeState(int led, Boolean state) {
-  if (state == TRUE) {
+void LedHal_changeLedState(int led, Boolean isLedOn) {
+  if (isLedOn == TRUE) {
     ledPort[led]->BSRR = ledPin[led]; // set bit
   } else {
     ledPort[led]->BSRR = (ledPin[led] << 16); // reset bit

@@ -25,28 +25,26 @@
  */
 
 #include <stdio.h>
-#include <led.h>
-#include <led_hal.h>
+#include "led.h"
+#include "led_hal.h"
 
 /**
  * @addtogroup LED
  * @{
  */
 
-static LED_State_TypeDef ledState[MAX_LEDS]; ///< States of the LEDs (MAX_LEDS is hardware dependent)
+static LedState ledState[MAX_LEDS]; ///< States of the LEDs (MAX_LEDS is hardware dependent)
 
 /**
  * @brief Add an LED.
  * @param led LED init structure.
  */
-LED_ErrorTypedef LED_Add(LED_Number_TypeDef led) {
-
+LedResultCode Led_addNewLed(LedNumber led) {
   if (led >= MAX_LEDS) {
     return LED_TOO_MANY_LEDS;
   }
-
-  LED_HAL_Init(led);
-  ledState[led] = LED_OFF; // LED initially off
+  LedHal_initialize(led);
+  ledState[led] = LED_OFF;
   return LED_OK;
 }
 /**
@@ -54,22 +52,19 @@ LED_ErrorTypedef LED_Add(LED_Number_TypeDef led) {
  * @param led LED number.
  * @param state New state.
  */
-LED_ErrorTypedef LED_ChangeState(LED_Number_TypeDef led, LED_State_TypeDef state) {
-
+LedResultCode Led_changeState(LedNumber led, LedState state) {
   if (led >= MAX_LEDS) {
     return LED_INCORRECT_LED_NUMBER;
   }
-
   if (ledState[led] == LED_UNUSED) {
     return LED_NOT_INITALIZED;
   } else {
     if (state == LED_OFF) {
-      LED_HAL_ChangeState(led, FALSE); // turn off LED
+      LedHal_changeLedState(led, FALSE);
     } else if (state == LED_ON) {
-      LED_HAL_ChangeState(led, TRUE); // light up LED
+      LedHal_changeLedState(led, TRUE);
     }
   }
-
   ledState[led] = state; // update LED state
   return LED_OK;
 }
@@ -77,12 +72,10 @@ LED_ErrorTypedef LED_ChangeState(LED_Number_TypeDef led, LED_State_TypeDef state
  * @brief Toggle an LED.
  * @param led LED number.
  */
-LED_ErrorTypedef LED_Toggle(LED_Number_TypeDef led) {
-
+LedResultCode Led_toggle(LedNumber led) {
   if (led >= MAX_LEDS) {
     return LED_INCORRECT_LED_NUMBER;
   }
-
   if (ledState[led] == LED_UNUSED) {
     return LED_NOT_INITALIZED;
   } else {
@@ -91,7 +84,7 @@ LED_ErrorTypedef LED_Toggle(LED_Number_TypeDef led) {
     } else if (ledState[led] == LED_ON) {
       ledState[led]= LED_OFF;
     }
-    LED_HAL_Toggle(led);
+    LedHal_toggle(led);
   }
   return LED_OK;
 }

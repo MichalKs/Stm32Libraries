@@ -187,15 +187,15 @@ void TSC2046_Update(void) {
     break;
 
   case IRQ_RECEIVED:
-    debounce = TIMER_GetTimeMillis();
+    debounce = Timer_getTimeMillis();
     touchState = WAIT_FOR_DEBOUNCE;
     break;
 
   case WAIT_FOR_DEBOUNCE:
-    if (TIMER_DelayTimer(DEBOUNCE_TIME, debounce)) {
+    if (Timer_delayTimer(DEBOUNCE_TIME, debounce)) {
       int x, y;
       touchState = WAIT_FOR_NEXT_TOUCH;
-      debounce = TIMER_GetTimeMillis();
+      debounce = Timer_getTimeMillis();
       // still down?
       if (!TSC2046_HAL_ReadPenirq()) {
 
@@ -215,7 +215,7 @@ void TSC2046_Update(void) {
     break;
 
   case WAIT_FOR_NEXT_TOUCH:
-    if (TIMER_DelayTimer(WAIT_TIME, debounce)) {
+    if (Timer_delayTimer(WAIT_TIME, debounce)) {
       touchState = WAITING_FOR_IRQ;
       wasTouchDetected = FALSE;
     }

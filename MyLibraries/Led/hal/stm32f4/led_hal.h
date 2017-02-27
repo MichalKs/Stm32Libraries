@@ -30,11 +30,11 @@
  * @{
  */
 
-#define MAX_LEDS    4 ///< Maximum number of LEDs available in design
+#define MAX_LEDS 4 ///< Maximum number of LEDs available in design
 
-void LED_HAL_Init         (int led);
-void LED_HAL_Toggle       (int led);
-void LED_HAL_ChangeState  (int led, Boolean state);
+void LedHal_initialize     (int led);
+void LedHal_toggle         (int led);
+void LedHal_changeLedState (int led, Boolean state);
 
 /**
  * @}

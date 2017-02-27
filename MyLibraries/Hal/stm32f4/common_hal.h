@@ -19,7 +19,7 @@
 #ifndef INC_COMMON_HAL_H_
 #define INC_COMMON_HAL_H_
 
-void COMMON_HAL_Init(void);
-void COMMON_HAL_ErrorHandler(void);
+void CommonHal_initialize(void);
+void CommonHal_errorHandler(void);
 
 #endif /* INC_COMMON_HAL_H_ */

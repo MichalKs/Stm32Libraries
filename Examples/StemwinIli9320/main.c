@@ -18,7 +18,7 @@
 
 #include "timers.h"
 #include "led.h"
-#include "comm.h"
+#include "serial_port.h"
 #include "common_hal.h"
 #include "keys.h"
 #include "tsc2046.h"
@@ -48,21 +48,21 @@ void softTimerCallback(void) {
   int length;                         // length of command
 
   // check for new frames from PC
-  if (COMM_GetFrame(frameBuffer, &length, FRAME_MAX_SIZE) == COMM_GOT_FRAME) {
+  if (SerialPort_getFrame(frameBuffer, &length, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
     println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
 
     // control LED0 from terminal
     if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
-      LED_ChangeState(_LED0, LED_ON);
+      Led_changeState(LED_NUMBER0, LED_ON);
     }
     if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
-      LED_ChangeState(_LED0, LED_OFF);
+      Led_changeState(LED_NUMBER0, LED_OFF);
     }
     if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
-      LED_ChangeState(_LED1, LED_ON);
+      Led_changeState(LED_NUMBER1, LED_ON);
     }
     if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
-      LED_ChangeState(_LED1, LED_OFF);
+      Led_changeState(LED_NUMBER1, LED_OFF);
     }
   }
 }
@@ -72,25 +72,25 @@ void softTimerCallback(void) {
  */
 int main(void) {
 
-  COMMON_HAL_Init();
+  CommonHal_initialize();
 
   const int COMM_BAUD_RATE = 115200;
-  COMM_Initialize(COMM_BAUD_RATE);
+  SerialPort_initialize(COMM_BAUD_RATE);
   println("Starting program"); // Print a string to terminal
 
-  LED_Add(_LED0);
-  LED_Add(_LED1);
-  LED_Add(_LED2);
+  Led_addNewLed(LED_NUMBER0);
+  Led_addNewLed(LED_NUMBER1);
+  Led_addNewLed(LED_NUMBER2);
 
   // Add a soft timer with callback
   const int SOFT_TIMER_PERIOD_MILLIS = 1000;
-  int timerId = TIMER_AddSoftTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
-  TIMER_StartSoftTimer(timerId);
+  int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
+  Timer_startSoftwareTimer(timerId);
 
   ST_GUI_Init();
 
   while (TRUE) {
-    TIMER_SoftTimersUpdate(); // run timers
+    Timer_softwareTimersUpdate(); // run timers
     ST_GUI_Run();
   }
 }

@@ -83,7 +83,7 @@ void UTILS_Hexdump(const uint8_t const *dataBuffer, int length) {
     }
 
     if ((i % DELAY_TIME_MILLIS) == 0) {
-      TIMER_DelayMillis(DELAY_TIME); // Delay so as not to overflow buffer
+      Timer_delayMillis(DELAY_TIME); // Delay so as not to overflow buffer
     }
   }
   printf(NEWLINE_SEQUENCE);
@@ -120,7 +120,7 @@ void UTILS_HexdumpWithCharacters(const uint8_t const *dataBuffer, int length) {
     }
 
     if ((i % DELAY_TIME_MILLIS) == 0) {
-      TIMER_DelayMillis(DELAY_TIME); // Delay so as not to overflow buffer
+      Timer_delayMillis(DELAY_TIME); // Delay so as not to overflow buffer
     }
   }
   printf(NEWLINE_SEQUENCE);
@@ -148,7 +148,7 @@ void UTILS_Hexdump16(const uint16_t const *dataBuffer, int length) {
     }
 
     if ((i % DELAY_TIME_MILLIS) == 0) {
-      TIMER_DelayMillis(DELAY_TIME); // Delay so as not to overflow buffer
+      Timer_delayMillis(DELAY_TIME); // Delay so as not to overflow buffer
     }
   }
   printf(NEWLINE_SEQUENCE);

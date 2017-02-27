@@ -111,7 +111,7 @@ void ILI9320_HAL_Initialize(void) {
   sramHandle.Init.WriteBurst         = FSMC_WRITE_BURST_DISABLE;
 
   if(HAL_SRAM_Init(&sramHandle, &timing, &timing) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
 }
 /**

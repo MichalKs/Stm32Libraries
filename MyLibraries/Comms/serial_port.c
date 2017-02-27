@@ -15,11 +15,11 @@
  * @endverbatim
  */
 
-#include <comm.h>
-#include <fifo.h>
-#include <stdio.h>
-#include <uart.h>
+#include <serial_port.h>
+#include "fifo.h"
+#include "uart.h"
 #include <string.h>
+#include <stdio.h>
 
 #ifndef COMM_DEBUG
   #define COMM_DEBUG
@@ -55,7 +55,7 @@ static void receiveCb(char receivedCharacter);
  * @brief Initialize communication terminal interface.
  * @param baudRate Required baud rate
  */
-void COMM_Initialize(int baudRate) {
+void SerialPort_initialize(int baudRate) {
 
   // pass baud rate
   // callback for received data and callback for transmitted data
@@ -74,7 +74,7 @@ void COMM_Initialize(int baudRate) {
  *
  * @param characterToSend Character to send.
  */
-void COMM_PutCharacter(char characterToSend) {
+void SerialPort_putCharacter(char characterToSend) {
 
   // disable IRQ so it doesn't screw up FIFO count - leads to errors in transmission
   UART_DisableIrq();
@@ -93,26 +93,22 @@ void COMM_PutCharacter(char characterToSend) {
  * @brief Send string to PC with newline
  * @param line Line to send
  */
-void COMM_PrintLine(char* line) {
+void SerialPort_printLine(char* line) {
   for (unsigned int i = 0; i < strlen(line); i++) {
-    COMM_PutCharacter(line[i]);
+    SerialPort_putCharacter(line[i]);
   }
-  COMM_PutCharacter('\r');
-  COMM_PutCharacter('\n');
+  SerialPort_putCharacter('\r');
+  SerialPort_putCharacter('\n');
 }
 /**
  * @brief Get a char from PC
  * @return Received character
  * @warning Blocking function! Waits until char is received.
  */
-char COMM_GetCharacter(void) {
-
+char SerialPort_getCharacter(void) {
   uint8_t receivedCharacter;
-
   while (FIFO_IsEmpty(&receiveFifo)); // wait until buffer is not empty
-
   FIFO_Pop(&receiveFifo, &receivedCharacter); // Get data from RX buffer
-
   return (char)receivedCharacter;
 }
 /**
@@ -123,7 +119,7 @@ char COMM_GetCharacter(void) {
  * @retval COMM_NO_FRAME_READY No frame in buffer
  * @retval COMM_FRAME_ERROR Frame error
  */
-COMM_ErrorTypedef COMM_GetFrame(char* frameBuffer, int* length, int maximumLength) {
+SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int maximumLength) {
 
   char receivedByte;
   *length = 0;
@@ -137,7 +133,7 @@ COMM_ErrorTypedef COMM_GetFrame(char* frameBuffer, int* length, int maximumLengt
         *length = 0;
         println("Invalid frame");
         FIFO_Flush(&receiveFifo);
-        return COMM_FRAME_ERROR;
+        return SERIAL_PORT_FRAME_ERROR;
       }
 
       FIFO_Pop(&receiveFifo, &receivedByte);
@@ -148,7 +144,7 @@ COMM_ErrorTypedef COMM_GetFrame(char* frameBuffer, int* length, int maximumLengt
         *length = 0;
         println("Frame too long");
         FIFO_Flush(&receiveFifo);
-        return COMM_FRAME_TOO_LARGE;
+        return SERIAL_PORT_FRAME_TOO_LARGE;
       }
 
       // if end of frame
@@ -160,10 +156,10 @@ COMM_ErrorTypedef COMM_GetFrame(char* frameBuffer, int* length, int maximumLengt
 
     }
     frameCounter--;
-    return COMM_GOT_FRAME;
+    return SERIAL_PORT_GOT_FRAME;
 
   } else {
-    return COMM_NO_FRAME_READY;
+    return SERIAL_PORT_NO_FRAME_READY;
   }
 }
 /**

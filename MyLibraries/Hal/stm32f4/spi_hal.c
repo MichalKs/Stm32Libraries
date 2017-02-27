@@ -101,7 +101,7 @@ void SPI_HAL_Init(SPI_HAL_Typedef spi) {
   currentHandle->Init.Mode              = SPI_MODE_MASTER;
 
   if(HAL_SPI_Init(currentHandle) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
 }
 /**
@@ -236,7 +236,7 @@ void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
 
   if (HAL_SPI_TransmitReceive(spiHandle, (uint8_t*)transmitBuffer,
       (uint8_t *)receiveBuffer, length, SPI_MAX_DELAY_TIME) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
 }
 /**
@@ -268,7 +268,7 @@ uint8_t SPI_HAL_TransmitByte(SPI_HAL_Typedef spi, uint8_t dataToSend) {
 
   if (HAL_SPI_TransmitReceive(spiHandle, &dataToSend,
       &receivedData, 1, SPI_MAX_DELAY_TIME) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
   return receivedData;
 }

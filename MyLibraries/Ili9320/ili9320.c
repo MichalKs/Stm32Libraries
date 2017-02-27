@@ -108,14 +108,14 @@ void ILI9320_Initializtion(void) {
 
   // Reset the LCD
   ILI9320_HAL_ResetOff();
-  TIMER_DelayMillis(RESET_DELAY);
+  Timer_delayMillis(RESET_DELAY);
   ILI9320_HAL_ResetOn();
-  TIMER_DelayMillis(RESET_DELAY);
+  Timer_delayMillis(RESET_DELAY);
   ILI9320_HAL_ResetOff();
-  TIMER_DelayMillis(RESET_DELAY);
+  Timer_delayMillis(RESET_DELAY);
 
   ILI9320_HAL_WriteReg(ILI9320_START_OSCILLATION, TRUE);
-  TIMER_DelayMillis(RESET_DELAY);
+  Timer_delayMillis(RESET_DELAY);
 
   int id = ILI9320_HAL_ReadReg(ILI9320_READ_ID);
 
@@ -182,7 +182,7 @@ void ILI9320_Initializtion(void) {
     ILI9320_HAL_WriteReg(ILI9320_DISP1, 0x0173);
   }
 
-  TIMER_DelayMillis(INIT_DELAY);
+  Timer_delayMillis(INIT_DELAY);
 }
 void ILI9320_SetHorizontalGramUpdateDirection(void) {
   ILI9320_HAL_WriteReg(ILI9320_ENTRY_MODE, 0x1000 | 0x0038);

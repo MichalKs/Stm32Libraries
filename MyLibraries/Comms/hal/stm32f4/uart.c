@@ -92,7 +92,7 @@ void UART_SendDataIrq(void) {
   if (numberOfBytes > 0) {
     // send it to PC
     if (HAL_UART_Transmit_IT(&uartHandle, (uint8_t*)buf, numberOfBytes) != HAL_OK) {
-      COMMON_HAL_ErrorHandler();
+      CommonHal_errorHandler();
     }
     isSendingData = TRUE;
   } else {
@@ -119,11 +119,11 @@ void UART_Initialize(int baud, void(*rxCb)(char), int(*txCb)(char*) ) {
   uartHandle.Init.Mode       = UART_MODE_TX_RX;
 
   if (HAL_UART_Init(&uartHandle) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
 
   if(HAL_UART_Receive_IT(&uartHandle, (uint8_t*)rxBuffer, RECEIVE_BUFFER_LENGTH) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
 }
 // ********************** HAL UART callbacks and IRQs **********************
@@ -142,7 +142,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef * uart) {
 
   // start another reception
   if (HAL_UART_Receive_IT(uart, (uint8_t *)(rxBuffer), RECEIVE_BUFFER_LENGTH) != HAL_OK) {
-    COMMON_HAL_ErrorHandler();
+    CommonHal_errorHandler();
   }
 }
 /**
