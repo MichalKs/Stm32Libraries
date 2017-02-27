@@ -256,13 +256,13 @@ int SD_Initialize(void) {
   uint8_t sdCommandsBuffer[BUFFER_LENGTH];
   SD_CardErrorsTypedef result;
 
-  SPI_HAL_Init(SPI_HAL_SPI1);
-  SPI_HAL_Select(SPI_HAL_SPI1);
+  SpiHal_initialize(SPI_HAL_SPI1);
+  SpiHal_select(SPI_HAL_SPI1);
 
   // Synchronize card with SPI
   const int SYNCHRONIZATION_BYTES = 20;
   for (int i = 0; i < SYNCHRONIZATION_BYTES; i++) {
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+    SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
   }
 
   isCardInIdleState = TRUE;
@@ -327,7 +327,7 @@ int SD_Initialize(void) {
     isSDHC = FALSE;
   }
 
-  SPI_HAL_Deselect(SPI_HAL_SPI1);
+  SpiHal_deselect(SPI_HAL_SPI1);
   isCardInitalized = TRUE;
   return SD_NO_ERROR;
 
@@ -362,22 +362,22 @@ int SD_ReadSectors(uint8_t* readDataBuffer, uint32_t startSector,
     startSector *= NUMBER_OF_BYTES_IN_SECTOR;
   }
 
-  SPI_HAL_Select(SPI_HAL_SPI1);
+  SpiHal_select(SPI_HAL_SPI1);
 
   result = sendCommand(SD_READ_MULTIPLE_BLOCK, startSector);
 
   if (result != SD_NO_ERROR) {
     println("SD_READ_MULTIPLE_BLOCK error");
-    SPI_HAL_Deselect(SPI_HAL_SPI1);
+    SpiHal_deselect(SPI_HAL_SPI1);
     return SD_BLOCK_READ_ERROR;
   }
 
   while (sectorsToRead) {
     // wait for data token
-    while (SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE) != SD_TOKEN_SBR_MBR_SBW);
-    SPI_HAL_ReadBuffer(SPI_HAL_SPI1, readDataBuffer, NUMBER_OF_BYTES_IN_SECTOR);
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE); // two bytes CRC
+    while (SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE) != SD_TOKEN_SBR_MBR_SBW);
+    SpiHal_readBuffer(SPI_HAL_SPI1, readDataBuffer, NUMBER_OF_BYTES_IN_SECTOR);
+    SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+    SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE); // two bytes CRC
     sectorsToRead--;
     readDataBuffer += NUMBER_OF_BYTES_IN_SECTOR; // move buffer pointer forward
   }
@@ -385,9 +385,9 @@ int SD_ReadSectors(uint8_t* readDataBuffer, uint32_t startSector,
   sendCommand(SD_STOP_TRANSMISSION, 0);
 
   // R1b response - check busy flag
-  while(!SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
+  while(!SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
 
-  SPI_HAL_Deselect(SPI_HAL_SPI1);
+  SpiHal_deselect(SPI_HAL_SPI1);
 
   return SD_NO_ERROR;
 }
@@ -416,33 +416,33 @@ int SD_WriteSectors(uint8_t* writeDataBuffer, uint32_t startSector,
     startSector *= NUMBER_OF_BYTES_IN_SECTOR;
   }
 
-  SPI_HAL_Select(SPI_HAL_SPI1);
+  SpiHal_select(SPI_HAL_SPI1);
 
   result = sendCommand(SD_WRITE_MULTIPLE_BLOCK, startSector);
 
   if (result != SD_NO_ERROR) {
     println("SD_WRITE_MULTIPLE_BLOCK error");
-    SPI_HAL_Deselect(SPI_HAL_SPI1);
+    SpiHal_deselect(SPI_HAL_SPI1);
     return SD_BLOCK_WRITE_ERROR;
   }
 
   while (sectorsToWrite) {
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, START_BLOCK_TOKEN);
-    SPI_HAL_SendBuffer(SPI_HAL_SPI1, writeDataBuffer, NUMBER_OF_BYTES_IN_SECTOR);
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE); // two bytes CRC
+    SpiHal_transmitByte(SPI_HAL_SPI1, START_BLOCK_TOKEN);
+    SpiHal_sendBuffer(SPI_HAL_SPI1, writeDataBuffer, NUMBER_OF_BYTES_IN_SECTOR);
+    SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+    SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE); // two bytes CRC
     sectorsToWrite--;
     writeDataBuffer += NUMBER_OF_BYTES_IN_SECTOR; // move buffer pointer forward
     // data response
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-    while(!SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE)); // wait while card is busy
+    SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+    while(!SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE)); // wait while card is busy
   }
 
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, STOP_TRANSMISSION_TOKEN); // stop transmission token
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-  while(!SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE)); // wait while card is busy
+  SpiHal_transmitByte(SPI_HAL_SPI1, STOP_TRANSMISSION_TOKEN); // stop transmission token
+  SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+  while(!SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE)); // wait while card is busy
 
-  SPI_HAL_Deselect(SPI_HAL_SPI1);
+  SpiHal_deselect(SPI_HAL_SPI1);
 
   return SD_NO_ERROR;
 }
@@ -492,10 +492,10 @@ SD_CardErrorsTypedef readCid(SD_CID* cid) {
   // Read CID implemented as read block
   // So do the same as for read block
   // wait for data token
-  while (SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE) != SD_TOKEN_SBR_MBR_SBW);
-  SPI_HAL_ReadBuffer(SPI_HAL_SPI1, cidBuffer, CID_LENGTH);
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE); // two bytes CRC
+  while (SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE) != SD_TOKEN_SBR_MBR_SBW);
+  SpiHal_readBuffer(SPI_HAL_SPI1, cidBuffer, CID_LENGTH);
+  SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+  SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE); // two bytes CRC
 
   uint8_t* ptr = (uint8_t*)cid;
   for (int i = 0; i < CID_LENGTH; i++) {
@@ -505,7 +505,7 @@ SD_CardErrorsTypedef readCid(SD_CID* cid) {
 //  UTILS_HexdumpWithCharacters(cidBuffer, CID_LENGTH);
 
   // R1b response - check busy flag
-  while(!SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
+  while(!SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
 
   return SD_NO_ERROR;
 }
@@ -528,10 +528,10 @@ SD_CardErrorsTypedef readCsd(SD_CSD* csd) {
   // Read CID implemented as read block
   // So do the same as for read block
   // wait for data token
-  while (SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE) != SD_TOKEN_SBR_MBR_SBW);
-  SPI_HAL_ReadBuffer(SPI_HAL_SPI1, csdBuffer, CSD_LENGTH);
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE); // two bytes CRC
+  while (SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE) != SD_TOKEN_SBR_MBR_SBW);
+  SpiHal_readBuffer(SPI_HAL_SPI1, csdBuffer, CSD_LENGTH);
+  SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+  SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE); // two bytes CRC
 
   uint32_t* ptr = (uint32_t*)csd;
   uint32_t* ptrBuf = (uint32_t*)csdBuffer;
@@ -550,7 +550,7 @@ SD_CardErrorsTypedef readCsd(SD_CSD* csd) {
   println("Card capacity: %u", (unsigned int)cardCapacity);
 
   // R1b response - check busy flag
-  while(!SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
+  while(!SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
 
 }
 /**
@@ -565,29 +565,29 @@ SD_CardErrorsTypedef readCsd(SD_CSD* csd) {
  */
 SD_CardErrorsTypedef sendCommand(uint8_t cmd, uint32_t args) {
 
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, 0x40 | cmd);
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, args >> 24); // MSB first
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, args >> 16);
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, args >> 8);
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, args);
+  SpiHal_transmitByte(SPI_HAL_SPI1, 0x40 | cmd);
+  SpiHal_transmitByte(SPI_HAL_SPI1, args >> 24); // MSB first
+  SpiHal_transmitByte(SPI_HAL_SPI1, args >> 16);
+  SpiHal_transmitByte(SPI_HAL_SPI1, args >> 8);
+  SpiHal_transmitByte(SPI_HAL_SPI1, args);
 
   // CRC is irrelevant while using SPI interface - only checked for some commands.
   switch (cmd) {
   case SD_GO_IDLE_STATE:
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, 0x95);
+    SpiHal_transmitByte(SPI_HAL_SPI1, 0x95);
     break;
   case SD_SEND_IF_COND:
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, 0x87);
+    SpiHal_transmitByte(SPI_HAL_SPI1, 0x87);
     break;
   default:
-    SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+    SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
   }
   // Practice has shown that a valid response token
   // is sent as the second byte by the card.
   // So, we send a dummy byte first.
-  SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+  SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
   SD_ResponseR1 commandResponse;
-  commandResponse.asUint8 = SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+  commandResponse.asUint8 = SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
 //  println("Response to cmd %d is %02x", cmd, commandResponse.asUint8);
 
   // Check response errors
@@ -615,7 +615,7 @@ SD_CardErrorsTypedef sendCommand(uint8_t cmd, uint32_t args) {
 void getResponseR3orR7(uint8_t* responseBuffer) {
   const int RESPONSE_R3_OR_R7_LENGTH = 4;
   for (int i = 0; i < RESPONSE_R3_OR_R7_LENGTH; i++) {
-    responseBuffer[i] = SPI_HAL_TransmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
+    responseBuffer[i] = SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE);
   }
 }
 /**

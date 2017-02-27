@@ -125,9 +125,9 @@ void TSC2046_Initialize(void) {
   txBuffer[POSITION_HIGH_BYTE] = 0;
   txBuffer[POSITION_LOW_BYTE] = 0;
 
-  SPI_HAL_Select(SPI_HAL_SPI3);
-  SPI_HAL_SendBuffer(SPI_HAL_SPI3, txBuffer, TOUCHSCREEN_COMMAND_LENGTH);
-  SPI_HAL_Deselect(SPI_HAL_SPI3);
+  SpiHal_select(SPI_HAL_SPI3);
+  SpiHal_sendBuffer(SPI_HAL_SPI3, txBuffer, TOUCHSCREEN_COMMAND_LENGTH);
+  SpiHal_deselect(SPI_HAL_SPI3);
 }
 /**
  * @brief Registers a given region of the touch screen
@@ -237,7 +237,7 @@ void readTouchPosition(int *x, int *y) {
   const int TOUCH_BIT_SHIFT = 3;
 
   TSC2046_HAL_DisablePenirq(); // disable IRQ during read
-  SPI_HAL_Select(SPI_HAL_SPI3);
+  SpiHal_select(SPI_HAL_SPI3);
 
   // control byte
   ControlByteTypedef ctrl;
@@ -253,7 +253,7 @@ void readTouchPosition(int *x, int *y) {
   txBuffer[POSITION_COMMAND] = ctrl.byte;
   txBuffer[POSITION_HIGH_BYTE] = 0;
   txBuffer[POSITION_LOW_BYTE] = 0;
-  SPI_HAL_TransmitBuffer(SPI_HAL_SPI3, rxBuffer, txBuffer,
+  SpiHal_transmitBuffer(SPI_HAL_SPI3, rxBuffer, txBuffer,
       TOUCHSCREEN_COMMAND_LENGTH);
 
   int tmpY = ((int)rxBuffer[POSITION_HIGH_BYTE])<<8;
@@ -262,7 +262,7 @@ void readTouchPosition(int *x, int *y) {
   // read X
   ctrl.bits.channelSelect = MEASURE_X;
   txBuffer[POSITION_COMMAND] = ctrl.byte;
-  SPI_HAL_TransmitBuffer(SPI_HAL_SPI3, rxBuffer, txBuffer,
+  SpiHal_transmitBuffer(SPI_HAL_SPI3, rxBuffer, txBuffer,
       TOUCHSCREEN_COMMAND_LENGTH);
 
   int tmpX = ((int)rxBuffer[POSITION_HIGH_BYTE])<<8;
@@ -273,7 +273,7 @@ void readTouchPosition(int *x, int *y) {
 
   println("Touch position: x = %d y = %d", *x, *y);
 
-  SPI_HAL_Deselect(SPI_HAL_SPI3);
+  SpiHal_deselect(SPI_HAL_SPI3);
   TSC2046_HAL_EnablePenirq();
 }
 /**

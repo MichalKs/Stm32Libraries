@@ -30,9 +30,16 @@
  * @{
  */
 
+typedef enum {
+  USART_HAL_USART1,
+  USART_HAL_USART2,
+  USART_HAL_USART3,
+  USART_HAL_USART4
+} UsartNumber;
+
 #define UART_BUF_LEN_TX 512 ///< Buffer length for UART peripheral
 
-void    UART_Initialize   (int baud, void(*rxCb)(char), int(*txCb)(char*));
+void    UART_Initialize   (UsartNumber usart, int baud, void(*rxCb)(char), int(*txCb)(char*));
 Boolean UART_IsSendingData(void);
 void    UART_SendDataIrq  (void);
 void    UART_EnableIrq    (void);

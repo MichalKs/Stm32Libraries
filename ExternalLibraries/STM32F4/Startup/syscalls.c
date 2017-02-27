@@ -13,9 +13,9 @@
 #include <sys/times.h>
 #include <sys/errno.h>
 #include <reent.h>
-#include <serial_port.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include "../../../MyLibraries/SerialPort/serial_port.h"
 
 //#define FreeRTOS
 //#define MAX_STACK_SIZE 0x200

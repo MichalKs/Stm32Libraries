@@ -56,7 +56,6 @@
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STM32F4xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/Include"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Comms/hal/stm32f4"/>
-									<listOptionValue builtIn="false" value="../../../MyLibraries/Comms"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Fifo"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Utils"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Timers/hal/stm32f4"/>
@@ -79,6 +78,7 @@
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Tsc2046/hal/stm32f4"/>
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/inc"/>
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/Config"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/SerialPort"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.677838452" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -121,7 +121,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="libs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="STM32F4/STM32_USB_Device_Library|STM32F4/STemWin" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="libs"/>
+						<entry excluding="STM32F4/STemWin|STM32F4/STM32_USB_Device_Library" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="libs"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

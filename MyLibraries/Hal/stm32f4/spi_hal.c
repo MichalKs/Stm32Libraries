@@ -69,7 +69,7 @@ static SPI_HandleTypeDef spi3Handle;
 /**
  * @brief Initialize SPI and SS pin.
  */
-void SPI_HAL_Init(SPI_HAL_Typedef spi) {
+void SpiHal_initialize(SpiNumber spi) {
 
   SPI_HandleTypeDef *currentHandle;
 
@@ -107,7 +107,7 @@ void SPI_HAL_Init(SPI_HAL_Typedef spi) {
 /**
  * @brief Select chip.
  */
-void SPI_HAL_Select(SPI_HAL_Typedef spi) {
+void SpiHal_select(SpiNumber spi) {
   switch(spi) {
   case SPI_HAL_SPI3:
     HAL_GPIO_WritePin(SPI3_CS_PORT, SPI3_CS_PIN, GPIO_PIN_RESET);
@@ -124,7 +124,7 @@ void SPI_HAL_Select(SPI_HAL_Typedef spi) {
 /**
  * @brief Deselect chip.
  */
-void SPI_HAL_Deselect(SPI_HAL_Typedef spi) {
+void SpiHal_deselect(SpiNumber spi) {
   switch(spi) {
   case SPI_HAL_SPI3:
     HAL_GPIO_WritePin(SPI3_CS_PORT, SPI3_CS_PIN, GPIO_PIN_SET);
@@ -145,11 +145,11 @@ void SPI_HAL_Deselect(SPI_HAL_Typedef spi) {
  * @warning Blocking function!
  * FIXME SD card not working with the commented out code
  */
-void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer,
+void SpiHal_sendBuffer(SpiNumber spi, uint8_t* transmitBuffer,
     int length) {
 
   while (length--) {
-    SPI_HAL_TransmitByte(spi, *transmitBuffer++);
+    SpiHal_transmitByte(spi, *transmitBuffer++);
   }
   return;
 
@@ -181,11 +181,11 @@ void SPI_HAL_SendBuffer(SPI_HAL_Typedef spi, uint8_t* transmitBuffer,
  * @warning Blocking function!
  * FIXME SD card not working with the commented out code
  */
-void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
+void SpiHal_readBuffer(SpiNumber spi, uint8_t* receiveBuffer,
     int length) {
 
   while (length--) {
-    *receiveBuffer++ = SPI_HAL_TransmitByte(spi, 0xff);
+    *receiveBuffer++ = SpiHal_transmitByte(spi, 0xff);
   }
   return;
 
@@ -216,7 +216,7 @@ void SPI_HAL_ReadBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
  * @param length Number of bytes to transmit.
  * @warning Blocking function!
  */
-void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
+void SpiHal_transmitBuffer(SpiNumber spi, uint8_t* receiveBuffer,
     uint8_t* transmitBuffer, int length) {
 
   SPI_HandleTypeDef * spiHandle;
@@ -245,7 +245,7 @@ void SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
  * @param dataToSend Data to send
  * @return Received data
  */
-uint8_t SPI_HAL_TransmitByte(SPI_HAL_Typedef spi, uint8_t dataToSend) {
+uint8_t SpiHal_transmitByte(SpiNumber spi, uint8_t dataToSend) {
 
   const uint8_t INVALID_DATA = 0xff;
 

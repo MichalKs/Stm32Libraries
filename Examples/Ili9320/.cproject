@@ -55,7 +55,6 @@
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STM32F4xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/Include"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Comms/hal/stm32f4"/>
-									<listOptionValue builtIn="false" value="../../../MyLibraries/Comms"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Fifo"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Utils"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/Timers/hal/stm32f4"/>
@@ -78,6 +77,7 @@
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/inc"/>
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/Config"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/MkGui"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/SerialPort"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1003898860" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -96,8 +96,8 @@
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.usenewlibnano.59447781" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.usenewlibnano" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.useprintffloat.1540697065" name="Use float with nano printf (-u _printf_float)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.useprintffloat" useByScannerDiscovery="false" value="true" valueType="boolean"/>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs.10603800" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs" valueType="libs"/>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.434399866" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs.10603800" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.434399866" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input.407618203" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

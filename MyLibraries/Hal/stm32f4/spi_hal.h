@@ -36,15 +36,15 @@ typedef enum {
   SPI_HAL_SPI1,//!< SPI_HAL_SPI1
   SPI_HAL_SPI2,//!< SPI_HAL_SPI2
   SPI_HAL_SPI3,//!< SPI_HAL_SPI3
-} SPI_HAL_Typedef;
+} SpiNumber;
 
-void    SPI_HAL_Init          (SPI_HAL_Typedef spi);
-void    SPI_HAL_Select        (SPI_HAL_Typedef spi);
-void    SPI_HAL_Deselect      (SPI_HAL_Typedef spi);
-uint8_t SPI_HAL_TransmitByte  (SPI_HAL_Typedef spi, uint8_t dataToSend);
-void    SPI_HAL_ReadBuffer    (SPI_HAL_Typedef spi, uint8_t* receiveBuffer, int length);
-void    SPI_HAL_SendBuffer    (SPI_HAL_Typedef spi, uint8_t* transmitBuffer, int length);
-void    SPI_HAL_TransmitBuffer(SPI_HAL_Typedef spi, uint8_t* receiveBuffer,
+void    SPI_HAL_Init         (SpiNumber spi);
+void    SpiHal_select        (SpiNumber spi);
+void    SpiHal_deselect      (SpiNumber spi);
+uint8_t SpiHal_transmitByte  (SpiNumber spi, uint8_t dataToSend);
+void    SpiHal_readBuffer    (SpiNumber spi, uint8_t* receiveBuffer, int length);
+void    SpiHal_sendBuffer    (SpiNumber spi, uint8_t* transmitBuffer, int length);
+void    SpiHal_transmitBuffer(SpiNumber spi, uint8_t* receiveBuffer,
         uint8_t* transmitBuffer, int length);
 
 /**

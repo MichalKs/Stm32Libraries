@@ -10,7 +10,6 @@
 <includepath>../../ExternalLibraries/STM32F4/STM32F4xx_HAL_Driver/Inc</includepath>
 <includepath>../../ExternalLibraries/STM32F4/Include</includepath>
 <includepath>../../MyLibraries/Comms/hal/stm32f4</includepath>
-<includepath>../../MyLibraries/Comms</includepath>
 <includepath>../../MyLibraries/Fifo</includepath>
 <includepath>../../MyLibraries/Utils</includepath>
 <includepath>../../MyLibraries/Timers/hal/stm32f4</includepath>
@@ -33,6 +32,7 @@
 <includepath>../../ExternalLibraries/STM32F4/STemWin/inc</includepath>
 <includepath>../../ExternalLibraries/STM32F4/STemWin/Config</includepath>
 <includepath>../../MyLibraries/MkGui</includepath>
+<includepath>../../MyLibraries/SerialPort</includepath>
 
 </language>
 <language name="Object File">

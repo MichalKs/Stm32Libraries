@@ -15,11 +15,11 @@
  * @endverbatim
  */
 
-#include <serial_port.h>
+#include "serial_port.h"
 #include "fifo.h"
-#include "uart.h"
 #include <string.h>
 #include <stdio.h>
+#include <usart.h>
 
 #ifndef COMM_DEBUG
   #define COMM_DEBUG
@@ -59,7 +59,7 @@ void SerialPort_initialize(int baudRate) {
 
   // pass baud rate
   // callback for received data and callback for transmitted data
-  UART_Initialize(baudRate, receiveCb, transmitCb);
+  Usart_initialize(USART_HAL_USART2, baudRate, receiveCb, transmitCb);
 
   // Initialize RX FIFO for receiving data from PC
   FIFO_Add(&receiveFifo, receiveBuffer, RECEIVE_BUFFER_LENGTH);

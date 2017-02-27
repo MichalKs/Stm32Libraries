@@ -18,7 +18,7 @@
 #ifndef COMM_H_
 #define COMM_H_
 
-#include <inttypes.h>
+#include "utils.h"
 
 /**
  * @defgroup  COMM COMM
