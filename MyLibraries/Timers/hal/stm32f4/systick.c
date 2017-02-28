@@ -34,7 +34,7 @@ static volatile unsigned int systemClockMillis;  ///< System clock timer.
  * @brief Get the system time
  * @return System time.
  */
-unsigned int SYSTICK_GetTimeMillis(void) {
+unsigned int SysTick_getTimeMillis(void) {
   return systemClockMillis;
 }
 /**

@@ -27,7 +27,7 @@
  * @addtogroup SYSTICK
  * @{
  */
-unsigned int  SYSTICK_GetTimeMillis (void);
+unsigned int  SysTick_getTimeMillis (void);
 
 /**
  * @}

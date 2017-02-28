@@ -101,6 +101,7 @@
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/Linker/libs.ld"/>
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/Linker/sections.ld"/>
 								</option>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.useprintffloat.601442599" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.useprintffloat" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input.778915787" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

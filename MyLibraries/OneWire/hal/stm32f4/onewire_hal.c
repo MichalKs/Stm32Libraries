@@ -20,7 +20,7 @@
 
 #define ONEWIRE_PIN          GPIO_PIN_1
 #define ONEWIRE_PORT         GPIOC
-#define ONEWIRE_CLK_ENABLE() __HAL_RCC_GPIOA_CLK_ENABLE()
+#define ONEWIRE_CLK_ENABLE() __HAL_RCC_GPIOC_CLK_ENABLE()
 
 /**
  * @brief Initialize ONEWIRE hardware as open drain output

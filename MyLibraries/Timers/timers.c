@@ -20,6 +20,7 @@
 
 #include "timers.h"
 #include "systick.h"
+#include "hardware_timers.h"
 #include <stdio.h>
 
 #ifndef DEBUG_TIMERS
@@ -55,12 +56,19 @@ typedef struct {
 
 static TIMER_SoftTimerTypedef softTimers[MAX_SOFT_TIMERS]; ///< Array of soft timers
 static int softTimerCount; ///< Count number of soft timers
+static volatile unsigned int systemClockMicros;
+static Boolean isMicrosCounterInitialized = FALSE;
+
+static void microsUpdateCb(void) {
+  systemClockMicros++;
+}
+
 /**
  * @brief Returns the system time.
  * @return System time
  */
 unsigned int Timer_getTimeMillis(void) {
-  return SYSTICK_GetTimeMillis();
+  return SysTick_getTimeMillis();
 }
 /**
  * @brief Blocking delay function.
@@ -85,8 +93,34 @@ void Timer_delayMillis(unsigned int millis) {
     }
   }
 }
+/**
+ * @brief Blocking delay function.
+ * @param micros Microseconds to delay
+ */
 void Timer_delayMicros(unsigned int micros) {
 
+  if (!isMicrosCounterInitialized) {
+    const int TIMER_FREQUENCY_HZ = 1000000;
+    HardwareTimers_configureTimerAsIrqWithCallback(HARDWARE_TIMERS_TIMER5, TIMER_FREQUENCY_HZ,
+        microsUpdateCb);
+    isMicrosCounterInitialized = TRUE;
+  }
+
+  unsigned int startTimeMicros = systemClockMicros;
+  unsigned int currentTimeMicros;
+
+  while (TRUE) {
+    currentTimeMicros = systemClockMicros;
+    if ((currentTimeMicros >= startTimeMicros) &&
+        (currentTimeMicros-startTimeMicros > micros)) {
+      break;
+    }
+    // account for system timer overflow
+    if ((currentTimeMicros < startTimeMicros) &&
+        (UINT32_MAX-startTimeMicros + currentTimeMicros > micros)) {
+      break;
+    }
+  }
 }
 /**
  * @brief Nonblocking delay function
@@ -166,7 +200,7 @@ void Timer_softwareTimersUpdate(void) {
 
   static unsigned int previousTimeMillis;
   unsigned int deltaMillis;
-  unsigned int currentTimeMillis = SYSTICK_GetTimeMillis();
+  unsigned int currentTimeMillis = SysTick_getTimeMillis();
 
   if (currentTimeMillis >= previousTimeMillis) {
     // How much time passed from previous run
