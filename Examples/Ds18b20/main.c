@@ -39,18 +39,14 @@
  * @brief Callback for performing periodic tasks
  */
 void softTimerCallback(void) {
-
   Led_toggle(LED_NUMBER2);
 
   const int FRAME_MAX_SIZE = 10;
   char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
   int length;                         // length of command
 
-  // check for new frames from PC
   if (SerialPort_getFrame(frameBuffer, &length, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
     println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
-
-    // control LED0 from terminal
     if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
       Led_changeState(LED_NUMBER0, LED_ON);
     }
@@ -66,51 +62,38 @@ void softTimerCallback(void) {
   }
 
   static int counter;
-  double temp;
-
+  float temperatureCelsius;
   // get temperature every 2 seconds
   switch (counter % 2) {
   case 0:
     Ds18b20_conversionStart();
     break;
-
   case 1:
-    temp = Ds18b20_readTemperatureCelsius();
-    println("Temperature = %.2f", temp);
+    temperatureCelsius = Ds18b20_readTemperatureCelsius();
+    println("Temperature = %.2f", temperatureCelsius);
     break;
-
   }
-
   counter++;
-
 }
 /**
   * @brief  Main program
   */
 int main(void) {
-
   CommonHal_initialize();
-
   const int COMM_BAUD_RATE = 115200;
   SerialPort_initialize(COMM_BAUD_RATE);
-  println("Starting program"); // Print a string to terminal
-
+  println("Starting program");
   Led_addNewLed(LED_NUMBER0);
   Led_addNewLed(LED_NUMBER1);
   Led_addNewLed(LED_NUMBER2);
-
-  // Add a soft timer with callback
   const int SOFT_TIMER_PERIOD_MILLIS = 1000;
   int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
   Timer_startSoftwareTimer(timerId);
-
-  Onewire_initialize(); // initialize ONEWIRE bus
-  Ds18b20_initialize(); // initialize DS18B20 on the bus
+  Onewire_initialize();
+  Ds18b20_initialize();
 
   while (TRUE) {
     Timer_softwareTimersUpdate();
   }
-
   return 0;
 }
-

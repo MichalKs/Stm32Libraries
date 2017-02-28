@@ -20,8 +20,13 @@
 
 #include <inttypes.h>
 
-double  Ds18b20_readTemperatureCelsius        (void);
-uint8_t Ds18b20_initialize            (void);
+typedef enum {
+  DS18B20_RESULT_OK,
+  DS18B20_NO_DEVICE_ON_BUS,
+} Ds18b20ResultCode;
+
+float   Ds18b20_readTemperatureCelsius        (void);
+Ds18b20ResultCode Ds18b20_initialize            (void);
 void    Ds18b20_conversionStart (void);
 
 #endif /* DS18B20_H_ */

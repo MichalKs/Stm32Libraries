@@ -34,47 +34,47 @@
 #define println(str, args...) (void)0
 #endif
 
-
 #define ONEWIRE_MAX_DEVICES 16 ///< Maximum number of devices on the bus
+#define ROM_LENGTH_WITHOUT_CRC 8 ///< Length of ROM without CRC
 
 //static uint64_t romCode[ONEWIRE_MAX_DEVICES]; ///< Romcodes of found devices.
 //static uint16_t deviceCounter; ///< Number of found devices on the bus.
-
-#define ONEWIRE_CMD_SEARCH_ROM    0xf0
-#define ONEWIRE_CMD_READ_ROM      0x33
-#define ONEWIRE_CMD_MATCH_ROM     0x55
-#define ONEWIRE_CMD_SKIP_ROM      0xcc
-#define ONEWIRE_CMD_ALARM_SEARCH  0xec
+/**
+ * @brief Onewire commands
+ */
+typedef enum {
+  ONEWIRE_CMD_SEARCH_ROM    = 0xf0,//!< ONEWIRE_CMD_SEARCH_ROM
+  ONEWIRE_CMD_READ_ROM      = 0x33,//!< ONEWIRE_CMD_READ_ROM
+  ONEWIRE_CMD_MATCH_ROM     = 0x55,//!< ONEWIRE_CMD_MATCH_ROM
+  ONEWIRE_CMD_SKIP_ROM      = 0xcc,//!< ONEWIRE_CMD_SKIP_ROM
+  ONEWIRE_CMD_ALARM_SEARCH  = 0xec,//!< ONEWIRE_CMD_ALARM_SEARCH
+} OnewireCommands;
 
 /**
  * @brief Initialize ONEWIRE bus.
  */
 void Onewire_initialize(void) {
-  // initialize hardware
   OnewireHal_initialize();
 }
 /**
  * @brief Reset the bus
- * @retval FALSE Devices present on bus
- * @retval TRUE No devices on bus
+ * @return Result code
  */
 OnewireResultCode Onewire_resetBus(void) {
-
-  OnewireHal_busLow(); // pull bus low for 480us
-  Timer_delayMicros(480);
-  OnewireHal_releaseBus(); // release bus for 60us
-  Timer_delayMicros(60);
-
+  const int BUS_LOW_TIME_MICROS = 480;
+  OnewireHal_busLow();
+  Timer_delayMicros(BUS_LOW_TIME_MICROS);
+  const int BUS_RELEASE_TIME_MICROS = 60;
+  OnewireHal_releaseBus();
+  Timer_delayMicros(BUS_RELEASE_TIME_MICROS);
   // by now device should pull bus low - presence pulse
-  uint8_t ret = OnewireHal_readBus();
-
-  Timer_delayMicros(420); // minimum 480us (after realase time) - 60us
-
-  if (ret) {
-//    println("No devices");
+  Boolean busState = OnewireHal_readBus();
+  const int BUS_WAIT_TIME_MICROS = 420;
+  // minimum 480us (after release time) - 60us
+  Timer_delayMicros(BUS_WAIT_TIME_MICROS);
+  if (busState) {
     return ONEWIRE_NO_DEVICES_ON_BUS;
   } else {
-//    println("Devices present on bus");
     return ONEWIRE_RESULT_OK;
   }
 }
@@ -83,16 +83,20 @@ OnewireResultCode Onewire_resetBus(void) {
  * @param bit Bit
  */
 void Onewire_writeBit(Boolean bit) {
-  OnewireHal_busLow(); // pull bus low for 1us
-  Timer_delayMicros(1);
+  const int BUS_LOW_TIME_MICROS = 1;
+  OnewireHal_busLow();
+  Timer_delayMicros(BUS_LOW_TIME_MICROS);
 
   // release bus for high bit
   if (bit & 0x01) {
     OnewireHal_releaseBus();
   }
-  Timer_delayMicros(60);
+  const int BIT_HOLD_TIME_MICROS = 60;
+  Timer_delayMicros(BIT_HOLD_TIME_MICROS);
   OnewireHal_releaseBus(); // this is necessary for 0 bit
-  Timer_delayMicros(1); // this delay is crucial - doesn't work without it
+  // this delay is crucial - doesn't work without it
+  const int FINAL_DELAY_MICROS = 1;
+  Timer_delayMicros(FINAL_DELAY_MICROS);
 }
 /**
  * @brief Writes a byte
@@ -109,78 +113,64 @@ void Onewire_writeByte(uint8_t data) {
  * @brief Reads a bit
  * @return Read bit
  */
-uint8_t Onewire_readBit(void) {
-
-  OnewireHal_busLow(); // pull bus low for 1us
-  Timer_delayMicros(1);
-
+Boolean Onewire_readBit(void) {
+  const int BUS_LOW_TIME_MICROS = 1;
+  OnewireHal_busLow();
+  Timer_delayMicros(BUS_LOW_TIME_MICROS);
   OnewireHal_releaseBus();
-  Timer_delayMicros(15); // delay for device to respond - must be under 15us from initial falling edge
-
-  uint8_t ret = OnewireHal_readBus();
-
-  Timer_delayMicros(45); // whole read slot should be 60us + 1us of gap
-
-  return ret;
+  const int DEVICE_RESPONSE_DELAY_MICROS = 15;
+  // delay for device to respond - must be under 15us from initial falling edge
+  Timer_delayMicros(DEVICE_RESPONSE_DELAY_MICROS);
+  Boolean bit = OnewireHal_readBus();
+  // whole read slot should be 60us + 1us of gap
+  const int FINAL_DELAY_MICROS = 45;
+  Timer_delayMicros(FINAL_DELAY_MICROS);
+  return bit;
 }
 /**
  * @brief Reads a byte
  * @return Read byte
  */
-uint8_t Onewire_readByte(void) {
-
-  uint8_t ret = 0;
-
+char Onewire_readByte(void) {
+  char readByte = 0;
   for (int i = 0; i < NUMBER_OF_BITS_IN_BYTE; i++) {
-    ret |= (Onewire_readBit() << i);
+    readByte |= (Onewire_readBit() << i);
   }
-
-  return ret;
+  return readByte;
 }
 /**
  * @brief Reads ROM code of device on the bus
- *
  * @warning This command works only if there is only one device
  * on the bus. Data collision will occur if there are more than
  * one device.
- *
  * @details First byte is device family code (0x28 for DS18B20).
  * Last byte is CRC
- *
  * @param buf Buffer for storing ROM code
- *
+ * @return Result code
  * TODO Add CRC calculation
  */
-uint8_t Onewire_readRom(uint8_t* buf) {
-
-  uint8_t ret = Onewire_resetBus();
-
-  if (ret) {
-    return 1; // no devices on bus
+OnewireResultCode Onewire_readRom(char * bufferForRomData) {
+  OnewireResultCode result = Onewire_resetBus();
+  if (result != ONEWIRE_RESULT_OK) {
+    return ONEWIRE_NO_DEVICES_ON_BUS;
   }
-
-  Onewire_writeByte(ONEWIRE_CMD_READ_ROM); // read ROM
-
-  for (int i = 0; i < 8; i++) {
-    buf[i] = Onewire_readByte();
-    printf("0x%02x ", buf[i]);
+  Onewire_writeByte(ONEWIRE_CMD_READ_ROM);
+  for (int i = 0; i < ROM_LENGTH_WITHOUT_CRC; i++) {
+    bufferForRomData[i] = Onewire_readByte();
+    printf("0x%02x ", (uint8_t)bufferForRomData[i]);
   }
   printf("\r\n");
-
-  return 0;
-
+  return ONEWIRE_RESULT_OK;
 }
 /**
  * @brief Send match ROM command
  * @param rom ROM code
  */
-void Onewire_matchRom(uint8_t* rom) {
-
+void Onewire_matchRom(char * rom) {
   Onewire_resetBus();
-  Onewire_writeByte(ONEWIRE_CMD_MATCH_ROM); // match ROM
-  for (int i = 0; i < 8; i++) {
+  Onewire_writeByte(ONEWIRE_CMD_MATCH_ROM);
+  for (int i = 0; i < ROM_LENGTH_WITHOUT_CRC; i++) {
     Onewire_writeByte(rom[i]);
   }
-
 }
 

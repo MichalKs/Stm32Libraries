@@ -26,10 +26,10 @@ typedef enum {
 } OnewireResultCode;
 
 OnewireResultCode Onewire_resetBus  (void);
-uint8_t Onewire_readByte  (void);
+char Onewire_readByte  (void);
 void    Onewire_writeByte (uint8_t data);
 void    Onewire_initialize(void);
-uint8_t Onewire_readRom   (uint8_t* buf);
-void    Onewire_matchRom  (uint8_t* rom);
+OnewireResultCode Onewire_readRom   (char * buf);
+void    Onewire_matchRom  (char * rom);
 
 #endif /* ONEWIRE_C_ */

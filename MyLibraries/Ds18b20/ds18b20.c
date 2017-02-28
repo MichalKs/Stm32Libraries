@@ -26,7 +26,7 @@
 #include "onewire.h"
 #include <stdio.h>
 
-#define DEBUG ///< If defined, program sends all printf data to the USART
+#define DEBUG
 
 #ifdef DEBUG
 #define print(str, args...) printf("DS18B20--> "str"%s",##args,"\r")
@@ -36,57 +36,63 @@
 #define println(str, args...) (void)0
 #endif
 
-#define DS18B20_CMD_CONVERT_T         0x44 ///< Convert temperature command
-#define DS18B20_CMD_WRITE_SCRATCHPAD  0x4e ///< Write scratchpad command
-#define DS18B20_CMD_READ_SCRATCHPAD   0xbe ///< Read scratchpad command
-#define DS18B20_CMD_COPY_SCRATCHPAD   0x48 ///< Copy scratchpad to internal EEPROM command
-#define DS18B20_CMD_RECALL_EE         0xb8 ///< Recall configuration data from internal EEPROM command
-#define DS18B20_CMD_READ_POWER        0xb4 ///< Read power status command
-
+/**
+ * @brief DS18B20 commands
+ */
+typedef enum {
+  DS18B20_CMD_CONVERT_TEMPERATURE = 0x44, ///< Convert temperature command
+  DS18B20_CMD_WRITE_SCRATCHPAD    = 0x4e, ///< Write scratchpad command
+  DS18B20_CMD_READ_SCRATCHPAD     = 0xbe, ///< Read scratchpad command
+  DS18B20_CMD_COPY_SCRATCHPAD     = 0x48, ///< Copy scratchpad to internal EEPROM command
+  DS18B20_CMD_RECALL_EEPROM       = 0xb8, ///< Recall configuration data from internal EEPROM command
+  DS18B20_CMD_READ_POWER          = 0xb4, ///< Read power status command
+} Ds18b20Commands;
 /**
  * @brief Memory structure of the DS18B20
  */
 typedef struct {
-  uint8_t tempLSB;    ///< Temperature value - lower byte
-  uint8_t tempMSB;    ///< Temperature value - higher byte
-  uint8_t thReg;      ///< Temperature alarm - higher byte
-  uint8_t tlReg;      ///< Temperature alarm - lower byte
-  uint8_t config;     ///< Configuration byte
-  uint8_t reserved0;  ///< Reserved
-  uint8_t reserved1;  ///< Reserved
-  uint8_t reserved2;  ///< Reserved
-  uint8_t crc;        ///< CRC calculated from previous fields
-} __attribute((packed)) DS18B20_Memory;
-
-#define DS18B20_RESOLUTION9   (0<<5) ///< 9  bit resolution
-#define DS18B20_RESOLUTION10  (1<<5) ///< 10 bit resolution
-#define DS18B20_RESOLUTION11  (2<<5) ///< 11 bit resolution
-#define DS18B20_RESOLUTION12  (3<<5) ///< 12 bit resolution (default)
-
-static uint8_t romCode[8]; ///< Device ROMCODE
-
-#define ROMCODE_DEV_ID 0x28 ///< Device ROMCODE ID for DS18B20 family
+  uint8_t temperatureLsb;         ///< Temperature value - lower byte
+  uint8_t temperatureMsb;         ///< Temperature value - higher byte
+  uint8_t temperatureAlarmHigher; ///< Temperature alarm - higher byte
+  uint8_t temperatureAlarmLower;  ///< Temperature alarm - lower byte
+  uint8_t configuration;          ///< Configuration byte
+  uint8_t reserved0;              ///< Reserved
+  uint8_t reserved1;              ///< Reserved
+  uint8_t reserved2;              ///< Reserved
+  uint8_t crc;                    ///< CRC calculated from previous fields
+} __attribute((packed)) Ds18b20Memory;
+/**
+ * @brief DS18B20 measurement resolution
+ */
+typedef enum {
+  DS18B20_RESOLUTION_9_BITS   = (0<<5), ///< 9  bit resolution
+  DS18B20_RESOLUTION_10_BITS  = (1<<5), ///< 10 bit resolution
+  DS18B20_RESOLUTION_11_BITS  = (2<<5), ///< 11 bit resolution
+  DS18B20_RESOLUTION_12_BITS  = (3<<5), ///< 12 bit resolution (default)
+} Ds18b20Resolution;
+#define ROMCODE_SIZE               8    ///< Size of device ROMCODE
+#define ROMCODE_DEVICE_ID          0x28 ///< Device ROMCODE ID for DS18B20 family
+#define ROMCODE_DEVICE_ID_POSITION 0    ///< Position of device ID in ROMCODE
+static char romCode[ROMCODE_SIZE];   ///< Device ROMCODE
 
 /**
  * @brief Initialize DS18B20 digital thermometer.
- *
- * @retval 1 No DS18B20 on bus
- * @retval 0 Initialization went OK.
+ * @return Result code
  */
-uint8_t Ds18b20_initialize(void) {
+Ds18b20ResultCode Ds18b20_initialize(void) {
   Onewire_readRom(romCode);
-  if (romCode[0] != ROMCODE_DEV_ID) {
+  if (romCode[ROMCODE_DEVICE_ID_POSITION] != ROMCODE_DEVICE_ID) {
     println("Not DS18B20!");
-    return 1; // not DS18B20
+    return DS18B20_NO_DEVICE_ON_BUS;
   }
-  return 0;
+  return DS18B20_RESULT_OK;
 }
 /**
  * @brief Send start temperature conversion command.
  */
 void Ds18b20_conversionStart(void) {
   Onewire_matchRom(romCode);
-  Onewire_writeByte(DS18B20_CMD_CONVERT_T); // convert temp
+  Onewire_writeByte(DS18B20_CMD_CONVERT_TEMPERATURE);
 }
 /**
  * @brief Write scratchpad commands
@@ -118,36 +124,35 @@ void Ds18b20_copyScratchPad(void) {
  * @brief Reads DS18B20 scratchpad.
  * @param buf Buffer for scratchpad
  */
-void Ds18b20_readScratchPad(uint8_t* buf) {
+void Ds18b20_readScratchPad(char * memoryBuffer) {
   Onewire_matchRom(romCode);
-  Onewire_writeByte(DS18B20_CMD_READ_SCRATCHPAD); // read scratchpad
-  for (int i = 0; i < 9; i++) {
-    buf[i] = Onewire_readByte();
+  Onewire_writeByte(DS18B20_CMD_READ_SCRATCHPAD);
+  for (int i = 0; i < (int)sizeof(Ds18b20Memory); i++) {
+    memoryBuffer[i] = Onewire_readByte();
   }
 }
 /**
  * @brief Reads DS18B20 temperature.
  * @return Temperature value in degrees Celsius
  */
-double Ds18b20_readTemperatureCelsius(void) {
-  uint8_t mem[10];
-  Ds18b20_readScratchPad(mem);
-  DS18B20_Memory* dsMem = (DS18B20_Memory*)mem;
-  uint8_t t1 = (dsMem->tempLSB >> 4) & 0x0f;
-  t1 |= ((dsMem->tempMSB << 4) & 0x70);
-  double t2 = 0;
-  if (dsMem->tempLSB & 0x08) {
-    t2 += 0.5;
+float Ds18b20_readTemperatureCelsius(void) {
+  Ds18b20Memory ds18b20Memory;
+  Ds18b20_readScratchPad((char*)&ds18b20Memory);
+  uint8_t t1 = (ds18b20Memory.temperatureLsb >> 4) & 0x0f;
+  t1 |= ((ds18b20Memory.temperatureMsb << 4) & 0x70);
+  float t2 = 0;
+  if (ds18b20Memory.temperatureLsb & 0x08) {
+    t2 += 0.5f;
   }
-  if (dsMem->tempLSB & 0x04) {
-    t2 += 0.25;
+  if (ds18b20Memory.temperatureLsb & 0x04) {
+    t2 += 0.25f;
   }
-  if (dsMem->tempLSB & 0x02) {
-    t2 += 0.125;
+  if (ds18b20Memory.temperatureLsb & 0x02) {
+    t2 += 0.125f;
   }
-  if (dsMem->tempLSB & 0x01) {
-    t2 += 0.0625;
+  if (ds18b20Memory.temperatureLsb & 0x01) {
+    t2 += 0.0625f;
   }
-  double ret = (double)t1 + t2;
+  float ret = (float)t1 + t2;
   return ret;
 }
