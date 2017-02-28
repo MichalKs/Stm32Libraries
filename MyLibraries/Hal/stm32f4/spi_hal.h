@@ -38,7 +38,7 @@ typedef enum {
   SPI_HAL_SPI3,//!< SPI_HAL_SPI3
 } SpiNumber;
 
-void    SPI_HAL_Init         (SpiNumber spi);
+void    SpiHal_initialize    (SpiNumber spi);
 void    SpiHal_select        (SpiNumber spi);
 void    SpiHal_deselect      (SpiNumber spi);
 uint8_t SpiHal_transmitByte  (SpiNumber spi, uint8_t dataToSend);

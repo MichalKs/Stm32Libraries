@@ -108,7 +108,7 @@ void TSC2046_Initialize(void) {
   const int POSITION_HIGH_BYTE = 1;
   const int POSITION_LOW_BYTE = 2;
 
-  SPI_HAL_Init(SPI_HAL_SPI3);
+  SpiHal_initialize(SPI_HAL_SPI3);
   TSC2046_HAL_PenirqInit(touchInterruptCallback);
 
   // send first commands
