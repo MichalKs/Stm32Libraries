@@ -31,7 +31,7 @@
  */
 
 #define NEWLINE_SEQUENCE "\r\n" ///< Sequence to send to get new line in terminal
-
+#define NUMBER_OF_BITS_IN_BYTE 8
 /**
  * @brief Boolean type for flags
  */

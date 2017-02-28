@@ -85,6 +85,9 @@ void Timer_delayMillis(unsigned int millis) {
     }
   }
 }
+void Timer_delayMicros(unsigned int micros) {
+
+}
 /**
  * @brief Nonblocking delay function
  * @param millis Delay time

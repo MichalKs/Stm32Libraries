@@ -38,8 +38,9 @@
 typedef enum {
   TIMER_OK = 0,                //!< TIMER_OK
   TIMER_TOO_MANY_TIMERS = -100,//!< TIMER_TOO_MANY_TIMERS
-} TIMER_ErrorTypedef;
+} TimerResultCode;
 
+void         Timer_delayMicros          (unsigned int micros);
 void         Timer_delayMillis          (unsigned int millis);
 void         Timer_startSoftwareTimer   (int id);
 void         Timer_softwareTimersUpdate (void);
