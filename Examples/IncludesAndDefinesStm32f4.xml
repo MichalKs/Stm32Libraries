@@ -20,6 +20,7 @@
 <includepath>../../MyLibraries/Fat32</includepath>
 <includepath>../../MyLibraries/Fonts</includepath>
 <includepath>../../MyLibraries/Graphics</includepath>
+<includepath>../../MyLibraries/Gui</includepath>
 <includepath>../../MyLibraries/Ili9320</includepath>
 <includepath>../../MyLibraries/Ili9320/hal/stm32f4</includepath>
 <includepath>../../MyLibraries/Keyboard</includepath>
@@ -31,8 +32,10 @@
 <includepath>../../MyLibraries/Tsc2046/hal/stm32f4</includepath>
 <includepath>../../ExternalLibraries/STM32F4/STemWin/inc</includepath>
 <includepath>../../ExternalLibraries/STM32F4/STemWin/Config</includepath>
-<includepath>../../MyLibraries/MkGui</includepath>
 <includepath>../../MyLibraries/SerialPort</includepath>
+<includepath>../../MyLibraries/Ds18b20</includepath>
+<includepath>../../MyLibraries/OneWire</includepath>
+<includepath>../../MyLibraries/OneWire/hal/stm32f4</includepath>
 
 </language>
 <language name="Object File">
