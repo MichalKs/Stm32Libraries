@@ -1,13 +1,11 @@
 /**
- * @file: 	ds18b20.c
- * @brief:	DS18B20 digital thermometer library
- * @date: 	5 sie 2014
- * @author: Michal Ksiezopolski
- * 
+ * @file    ds18b20.c
+ * @brief   DS18B20 thermometer library
+ * @date    01.03.2017
+ * @author  Michal Ksiezopolski
  * @details The DS18B20 is assumed to be in non-parasite mode
  * (TODO Check if parasite mode also works with library).
  * The DS18B20 data line should be pulled up with a 4k7 resistor.
- *
  * TODO Add power supply read, recall EEPROM, use of multiple DS18B20.
  *
  * @verbatim
@@ -21,14 +19,13 @@
  * @endverbatim
  */
 
-
 #include "ds18b20.h"
 #include "onewire.h"
 #include <stdio.h>
 
-#define DEBUG
+#define DEBUG_DS18B20
 
-#ifdef DEBUG
+#ifdef DEBUG_DS18B20
 #define print(str, args...) printf("DS18B20--> "str"%s",##args,"\r")
 #define println(str, args...) printf("DS18B20--> "str"%s",##args,"\r\n")
 #else
@@ -73,7 +70,7 @@ typedef enum {
 #define ROMCODE_SIZE               8    ///< Size of device ROMCODE
 #define ROMCODE_DEVICE_ID          0x28 ///< Device ROMCODE ID for DS18B20 family
 #define ROMCODE_DEVICE_ID_POSITION 0    ///< Position of device ID in ROMCODE
-static char romCode[ROMCODE_SIZE];   ///< Device ROMCODE
+static char romCode[ROMCODE_SIZE];      ///< Device ROMCODE TODO Add structure for ROMCODE
 
 /**
  * @brief Initialize DS18B20 digital thermometer.
@@ -96,21 +93,21 @@ void Ds18b20_conversionStart(void) {
 }
 /**
  * @brief Write scratchpad commands
- * @param th High byte of temperature alarm value
- * @param tl Low byte of temperature alarm value
- * @param conf Configuration byte
+ * @param alarmTemperatureHigh High byte of temperature alarm value
+ * @param alarmTemperatureLow Low byte of temperature alarm value
+ * @param configurationByte Configuration byte
  */
-void Ds18b20_writeScratchPad(uint8_t th, uint8_t tl, uint8_t conf) {
-
+void Ds18b20_writeScratchPad(int alarmTemperatureHigh, int alarmTemperatureLow,
+    char configurationByte) {
   Onewire_matchRom(romCode);
   Onewire_writeByte(DS18B20_CMD_WRITE_SCRATCHPAD);
+  Onewire_writeByte(alarmTemperatureHigh);
+  Onewire_writeByte(alarmTemperatureLow);
 
-  Onewire_writeByte(th); // high alarm temperature
-  Onewire_writeByte(tl); // low  alarm temperature
-
-  conf |= 0x1f; // 5 LSB bits always 1
-  conf &= ~(1<<7); // MSB always 0
-  Onewire_writeByte(conf);
+  // FIXME Get rid of magic numbers
+  configurationByte |= 0x1f; // 5 LSB bits always 1
+  configurationByte &= ~(1<<7); // MSB always 0
+  Onewire_writeByte(configurationByte);
 }
 /**
  * @brief Copies scratchpad into DS18B20 EEPROM.
@@ -134,25 +131,26 @@ void Ds18b20_readScratchPad(char * memoryBuffer) {
 /**
  * @brief Reads DS18B20 temperature.
  * @return Temperature value in degrees Celsius
+ * FIXME Get rid of magic numbers
  */
 float Ds18b20_readTemperatureCelsius(void) {
   Ds18b20Memory ds18b20Memory;
   Ds18b20_readScratchPad((char*)&ds18b20Memory);
-  uint8_t t1 = (ds18b20Memory.temperatureLsb >> 4) & 0x0f;
-  t1 |= ((ds18b20Memory.temperatureMsb << 4) & 0x70);
-  float t2 = 0;
+
+  int temperatureCelsius = (ds18b20Memory.temperatureLsb >> 4) & 0x0f;
+  temperatureCelsius |= ((ds18b20Memory.temperatureMsb << 4) & 0x70);
+  float temperatureFraction = 0;
   if (ds18b20Memory.temperatureLsb & 0x08) {
-    t2 += 0.5f;
+    temperatureFraction += 0.5f;
   }
   if (ds18b20Memory.temperatureLsb & 0x04) {
-    t2 += 0.25f;
+    temperatureFraction += 0.25f;
   }
   if (ds18b20Memory.temperatureLsb & 0x02) {
-    t2 += 0.125f;
+    temperatureFraction += 0.125f;
   }
   if (ds18b20Memory.temperatureLsb & 0x01) {
-    t2 += 0.0625f;
+    temperatureFraction += 0.0625f;
   }
-  float ret = (float)t1 + t2;
-  return ret;
+  return (float)temperatureCelsius + temperatureFraction;
 }

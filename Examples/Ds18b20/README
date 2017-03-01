@@ -1,0 +1,9 @@
+
+
+The DS18B20 has three pins, which should be connected to the following discovery pins:
+- VDD to Discovery 3V
+- GND to Discovery GND
+- Data to Discovery PC1
+
+There should be a 4k7 resistor placed between the data line and VDD of the thermometer.
+

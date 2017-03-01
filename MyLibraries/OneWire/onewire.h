@@ -20,16 +20,19 @@
 
 #include "utils.h"
 
+/**
+ * @brief Result codes
+ */
 typedef enum {
-  ONEWIRE_RESULT_OK,
-  ONEWIRE_NO_DEVICES_ON_BUS,
+  ONEWIRE_RESULT_OK,        //!< ONEWIRE_RESULT_OK
+  ONEWIRE_NO_DEVICES_ON_BUS,//!< ONEWIRE_NO_DEVICES_ON_BUS
 } OnewireResultCode;
 
 OnewireResultCode Onewire_resetBus  (void);
-char Onewire_readByte  (void);
-void    Onewire_writeByte (uint8_t data);
-void    Onewire_initialize(void);
+char              Onewire_readByte  (void);
+void              Onewire_writeByte (uint8_t data);
+void              Onewire_initialize(void);
 OnewireResultCode Onewire_readRom   (char * buf);
-void    Onewire_matchRom  (char * rom);
+void              Onewire_matchRom  (char * rom);
 
 #endif /* ONEWIRE_C_ */

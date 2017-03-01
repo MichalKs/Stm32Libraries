@@ -24,18 +24,18 @@
 #include "timers.h"
 #include <stdio.h>
 
-#define DEBUG
+#define DEBUG_ONEWIRE
 
-#ifdef DEBUG
-#define print(str, args...) printf("1WIRE--> "str"%s",##args,"")
-#define println(str, args...) printf("1WIRE--> "str"%s",##args,"\r\n")
+#ifdef DEBUG_ONEWIRE
+#define print(str, args...) printf("ONEWIRE--> "str"%s",##args,"")
+#define println(str, args...) printf("ONEWIRE--> "str"%s",##args,"\r\n")
 #else
 #define print(str, args...) (void)0
 #define println(str, args...) (void)0
 #endif
 
-#define ONEWIRE_MAX_DEVICES 16 ///< Maximum number of devices on the bus
-#define ROM_LENGTH_WITHOUT_CRC 8 ///< Length of ROM without CRC
+#define ONEWIRE_MAX_DEVICES     16  ///< Maximum number of devices on the bus
+#define ROM_LENGTH_WITHOUT_CRC  8   ///< Length of ROM without CRC
 
 //static uint64_t romCode[ONEWIRE_MAX_DEVICES]; ///< Romcodes of found devices.
 //static uint16_t deviceCounter; ///< Number of found devices on the bus.
