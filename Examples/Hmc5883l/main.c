@@ -64,7 +64,7 @@ void softTimerCallback(void) {
     }
   }
 
-  double direction = Hmc5883l_readAngle();
+  float direction = Hmc5883l_readAngle();
   println("%.2f", direction);
   if (direction < 45 || direction >= 315) {
     println("North");

@@ -18,10 +18,9 @@
 #ifndef HMC5883L_H_
 #define HMC5883L_H_
 
-
-#include <inttypes.h>
+#include "utils.h"
 
 void Hmc5883l_initialize(void);
-double Hmc5883l_readAngle(void);
+float Hmc5883l_readAngle(void);
 
 #endif /* HMC5883L_H_ */

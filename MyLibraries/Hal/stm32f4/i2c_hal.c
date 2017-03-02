@@ -21,9 +21,8 @@
 #define I2C1_SDA_GPIO_PORT              GPIOB
 #define I2C1_SDA_AF                     GPIO_AF4_I2C1
 
-static I2C_HandleTypeDef i2c1Handle; /// Handle for I2C
-
-#define I2C_MAXIMUM_DELAY_MILLIS 100
+static I2C_HandleTypeDef i2c1Handle;  /// Handle for I2C
+#define I2C_MAXIMUM_DELAY_MILLIS 10   ///< Maximum delay for I2C transmission
 
 /**
  * @brief Initialize I2C
@@ -41,7 +40,7 @@ void I2c_initialize(I2cNumber i2cNumber) {
   }
 
   i2cHandle->Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
-  i2cHandle->Init.ClockSpeed      = 500;
+  i2cHandle->Init.ClockSpeed      = 400000;
   i2cHandle->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   i2cHandle->Init.DutyCycle       = I2C_DUTYCYCLE_2;
   i2cHandle->Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
@@ -61,7 +60,6 @@ void I2c_initialize(I2cNumber i2cNumber) {
  */
 I2cHalResultCode I2c_sendBuffer(I2cNumber i2cNumber, int i2cAddress, uint8_t * dataToSend,
     int length) {
-
   I2C_HandleTypeDef * i2cHandle;
   switch(i2cNumber) {
   case I2C_HAL_I2C1:
@@ -70,14 +68,12 @@ I2cHalResultCode I2c_sendBuffer(I2cNumber i2cNumber, int i2cAddress, uint8_t * d
   default:
     return I2C_HAL_WRONG_BUS;
   }
-
   if(HAL_I2C_Master_Transmit(i2cHandle, (uint16_t)i2cAddress,
        (uint8_t*)dataToSend, length, I2C_MAXIMUM_DELAY_MILLIS) != HAL_OK) {
     return I2C_HAL_NO_RESPONSE;
   }
   return I2C_HAL_RESULT_OK;
 }
-
 /**
  * @brief Read data from I2C
  * @param i2cAddress Address of peripheral on I2C bus
@@ -87,7 +83,6 @@ I2cHalResultCode I2c_sendBuffer(I2cNumber i2cNumber, int i2cAddress, uint8_t * d
  */
 I2cHalResultCode I2c_readBuffer(I2cNumber i2cNumber, int i2cAddress, uint8_t * readBuffer,
     int length) {
-
   I2C_HandleTypeDef * i2cHandle;
   switch(i2cNumber) {
   case I2C_HAL_I2C1:
@@ -96,7 +91,6 @@ I2cHalResultCode I2c_readBuffer(I2cNumber i2cNumber, int i2cAddress, uint8_t * r
   default:
     return I2C_HAL_WRONG_BUS;
   }
-
   while(HAL_I2C_Master_Receive(i2cHandle, (uint16_t)i2cAddress,
        (uint8_t*)readBuffer, length, I2C_MAXIMUM_DELAY_MILLIS) != HAL_OK) {
     return I2C_HAL_NO_RESPONSE;

@@ -1,17 +1,16 @@
 /**
- * @file: 	hmc5883l.c
- * @brief:	   
- * @date: 	11 maj 2014
- * @author: Michal Ksiezopolski
+ * @file 	  hmc5883l.c
+ * @brief   HMC5885L digital compass library
+ * @date 	  02.03.2017
+ * @author  Michal Ksiezopolski
  * 
  * @details The compass should be held in an ideally
  * horizontal position to get the bearings right. If not,
  * the results will be useless garbage.
- *
  * TODO Add tilting compensation.
  *
  * @verbatim
- * Copyright (c) 2014 Michal Ksiezopolski.
+ * Copyright (c) 2017 Michal Ksiezopolski.
  * All rights reserved. This program and the 
  * accompanying materials are made available 
  * under the terms of the GNU Public License 
@@ -21,10 +20,8 @@
  * @endverbatim
  */
 
-
 #include "hmc5883l.h"
 #include "i2c_hal.h"
-#include "timers.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -43,139 +40,121 @@
  * @brief Register addresses
  */
 typedef enum {
-  HMC5883L_CONFA     = 0x00, ///< Configuration register A (r/w)
-  HMC5883L_CONFB     = 0x01, ///< Configuration register B (r/w)
-  HMC5883L_MODE      = 0x02, ///< Mode register (r/w)
-  HMC5883L_DATAX_MSB = 0x03, ///< Data output X MSB register (r)
-  HMC5883L_DATAX_LSB = 0x04, ///< Data output X LSB register (r)
-  HMC5883L_DATAZ_MSB = 0x05, ///< Data output Z MSB register (r)
-  HMC5883L_DATAZ_LSB = 0x06, ///< Data output Z LSB register (r)
-  HMC5883L_DATAY_MSB = 0x07, ///< Data output Y MSB register (r)
-  HMC5883L_DATAY_LSB = 0x08, ///< Data output Y LSB register (r)
-  HMC5883L_STATUS    = 0x09, ///< Status register (r)
-  HMC5883L_IDA       = 0x0a, ///< Identification register A (r)
-  HMC5883L_IDB       = 0x0b, ///< Identification register B (r)
-  HMC5883L_IDC       = 0x0c, ///< Identification register C (r)
+  HMC5883L_CONFIGURATION_A = 0x00, ///< Configuration register A (r/w)
+  HMC5883L_CONFIGURATION_B = 0x01, ///< Configuration register B (r/w)
+  HMC5883L_MODE            = 0x02, ///< Mode register (r/w)
+  HMC5883L_DATAX_MSB       = 0x03, ///< Data output X MSB register (r)
+  HMC5883L_DATAX_LSB       = 0x04, ///< Data output X LSB register (r)
+  HMC5883L_DATAZ_MSB       = 0x05, ///< Data output Z MSB register (r)
+  HMC5883L_DATAZ_LSB       = 0x06, ///< Data output Z LSB register (r)
+  HMC5883L_DATAY_MSB       = 0x07, ///< Data output Y MSB register (r)
+  HMC5883L_DATAY_LSB       = 0x08, ///< Data output Y LSB register (r)
+  HMC5883L_STATUS          = 0x09, ///< Status register (r)
+  HMC5883L_IDA             = 0x0a, ///< Identification register A (r)
+  HMC5883L_IDB             = 0x0b, ///< Identification register B (r)
+  HMC5883L_IDC             = 0x0c, ///< Identification register C (r)
 } Hmc5883lRegisters;
 /**
- *
+ * @brief Modes of operation
  */
 typedef enum {
-  HMC6883L_MODE_CONTINUOUS = 0x00,  //!< HMC6883L_MODE_CONT
-  HMC6883L_MODE_SINGLE = 0x01,//!< HMC6883L_MODE_SINGLE
-  HMC6883L_MODE_IDLE = 0x10,  //!< HMC6883L_MODE_IDLE
+  HMC6883L_MODE_CONTINUOUS  = 0x00, //!< HMC6883L_MODE_CONT
+  HMC6883L_MODE_SINGLE      = 0x01, //!< HMC6883L_MODE_SINGLE
+  HMC6883L_MODE_IDLE        = 0x10, //!< HMC6883L_MODE_IDLE
 } Hmc5883lMode;
 /**
- *
+ * @brief Number of samples for average
  */
 typedef enum {
-  HMC6883L_1SAMP = 0x00,//!< HMC6883L_1SAMP
-  HMC6883L_2SAMP = 0x01,//!< HMC6883L_2SAMP
-  HMC6883L_4SAMP = 0x10,//!< HMC6883L_4SAMP
-  HMC6883L_8SAMP = 0x11,//!< HMC6883L_8SAMP
+  HMC6883L_AVERAGE_1_SAMPLE  = 0x00,//!< HMC6883L_1SAMP
+  HMC6883L_AVERAGE_2_SAMPLES = 0x01,//!< HMC6883L_2SAMP
+  HMC6883L_AVERAGE_4_SAMPLES = 0x10,//!< HMC6883L_4SAMP
+  HMC6883L_AVERAGE_8_SAMPLES = 0x11,//!< HMC6883L_8SAMP
 } Hmc5883lNumberOfSamplesToAverage;
 /**
- *
+ * @brief Measurement rate
  */
 typedef enum {
-  HMC6883L_0Hz75,//!< HMC6883L_0Hz75
-  HMC6883L_1Hz5, //!< HMC6883L_1Hz5
-  HMC6883L_3Hz,  //!< HMC6883L_3Hz
-  HMC6883L_7Hz5, //!< HMC6883L_7Hz5
-  HMC6883L_15,   //!< HMC6883L_15 15 Hz - default value
-  HMC6883L_30,   //!< HMC6883L_30
-  HMC6883L_75,   //!< HMC6883L_75
+  HMC6883L_750mHz,  //!< HMC6883L_0Hz75
+  HMC6883L_1500mHz, //!< HMC6883L_1Hz5
+  HMC6883L_3000mHz, //!< HMC6883L_3Hz
+  HMC6883L_7500mHz, //!< HMC6883L_7Hz5
+  HMC6883L_15Hz,    //!< HMC6883L_15 15 Hz - default value
+  HMC6883L_30Hz,    //!< HMC6883L_30
+  HMC6883L_75Hz,    //!< HMC6883L_75
 } Hmc5883lDataRate;
 
-static void readXYZ(int16_t * xMeasurement, int16_t * yMeasurement, int16_t * zMeasurement);
+static void readMeasurements(int16_t * xMeasurement, int16_t * yMeasurement, int16_t * zMeasurement);
 static void changeMode(Hmc5883lMode mode);
 static uint8_t readRegister(uint8_t address);
 static void writeRegister(uint8_t address, uint8_t value);
 
+/**
+ * @brief Read a register value
+ * @param address Address of register
+ * @return Register value
+ */
 uint8_t readRegister(uint8_t address) {
   const int READ_WRITE_LENGTH = 1;
-  uint8_t buffer[2];
-  buffer[0] = address;
-  I2c_sendBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, buffer, READ_WRITE_LENGTH);
-//  Timer_delayMillis(10);
+  I2c_sendBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, &address, READ_WRITE_LENGTH);
   uint8_t registerValue;
   I2c_readBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, &registerValue, READ_WRITE_LENGTH);
-//  Timer_delayMillis(10);
   return registerValue;
 }
+/**
+ * @brief Write a register value
+ * @param address Address of register
+ * @param value Register value
+ */
 void writeRegister(uint8_t address, uint8_t value) {
   const int WRITE_LENGTH = 2;
   uint8_t dataToWrite[WRITE_LENGTH];
   dataToWrite[0] = address;
   dataToWrite[1] = value;
   I2c_sendBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, dataToWrite, WRITE_LENGTH);
-//  Timer_delayMillis(10);
 }
 /**
  * @brief Initialize the digital compass
  */
 void Hmc5883l_initialize(void) {
   I2c_initialize(I2C_HAL_I2C1);
-  // Read id registers and print them out.
+  if (readRegister(HMC5883L_IDA) != 'H' || readRegister(HMC5883L_IDB) != '4' ||
+      readRegister(HMC5883L_IDC) != '3') {
+    println("Error. Wrong device");
+  }
   uint8_t registerValue = readRegister(HMC5883L_STATUS);
   println("Status %02x", registerValue);
   registerValue = readRegister(HMC5883L_MODE);
   println("Mode %02x", registerValue);
-  uint8_t identificationRegisterA = readRegister(HMC5883L_IDA);
-  println("Id A %02x", identificationRegisterA);
-  uint8_t identificationRegisterB = readRegister(HMC5883L_IDB);
-  println("Id B %02x", identificationRegisterB);
-  uint8_t identificationRegisterC = readRegister(HMC5883L_IDC);
-  println("Id C %02x", identificationRegisterC);
-  if (identificationRegisterA != 'H' || identificationRegisterB != '4' ||
-      identificationRegisterC != '3') {
-    println("Error. Wrong device");
-  }
-  registerValue = readRegister(HMC5883L_STATUS);
-  println("Status %02x", registerValue);
-  registerValue = readRegister(HMC5883L_MODE);
-  println("Mode %02x", registerValue);
-
-  // continuous measurement mode
   changeMode(HMC6883L_MODE_CONTINUOUS);
   registerValue = readRegister(HMC5883L_MODE);
   println("Mode %02x", registerValue);
-  Hmc5883l_readAngle();
-  Hmc5883l_readAngle();
-  Hmc5883l_readAngle();
 }
-
 /**
  * @brief Reads the current direction angle.
  * @return Direction angle (0 or 360 means north, 180 means south
  * 90 east and 270 west).
  */
-double Hmc5883l_readAngle(void) {
-
+float Hmc5883l_readAngle(void) {
   int16_t xMeasurement, yMeasurement, zMeasurement;
-
-  // Read XYZ
-  readXYZ(&xMeasurement, &yMeasurement, &zMeasurement);
-
+  readMeasurements(&xMeasurement, &yMeasurement, &zMeasurement);
   println("x=%d y=%d z=%d", xMeasurement, yMeasurement, zMeasurement);
 
-  double direction; // the direction angle
-
+  float directionAngle;
   // These formulas are taken from AN-203 application note
   // for the Honeywell compass
   // If the compass is horizontal these formulas actually
   // work.
   if (yMeasurement > 0) {
-    direction = 90.0 - atan((double)xMeasurement/(double)yMeasurement)*180.0/M_PI;
+    directionAngle = 90.0 - atanf((float)xMeasurement/(float)yMeasurement)*180.0f/M_PI;
   } else if (yMeasurement < 0){
-    direction = 270.0 - atan((double)xMeasurement/(double)yMeasurement)*180.0/M_PI;
+    directionAngle = 270.0 - atanf((float)xMeasurement/(float)yMeasurement)*180.0f/M_PI;
   } else if (yMeasurement == 0 && xMeasurement < 0) {
-    direction = 180.0;
+    directionAngle = 180.0;
   } else {
-    direction = 0.0;
+    directionAngle = 0.0;
   }
-
-  return direction;
+  return directionAngle;
 }
 /**
  * @brief Read XYZ readings from the compass.
@@ -185,15 +164,12 @@ double Hmc5883l_readAngle(void) {
  * @param yMeasurement
  * @param zMeasurement
  */
-void readXYZ(int16_t * xMeasurement, int16_t * yMeasurement, int16_t * zMeasurement) {
+void readMeasurements(int16_t * xMeasurement, int16_t * yMeasurement, int16_t * zMeasurement) {
   uint16_t x, y, z;
-  // Read x
   x = (uint16_t)readRegister(HMC5883L_DATAX_MSB) << 8;
   x |= (uint16_t)readRegister(HMC5883L_DATAX_LSB);
-  // Read y
   y = (uint16_t)readRegister(HMC5883L_DATAY_MSB) << 8;
   y |= (uint16_t)readRegister(HMC5883L_DATAY_LSB);
-  // Read z
   z = (uint16_t)readRegister(HMC5883L_DATAZ_MSB) << 8;
   z |= (uint16_t)readRegister(HMC5883L_DATAZ_LSB);
   *xMeasurement = (int16_t)x;
@@ -205,6 +181,5 @@ void readXYZ(int16_t * xMeasurement, int16_t * yMeasurement, int16_t * zMeasurem
  * @param mode New mode
  */
 void changeMode(Hmc5883lMode mode) {
-  // Mode bits are the two LSB of MODE register
-  writeRegister(HMC5883L_MODE, mode & 0x03);
+  writeRegister(HMC5883L_MODE, mode);
 }
