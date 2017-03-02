@@ -81,6 +81,10 @@
 									<listOptionValue builtIn="false" value="../../../ExternalLibraries/STM32F4/STemWin/Config"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/MkGui"/>
 									<listOptionValue builtIn="false" value="../../../MyLibraries/SerialPort"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Hmc5883l"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/OneWire"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/Ds18b20"/>
+									<listOptionValue builtIn="false" value="../../../MyLibraries/OneWire/hal/stm32f4"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1309802190" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
