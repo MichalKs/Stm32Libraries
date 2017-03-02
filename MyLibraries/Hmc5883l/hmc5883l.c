@@ -94,11 +94,13 @@ static void writeRegister(uint8_t address, uint8_t value);
 
 uint8_t readRegister(uint8_t address) {
   const int READ_WRITE_LENGTH = 1;
-  I2c_sendBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, &address, READ_WRITE_LENGTH);
-  Timer_delayMillis(10);
+  uint8_t buffer[2];
+  buffer[0] = address;
+  I2c_sendBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, buffer, READ_WRITE_LENGTH);
+//  Timer_delayMillis(10);
   uint8_t registerValue;
   I2c_readBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, &registerValue, READ_WRITE_LENGTH);
-  Timer_delayMillis(10);
+//  Timer_delayMillis(10);
   return registerValue;
 }
 void writeRegister(uint8_t address, uint8_t value) {
@@ -106,8 +108,8 @@ void writeRegister(uint8_t address, uint8_t value) {
   uint8_t dataToWrite[WRITE_LENGTH];
   dataToWrite[0] = address;
   dataToWrite[1] = value;
-  I2c_readBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, dataToWrite, WRITE_LENGTH);
-  Timer_delayMillis(10);
+  I2c_sendBuffer(I2C_HAL_I2C1, HMC5883L_ADDRESS, dataToWrite, WRITE_LENGTH);
+//  Timer_delayMillis(10);
 }
 /**
  * @brief Initialize the digital compass
@@ -138,6 +140,9 @@ void Hmc5883l_initialize(void) {
   changeMode(HMC6883L_MODE_CONTINUOUS);
   registerValue = readRegister(HMC5883L_MODE);
   println("Mode %02x", registerValue);
+  Hmc5883l_readAngle();
+  Hmc5883l_readAngle();
+  Hmc5883l_readAngle();
 }
 
 /**

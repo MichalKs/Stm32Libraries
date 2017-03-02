@@ -81,6 +81,7 @@ void softTimerCallback(void) {
   */
 int main(void) {
   CommonHal_initialize();
+  Timer_delayMillis(100);
   const int COMM_BAUD_RATE = 115200;
   SerialPort_initialize(COMM_BAUD_RATE);
   println("Starting program"); // Print a string to terminal

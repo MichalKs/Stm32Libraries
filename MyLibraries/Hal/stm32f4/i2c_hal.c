@@ -119,8 +119,8 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef * i2cHandle) {
   GPIO_InitTypeDef  gpioInitialization;
   gpioInitialization.Pin       = I2C1_SCL_PIN;
   gpioInitialization.Mode      = GPIO_MODE_AF_OD;
-  gpioInitialization.Pull      = GPIO_PULLUP;
-  gpioInitialization.Speed     = GPIO_SPEED_FAST;
+  gpioInitialization.Pull      = GPIO_NOPULL;
+  gpioInitialization.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
   gpioInitialization.Alternate = I2C1_SCL_AF;
   HAL_GPIO_Init(I2C1_SCL_GPIO_PORT, &gpioInitialization);
   gpioInitialization.Pin = I2C1_SDA_PIN;
