@@ -1,0 +1,9 @@
+
+
+This example is based on GY-271 module. Connections
+- VCC to Discovery 3V
+- GND to Discovery GND
+- SCL to PB6
+- SDA to PB7
+
+Pullups for I2C are built into the module, so a direct connection is possible.

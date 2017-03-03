@@ -22,6 +22,7 @@
 #include "led.h"
 #include "utils.h"
 #include "serial_port.h"
+#include "bmp085.h"
 
 #define DEBUG
 
@@ -39,7 +40,6 @@
 void softTimerCallback(void) {
 
   Led_toggle(LED_NUMBER2);
-  println("Hello world");
 
   const int FRAME_MAX_SIZE = 10;
   char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
@@ -63,6 +63,7 @@ void softTimerCallback(void) {
       Led_changeState(LED_NUMBER1, LED_OFF);
     }
   }
+  Bmp085_readMeasurements();
 }
 /**
   * @brief  Main program
@@ -78,7 +79,7 @@ int main(void) {
   Led_addNewLed(LED_NUMBER0);
   Led_addNewLed(LED_NUMBER1);
   Led_addNewLed(LED_NUMBER2);
-
+  Bmp085_initialize();
   // Add a soft timer with callback
   const int SOFT_TIMER_PERIOD_MILLIS = 1000;
   int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
