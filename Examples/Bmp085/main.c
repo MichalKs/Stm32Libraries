@@ -48,7 +48,6 @@ void softTimerCallback(void) {
   // check for new frames from PC
   if (SerialPort_getFrame(frameBuffer, &length, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
     println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
-
     // control LED0 from terminal
     if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
       Led_changeState(LED_NUMBER0, LED_ON);
@@ -69,18 +68,14 @@ void softTimerCallback(void) {
   * @brief  Main program
   */
 int main(void) {
-
   CommonHal_initialize();
-
   const int COMM_BAUD_RATE = 115200;
   SerialPort_initialize(COMM_BAUD_RATE);
-  println("Starting program"); // Print a string to terminal
-
+  println("Starting program");
   Led_addNewLed(LED_NUMBER0);
   Led_addNewLed(LED_NUMBER1);
   Led_addNewLed(LED_NUMBER2);
   Bmp085_initialize();
-  // Add a soft timer with callback
   const int SOFT_TIMER_PERIOD_MILLIS = 1000;
   int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
   Timer_startSoftwareTimer(timerId);
@@ -88,7 +83,5 @@ int main(void) {
   while (TRUE) {
     Timer_softwareTimersUpdate();
   }
-
   return 0;
 }
-
