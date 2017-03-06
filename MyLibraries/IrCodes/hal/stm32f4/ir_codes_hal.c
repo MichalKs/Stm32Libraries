@@ -75,6 +75,12 @@ void IR_HAL_Init(
   sConfig.ICSelection = TIM_ICSELECTION_DIRECTTI; // Standard connections
   HAL_TIM_IC_ConfigChannel(timerHandle, &sConfig, TIM_CHANNEL_2);
 
+  sConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Falling edge triggers CC2
+  sConfig.ICPrescaler = TIM_ICPSC_DIV1; // count every edge
+  sConfig.ICFilter = 0;
+  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI; // Standard connections
+  HAL_TIM_IC_ConfigChannel(timerHandle, &sConfig, TIM_CHANNEL_1);
+
   // Select the TIM4 Input Trigger: TI2FP2
   uint32_t tmpsmcr = 0U;
 
@@ -100,10 +106,8 @@ void IR_HAL_Init(
   TIM4->SMCR |= TIM_MASTERSLAVEMODE_ENABLE;
   TIM4->CR1 |= TIM_CR1_URS;
 
-//  __HAL_TIM_ENABLE_IT(timerHandle, TIM_IT_CC1);
-
   HAL_TIM_IC_Start_IT(timerHandle, TIM_CHANNEL_2);
-//  HAL_TIM_IC_Start_IT(timerHandle, TIM_CHANNEL_1);
+  HAL_TIM_IC_Start_IT(timerHandle, TIM_CHANNEL_1);
   HAL_TIM_Base_Start_IT(timerHandle);
 }
 /**
@@ -119,7 +123,6 @@ void TIM4_IRQHandler(void) {
   if (__HAL_TIM_GET_FLAG(&timer4Handle, TIM_FLAG_CC1) != RESET) {
     if (__HAL_TIM_GET_IT_SOURCE(&timer4Handle, TIM_IT_CC1) != RESET) {
       __HAL_TIM_CLEAR_IT(&timer4Handle, TIM_IT_CC1);
-      printf("*****************CC1\r\n");
       // Get the Input Capture value
       low = HAL_TIM_ReadCapturedValue(&timer4Handle, TIM_CHANNEL_1);
       readDataCallback(low, 0); // decode low pulse
@@ -129,7 +132,6 @@ void TIM4_IRQHandler(void) {
   if (__HAL_TIM_GET_FLAG(&timer4Handle, TIM_FLAG_CC2) != RESET) {
     if (__HAL_TIM_GET_IT_SOURCE(&timer4Handle, TIM_IT_CC2) != RESET) {
       __HAL_TIM_CLEAR_IT(&timer4Handle, TIM_IT_CC2);
-      printf("*****************CC2\r\n");
       // Get the Input Capture value
       high = HAL_TIM_ReadCapturedValue(&timer4Handle, TIM_CHANNEL_2);
       readDataCallback(high - low, 1); // decode high pulse

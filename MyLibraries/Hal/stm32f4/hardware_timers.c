@@ -23,6 +23,7 @@ void HardwareTimers_configureTimerAsIrqWithCallback(HardwareTimers timer, int fr
 
   switch(timer) {
   case HARDWARE_TIMERS_TIMER5:
+    // TIM5 clock runs at 84MHz
     callbackTimer5 = callback;
     __HAL_RCC_TIM5_CLK_ENABLE();
     HAL_NVIC_SetPriority(TIM5_IRQn, 10, 0);
