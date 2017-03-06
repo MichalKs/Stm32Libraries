@@ -130,7 +130,6 @@ void IR_RxData(uint16_t pulseWidth, uint8_t edge) {
     return;
   } else if (pulseCount == 0 && edge == 0) {
     // frame should start with falling edge
-    println("Frame error - wrong edge");
     IR_ResetFrame();
     return;
   }
@@ -165,7 +164,7 @@ void IR_RxData(uint16_t pulseWidth, uint8_t edge) {
     }
     frame |= (1<<bitCount--); // Second bit is a one
     pulseCount++;
-  } else if ((bitCount >= 0) && (bitCount < 12)) { // for bits 11 to 0
+  } else if (bitCount < 12) { // for bits 11 to 0
     // if pulseWidth is about 1700us then two half bits were transmitted
     // so increment pulseCount one more time
     if (pulseWidth > RC5_MAX_HALFBIT) {

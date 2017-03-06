@@ -38,8 +38,8 @@ void IR_HAL_Init(
   __HAL_RCC_TIM4_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  // TIM4 IC2 pin configuration (PB7)
-  GPIO_InitTypeDef  gpioInitialization;
+  // TIM4 TI2 pin configuration (PB7)
+  GPIO_InitTypeDef gpioInitialization;
   gpioInitialization.Pin       = GPIO_PIN_7;
   gpioInitialization.Mode      = GPIO_MODE_AF_PP;
   gpioInitialization.Pull      = GPIO_PULLUP;
@@ -69,43 +69,28 @@ void IR_HAL_Init(
    * The TIM4 CCR1 is used to compute the low pulse value
    */
   TIM_IC_InitTypeDef sConfig;
-  sConfig.ICPolarity = TIM_ICPOLARITY_FALLING; // Falling edge triggers CC2
+  sConfig.ICPolarity = TIM_ICPOLARITY_FALLING;
   sConfig.ICPrescaler = TIM_ICPSC_DIV1; // count every edge
   sConfig.ICFilter = 0;
-  sConfig.ICSelection = TIM_ICSELECTION_DIRECTTI; // Standard connections
+  sConfig.ICSelection = TIM_ICSELECTION_DIRECTTI; // connect IC2 to TI2
   HAL_TIM_IC_ConfigChannel(timerHandle, &sConfig, TIM_CHANNEL_2);
 
-  sConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Falling edge triggers CC2
+  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
   sConfig.ICPrescaler = TIM_ICPSC_DIV1; // count every edge
   sConfig.ICFilter = 0;
-  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI; // Standard connections
+  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI; // Connect IC1 to TI2
   HAL_TIM_IC_ConfigChannel(timerHandle, &sConfig, TIM_CHANNEL_1);
 
-  // Select the TIM4 Input Trigger: TI2FP2
-  uint32_t tmpsmcr = 0U;
-
-   /* Get the TIMx SMCR register value */
-   tmpsmcr = TIM4->SMCR;
-   /* Reset the TS Bits */
-   tmpsmcr &= ~TIM_SMCR_TS;
-   /* Set the Input Trigger source and the slave mode*/
-   tmpsmcr |= TIM_TS_TI2FP2 | TIM_SLAVEMODE_EXTERNAL1;
-   /* Write to TIMx SMCR */
-   TIM4->SMCR = tmpsmcr;
-
-  // Select the slave Mode: Reset Mode
-  /* Reset the SMS Bits */
+  uint32_t tmpsmcr = TIM4->SMCR;
+  tmpsmcr &= ~TIM_SMCR_TS;
+  // Set the Input Trigger source to filtered timer input 2
+  tmpsmcr |= TIM_TS_TI2FP2;
+  TIM4->SMCR = tmpsmcr;
+  // Select the slave Mode: Reset Mode - rising edge of the selected trigger input
+  // causes a reinitialization of the counter
   TIM4->SMCR &= (uint16_t)~TIM_SMCR_SMS;
-
-  /* Select the Slave Mode */
   TIM4->SMCR |= TIM_SLAVEMODE_RESET;
-  /* Reset the MSM Bit */
-  TIM4->SMCR &= (uint16_t)~TIM_SMCR_MSM;
-
-  /* Set or Reset the MSM Bit */
-  TIM4->SMCR |= TIM_MASTERSLAVEMODE_ENABLE;
   TIM4->CR1 |= TIM_CR1_URS;
-
   HAL_TIM_IC_Start_IT(timerHandle, TIM_CHANNEL_2);
   HAL_TIM_IC_Start_IT(timerHandle, TIM_CHANNEL_1);
   HAL_TIM_Base_Start_IT(timerHandle);
@@ -123,7 +108,6 @@ void TIM4_IRQHandler(void) {
   if (__HAL_TIM_GET_FLAG(&timer4Handle, TIM_FLAG_CC1) != RESET) {
     if (__HAL_TIM_GET_IT_SOURCE(&timer4Handle, TIM_IT_CC1) != RESET) {
       __HAL_TIM_CLEAR_IT(&timer4Handle, TIM_IT_CC1);
-      // Get the Input Capture value
       low = HAL_TIM_ReadCapturedValue(&timer4Handle, TIM_CHANNEL_1);
       readDataCallback(low, 0); // decode low pulse
     }
@@ -132,7 +116,6 @@ void TIM4_IRQHandler(void) {
   if (__HAL_TIM_GET_FLAG(&timer4Handle, TIM_FLAG_CC2) != RESET) {
     if (__HAL_TIM_GET_IT_SOURCE(&timer4Handle, TIM_IT_CC2) != RESET) {
       __HAL_TIM_CLEAR_IT(&timer4Handle, TIM_IT_CC2);
-      // Get the Input Capture value
       high = HAL_TIM_ReadCapturedValue(&timer4Handle, TIM_CHANNEL_2);
       readDataCallback(high - low, 1); // decode high pulse
     }
