@@ -74,7 +74,7 @@ int main(void) {
   Led_addNewLed(LED_NUMBER0);
   Led_addNewLed(LED_NUMBER1);
   Led_addNewLed(LED_NUMBER2);
-  IR_Init();
+  IrCodes_initialize();
   const int SOFT_TIMER_PERIOD_MILLIS = 1000;
   int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
   Timer_startSoftwareTimer(timerId);

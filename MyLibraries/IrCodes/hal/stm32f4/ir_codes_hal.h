@@ -20,10 +20,17 @@
 
 #include "utils.h"
 
-void IR_HAL_Init(
-    void (*readDataCb)(uint16_t pulseWidth, uint8_t edge),
-    void (*resetFrameCb)(void),
-    uint32_t timeout);
+/**
+ * @brief Pulse level
+ */
+typedef enum {
+  IR_LOW_PULSE, //!< IR_LOW_PULSE
+  IR_HIGH_PULSE,//!< IR_HIGH_PULSE
+} IrPulseState;
 
+void IrCodesHal_initialize(
+    void (*readDataCb)(int pulseWidth, IrPulseState pulse),
+    void (*resetFrameCb)(void),
+    int timeout);
 
 #endif /* INC_IR_HAL_H_ */

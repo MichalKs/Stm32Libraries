@@ -18,7 +18,7 @@
 #ifndef IR_H_
 #define IR_H_
 
-#include <inttypes.h>
+#include "utils.h"
 
 /**
  * @defgroup  IR IR
@@ -30,7 +30,7 @@
  * @{
  */
 
-void IR_Init(void);
+void IrCodes_initialize(void);
 
 /**
  * @}
