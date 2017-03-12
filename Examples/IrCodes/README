@@ -1,0 +1,13 @@
+
+
+
+
+This example was tested with an RC5 remote and a TSOP31236 IC.
+
+Connections:
+1. GND to Discovery GND
+2. VS to Discovery 5V
+3. OUT to Discovery PB7
+
+There was a 4.7uF capacitor between Vs and GND and a R220 resistor placed 
+on the supply line to reduce supply noise.
