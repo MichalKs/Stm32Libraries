@@ -38,6 +38,8 @@
 <includepath>../../MyLibraries/Ds18b20</includepath>
 <includepath>../../MyLibraries/OneWire/hal/stm32f4</includepath>
 <includepath>../../MyLibraries/Bmp085</includepath>
+<includepath>../../MyLibraries/IrCodes</includepath>
+<includepath>../../MyLibraries/IrCodes/hal/stm32f4</includepath>
 
 </language>
 <language name="Object File">
