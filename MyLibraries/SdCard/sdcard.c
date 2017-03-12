@@ -467,7 +467,7 @@ SD_CardErrorsTypedef readOcr(SD_OCR* ocr) {
   uint32_t* ptr = (uint32_t*)ocr;
   uint32_t* ptrBuf = (uint32_t*)ocrBuffer;
 
-  *ptr = UTILS_ConvertUnsignedIntToHostEndianness(*ptrBuf);
+  *ptr = Utils_convertUnsignedIntToHostEndianness(*ptrBuf);
 
   // Send OCR to terminal
   print("OCR value: ");
@@ -537,7 +537,7 @@ SD_CardErrorsTypedef readCsd(SD_CSD* csd) {
   uint32_t* ptrBuf = (uint32_t*)csdBuffer;
 
   for (int i = 0; i < CSD_LENGTH_WORDS; i++) {
-    ptr[i] = UTILS_ConvertUnsignedIntToHostEndianness(ptrBuf[3-i]);
+    ptr[i] = Utils_convertUnsignedIntToHostEndianness(ptrBuf[3-i]);
   }
 
 //  UTILS_HexdumpWithCharacters(csdBuffer, CSD_LENGTH);
@@ -551,7 +551,7 @@ SD_CardErrorsTypedef readCsd(SD_CSD* csd) {
 
   // R1b response - check busy flag
   while(!SpiHal_transmitByte(SPI_HAL_SPI1, DUMMY_BYTE));
-
+  return SD_NO_ERROR;
 }
 /**
  * @brief Sends a command to the SD card.

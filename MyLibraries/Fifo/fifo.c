@@ -43,7 +43,7 @@
  * @retval FIFO_ZERO_LENGTH FIFO length is 0
  * @retval FIFO_NULL_BUFFER Received buffer is null
  */
-FIFO_ErrorTypedef FIFO_Add(FIFO_Typedef* fifo, char* dataBuffer, int length) {
+FifoResultCode Fifo_addNewFifo(Fifo * fifo, char * dataBuffer, int length) {
 
   if (length == 0) {
     return FIFO_ZERO_LENGTH;
@@ -68,7 +68,7 @@ FIFO_ErrorTypedef FIFO_Add(FIFO_Typedef* fifo, char* dataBuffer, int length) {
  * @retval FIFO_OK Data added
  * @retval FIFO_FULL FIFO is full
  */
-FIFO_ErrorTypedef FIFO_Push(FIFO_Typedef* fifo, char newData) {
+FifoResultCode Fifo_push(Fifo* fifo, char newData) {
 
   // Check for overflow
   if (fifo->count == fifo->length) {
@@ -91,7 +91,7 @@ FIFO_ErrorTypedef FIFO_Push(FIFO_Typedef* fifo, char newData) {
  * @retval FIFO_OK Got valid data
  * @retval FIFO_EMPTY FIFO is empty
  */
-FIFO_ErrorTypedef FIFO_Pop(FIFO_Typedef* fifo, char* c) {
+FifoResultCode Fifo_pop(Fifo* fifo, char* c) {
   if (fifo->count == 0) {
     return FIFO_EMPTY;
   }
@@ -111,13 +111,17 @@ FIFO_ErrorTypedef FIFO_Pop(FIFO_Typedef* fifo, char* c) {
  * @retval TRUE FIFO is empty
  * @retval FALSE FIFO is not empty
  */
-Boolean FIFO_IsEmpty(FIFO_Typedef* fifo) {
+Boolean Fifo_isEmpty(Fifo * fifo) {
   if (fifo->count == 0) {
     return TRUE;
   }
   return FALSE;
 }
-void FIFO_Flush(FIFO_Typedef* fifo) {
+/**
+ * @brief Flush the FIFO
+ * @param fifo Pointer to FIFO structure
+ */
+void Fifo_flush(Fifo * fifo) {
   fifo->tail  = 0;
   fifo->head  = 0;
   fifo->count = 0;

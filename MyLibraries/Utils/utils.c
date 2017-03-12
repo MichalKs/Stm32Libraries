@@ -29,7 +29,7 @@
  * @retval TRUE Architecture is big endian.
  * @retval FALSE Architecture is little endian.
  */
-Boolean UTILS_IsArchitectureBigEndian(void) {
+Boolean Utils_isArchitectureBigEndian(void) {
   const int i = TRUE;
   return (*(char*)&i) == FALSE;
 }
@@ -38,14 +38,14 @@ Boolean UTILS_IsArchitectureBigEndian(void) {
  * @param value Value to convert
  * @return Converted value
  */
-unsigned int UTILS_ConvertUnsignedIntToHostEndianness(unsigned int value) {
+unsigned int Utils_convertUnsignedIntToHostEndianness(unsigned int value) {
 
   const int NUMBER_OF_BYTES_IN_INT = 4;
   const int LAST_BYTE_IN_ARRAY = 3;
 
   // if we're on big endian arch
   // then do nothing
-  if (UTILS_IsArchitectureBigEndian()) {
+  if (Utils_isArchitectureBigEndian()) {
     return value;
   }
 
@@ -66,7 +66,7 @@ unsigned int UTILS_ConvertUnsignedIntToHostEndianness(unsigned int value) {
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void UTILS_Hexdump(const uint8_t const *dataBuffer, int length) {
+void Utils_hexdump(const uint8_t const *dataBuffer, int length) {
 
   const int MAXIMUM_CHARACTERS_IN_LINE = 16;
   const int DELAY_TIME_MILLIS = 50;
@@ -94,7 +94,7 @@ void UTILS_Hexdump(const uint8_t const *dataBuffer, int length) {
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void UTILS_HexdumpWithCharacters(const uint8_t const *dataBuffer, int length) {
+void Utils_hexdumpWithCharacters(const uint8_t const *dataBuffer, int length) {
 
   const int MAXIMUM_CHARACTERS_IN_LINE = 8;
   const int DELAY_TIME_MILLIS = 50;
@@ -131,7 +131,7 @@ void UTILS_HexdumpWithCharacters(const uint8_t const *dataBuffer, int length) {
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void UTILS_Hexdump16(const uint16_t const *dataBuffer, int length) {
+void Utils_hexdump16(const uint16_t const * dataBuffer, int length) {
 
   const int MAXIMUM_CHARACTERS_IN_LINE = 8;
   const int DELAY_TIME_MILLIS = 50;
@@ -140,7 +140,7 @@ void UTILS_Hexdump16(const uint16_t const *dataBuffer, int length) {
 
   while (length--) {
 
-    printf("%04x", dataBuffer[i], dataBuffer[i]);
+    printf("%04x", dataBuffer[i]);
     i++;
 
     if ((i % MAXIMUM_CHARACTERS_IN_LINE) == 0) {

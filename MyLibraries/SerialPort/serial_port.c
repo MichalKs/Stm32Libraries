@@ -1,5 +1,5 @@
 /**
- * @file    comm.h
+ * @file    serial_port.c
  * @brief   Communication with PC functions.
  * @date    08.10.2016
  * @author  Michal Ksiezopolski
@@ -17,9 +17,9 @@
 
 #include "serial_port.h"
 #include "fifo.h"
+#include "usart.h"
 #include <string.h>
 #include <stdio.h>
-#include <usart.h>
 
 #ifndef COMM_DEBUG
   #define COMM_DEBUG
@@ -34,7 +34,7 @@
 #endif
 
 /**
- * @addtogroup COMM
+ * @addtogroup SERIAL_PORT
  * @{
  */
 
@@ -44,9 +44,11 @@
 
 static char receiveBuffer[RECEIVE_BUFFER_LENGTH];    ///< Buffer for received data.
 static char transmitBuffer[TRANSMIT_BUFFER_LENGTH];  ///< Buffer for transmitted data.
-static FIFO_Typedef receiveFifo;  ///< RX FIFO
-static FIFO_Typedef transmitFifo; ///< TX FIFO
+static Fifo receiveFifo;  ///< RX FIFO
+static Fifo transmitFifo; ///< TX FIFO
 static int frameCounter; ///< Nonzero signals a new frame (number of received frames)
+
+#define SERIAL_PORT_USART USART_HAL_USART2
 
 static int transmitCb(char* characterToSend);
 static void receiveCb(char receivedCharacter);
@@ -56,38 +58,29 @@ static void receiveCb(char receivedCharacter);
  * @param baudRate Required baud rate
  */
 void SerialPort_initialize(int baudRate) {
-
   // pass baud rate
   // callback for received data and callback for transmitted data
-  Usart_initialize(USART_HAL_USART2, baudRate, receiveCb, transmitCb);
-
+  Usart_initialize(SERIAL_PORT_USART, baudRate, receiveCb, transmitCb);
   // Initialize RX FIFO for receiving data from PC
-  FIFO_Add(&receiveFifo, receiveBuffer, RECEIVE_BUFFER_LENGTH);
-
+  Fifo_addNewFifo(&receiveFifo, receiveBuffer, RECEIVE_BUFFER_LENGTH);
   // Initialize TX FIFO for transferring data to PC
-  FIFO_Add(&transmitFifo, transmitBuffer, TRANSMIT_BUFFER_LENGTH);
-
+  Fifo_addNewFifo(&transmitFifo, transmitBuffer, TRANSMIT_BUFFER_LENGTH);
 }
 /**
  * @brief Send a char to PC.
  * @details This function can be called in _write for printf to work
- *
  * @param characterToSend Character to send.
  */
 void SerialPort_putCharacter(char characterToSend) {
-
   // disable IRQ so it doesn't screw up FIFO count - leads to errors in transmission
-  UART_DisableIrq();
-
-  FIFO_Push(&transmitFifo, characterToSend); // Put data in TX buffer
-
+  Usart_disableIrq(SERIAL_PORT_USART);
+  Fifo_push(&transmitFifo, characterToSend);
   // enable transmitter if inactive
-  if (!UART_IsSendingData()) {
-    UART_SendDataIrq();
+  if (!Usart_isSendingData(SERIAL_PORT_USART)) {
+    Usart_sendDataIrq(SERIAL_PORT_USART);
   }
-
   // enable IRQ again
-  UART_EnableIrq();
+  Usart_enableIrq(SERIAL_PORT_USART);
 }
 /**
  * @brief Send string to PC with newline
@@ -106,9 +99,9 @@ void SerialPort_printLine(char* line) {
  * @warning Blocking function! Waits until char is received.
  */
 char SerialPort_getCharacter(void) {
-  uint8_t receivedCharacter;
-  while (FIFO_IsEmpty(&receiveFifo)); // wait until buffer is not empty
-  FIFO_Pop(&receiveFifo, &receivedCharacter); // Get data from RX buffer
+  char receivedCharacter;
+  while (Fifo_isEmpty(&receiveFifo)); // wait until buffer is not empty
+  Fifo_pop(&receiveFifo, &receivedCharacter); // Get data from RX buffer
   return (char)receivedCharacter;
 }
 /**
@@ -120,7 +113,6 @@ char SerialPort_getCharacter(void) {
  * @retval COMM_FRAME_ERROR Frame error
  */
 SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int maximumLength) {
-
   char receivedByte;
   *length = 0;
 
@@ -128,22 +120,22 @@ SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int max
     while (TRUE) {
 
       // no more data and terminator wasn't reached => error
-      if (FIFO_IsEmpty(&receiveFifo)) {
+      if (Fifo_isEmpty(&receiveFifo)) {
         frameCounter = 0;
         *length = 0;
         println("Invalid frame");
-        FIFO_Flush(&receiveFifo);
+        Fifo_flush(&receiveFifo);
         return SERIAL_PORT_FRAME_ERROR;
       }
 
-      FIFO_Pop(&receiveFifo, &receivedByte);
+      Fifo_pop(&receiveFifo, &receivedByte);
       frameBuffer[(*length)++] = receivedByte;
 
       if (*length >= maximumLength) {
         frameCounter = 0;
         *length = 0;
         println("Frame too long");
-        FIFO_Flush(&receiveFifo);
+        Fifo_flush(&receiveFifo);
         return SERIAL_PORT_FRAME_TOO_LARGE;
       }
 
@@ -167,10 +159,7 @@ SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int max
  * @param c Data sent from lower layer software.
  */
 void receiveCb(char receivedCharacter) {
-
-  // Put data in RX buffer
-  FIFO_ErrorTypedef result = FIFO_Push(&receiveFifo, receivedCharacter);
-
+  FifoResultCode result = Fifo_push(&receiveFifo, receivedCharacter);
   // Checking result to ensure no buffer overflow occurred
   if ((receivedCharacter == TERMINATOR_CHARACTER) && (result == 0)) {
     frameCounter++;
@@ -181,20 +170,15 @@ void receiveCb(char receivedCharacter) {
  * @param dataToTransmit Transmitted data
  * @return Number of bytes to be transmitted
  */
-int transmitCb(char* dataToTransmit) {
-
-  char* localBuffer = dataToTransmit;
-
-  if (FIFO_IsEmpty(&transmitFifo)) {
+int transmitCb(char * dataToTransmit) {
+  if (Fifo_isEmpty(&transmitFifo)) {
     return 0;
   }
-
   // get all the data at one go
   int i = 0;
-  while (FIFO_Pop(&transmitFifo, localBuffer+i) == FIFO_OK) {
+  while (Fifo_pop(&transmitFifo, dataToTransmit+i) == FIFO_OK) {
     i++;
   }
-
   return i;
 }
 /**

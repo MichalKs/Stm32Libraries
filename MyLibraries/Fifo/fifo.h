@@ -39,7 +39,7 @@ typedef struct {
   char* dataBuffer; ///< Pointer to buffer
   int   length;     ///< Maximum length of FIFO
   int   count;      ///< Current number of data elements
-} FIFO_Typedef;
+} Fifo;
 /**
  * @brief Error codes
  */
@@ -49,13 +49,13 @@ typedef enum {
   FIFO_NULL_BUFFER,//!< FIFO_NULL_BUFFER
   FIFO_FULL,       //!< FIFO_FULL
   FIFO_EMPTY,      //!< FIFO_EMPTY
-} FIFO_ErrorTypedef;
+} FifoResultCode;
 
-FIFO_ErrorTypedef FIFO_Add    (FIFO_Typedef* fifo, char* dataBuffer, int length);
-FIFO_ErrorTypedef FIFO_Push   (FIFO_Typedef* fifo, char newData);
-FIFO_ErrorTypedef FIFO_Pop    (FIFO_Typedef* fifo, char* data);
-Boolean           FIFO_IsEmpty(FIFO_Typedef* fifo);
-void              FIFO_Flush  (FIFO_Typedef* fifo);
+FifoResultCode Fifo_addNewFifo (Fifo * fifo, char * dataBuffer, int length);
+FifoResultCode Fifo_push       (Fifo * fifo, char newData);
+FifoResultCode Fifo_pop        (Fifo * fifo, char * data);
+Boolean        Fifo_isEmpty    (Fifo * fifo);
+void           Fifo_flush      (Fifo * fifo);
 /**
  * @}
  */

@@ -1,5 +1,5 @@
 /**
- * @file    comm.h
+ * @file    serial_port.h
  * @brief   Communication with PC functions.
  * @date    08.10.2016
  * @author  Michal Ksiezopolski
@@ -21,19 +21,19 @@
 #include "utils.h"
 
 /**
- * @defgroup  COMM COMM
+ * @defgroup  SERIAL_PORT SERIAL_PORT
  * @brief     Communication with PC functions.
  */
 
 /**
- * @addtogroup COMM
+ * @addtogroup SERIAL_PORT
  * @{
  */
 /**
  * @brief Communication errors
  */
 typedef enum {
-  SERIAL_PORT_GOT_FRAME,      //!< COMM_GOT_FRAME
+  SERIAL_PORT_GOT_FRAME,      //!< SERIAL_PORT_GOT_FRAME
   SERIAL_PORT_NO_FRAME_READY, //!< SERIAL_PORT_NO_FRAME_READY
   SERIAL_PORT_FRAME_ERROR,    //!< SERIAL_PORT_FRAME_ERROR
   SERIAL_PORT_FRAME_TOO_LARGE,//!< SERIAL_PORT_FRAME_TOO_LARGE

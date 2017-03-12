@@ -30,7 +30,7 @@
  * @{
  */
 
-#define NEWLINE_SEQUENCE "\r\n" ///< Sequence to send to get new line in terminal
+#define NEWLINE_SEQUENCE "\r\n"   ///< Sequence to send to get new line in terminal
 #define NUMBER_OF_BITS_IN_BYTE 8
 #define IS_EVEN(x) ((x) % 2 == 0)
 
@@ -38,8 +38,8 @@
  * @brief Boolean type for flags
  */
 typedef enum {
-  FALSE = 0,//!< FALSE
-  TRUE = 1  //!< TRUE
+  FALSE = 0,  //!< FALSE
+  TRUE  = 1   //!< TRUE
 } Boolean;
 
 typedef enum {
@@ -47,11 +47,11 @@ typedef enum {
   RESULT_OUT_OF_BOUNDS,
 } ResultCode;
 
-void UTILS_Hexdump(const uint8_t const *dataBuffer, int length);
-void UTILS_HexdumpWithCharacters(const uint8_t const *dataBuffer, int length);
-void UTILS_Hexdump16(const uint16_t const *dataBuffer, int length);
-unsigned int UTILS_ConvertUnsignedIntToHostEndianness(unsigned int value);
-Boolean   UTILS_IsArchitectureBigEndian (void);
+void Utils_hexdump(const uint8_t const * dataBuffer, int length);
+void Utils_hexdumpWithCharacters(const uint8_t const * dataBuffer, int length);
+void Utils_hexdump16(const uint16_t const * dataBuffer, int length);
+unsigned int Utils_convertUnsignedIntToHostEndianness(unsigned int value);
+Boolean Utils_isArchitectureBigEndian(void);
 
 /**
  * @}

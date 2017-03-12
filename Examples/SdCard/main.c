@@ -94,7 +94,7 @@ int main(void) {
 
   int i = FAT_ReadFile(hello, data, 5);
   i += FAT_ReadFile(hello, data+i, 60);
-  UTILS_HexdumpWithCharacters(data, i);
+  Utils_hexdumpWithCharacters(data, i);
 
   int hamlet = FAT_OpenFile("HAMLET  TXT");
 
@@ -102,7 +102,7 @@ int main(void) {
 
   i = FAT_ReadFile(hamlet, data, 5);
   i += FAT_ReadFile(hamlet, data+i, 30);
-  UTILS_HexdumpWithCharacters(data, i);
+  Utils_hexdumpWithCharacters(data, i);
 
   char message[] = "Hello world, from STM32 to FAT driver new one"; // length 37
 
