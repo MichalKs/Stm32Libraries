@@ -52,12 +52,18 @@ typedef enum {
   SIRC  = 1, ///< SIRC coding
 } IrCoding;
 
-#define DEFAULT_IR_CODING               RC5  ///< Default coding for library
-#define RC5_NUMBER_OF_BITS_IN_FRAME     13   ///< Number of bits in RC5 frame
-#define RC5_FRAME_TIMEOUT_MICROS        3600 ///< Timeout value in us of RC5 frame
-#define RC5_MAX_BIT_LENGTH_MICROS       1900 ///< Max bit length in us
-#define RC5_MIN_HALFBIT_LENGTH_MICROS   700  ///< Min half bit value in us
-#define RC5_MAX_HALFBIT_LENGTH_MICROS   1000 ///< Max half bit value in us
+#define DEFAULT_IR_CODING               RC5    ///< Default coding for library
+#define RC5_NUMBER_OF_BITS_IN_FRAME     13     ///< Number of bits in RC5 frame
+#define RC5_TOGGLE_BIT_POSITION         11     ///< Position of toggle bit
+#define RC5_ADDRESS_POSITION            6      ///< Position of address
+#define RC5_COMMAND_POSITION            0      ///< Position of command
+#define RC5_TOGGLE_BIT_MASK             0x0001 ///< Toggle bit mask
+#define RC5_ADDRESS_MASK                0x001f ///< Address mask - 5 bits
+#define RC5_COMMAND_MASK                0x003f ///< Command mask - 6 bits
+#define RC5_FRAME_TIMEOUT_MICROS        3600   ///< Timeout value in us of RC5 frame
+#define RC5_MAX_BIT_LENGTH_MICROS       1900   ///< Max bit length in us
+#define RC5_MIN_HALFBIT_LENGTH_MICROS   700    ///< Min half bit value in us
+#define RC5_MAX_HALFBIT_LENGTH_MICROS   1000   ///< Max half bit value in us
 
 static uint16_t receivedFrame;      ///< The whole received frame
 static uint8_t frameAddress;        ///< Remote address
@@ -114,9 +120,11 @@ void IrCodes_initialize(void) {
  */
 void receiveDataCb(int pulseWidthMicros, IrPulseState pulse) {
 
+  const int START_BIT1_POSITION = 13;
+  const int START_BIT2_POSITION = 12;
+
   // frame starts with a falling edge
   // since the data line is normally high (pullup)
-  // frame visualization: -----|_
   if (pulseCount == 0 && pulse == IR_HIGH_PULSE) {
     pulseCount++;
     bitCount = RC5_NUMBER_OF_BITS_IN_FRAME;
@@ -137,27 +145,25 @@ void receiveDataCb(int pulseWidthMicros, IrPulseState pulse) {
     return;
   }
 
-  // frame visualization: -----|_|-
-  if (pulseCount == 1) {
+  if (bitCount == START_BIT1_POSITION) {
     // pulse width has to be 800 us - first two bits are a one
     if (pulseWidthMicros > RC5_MAX_HALFBIT_LENGTH_MICROS) {
       println("Frame error - wrong start bits, probably not RC5");
       resetFrameCb();
       return;
     }
-    receivedFrame |= (1<<bitCount--); // First bit (put as MSB) is a one
+    receivedFrame |= (TRUE<<bitCount--); // First bit (put as MSB) is a one
     pulseCount++;
-  // frame visualization: -----|_|-|_
-  } else if (pulseCount == 2) {
+  } else if (bitCount == START_BIT2_POSITION) {
     // pulseWidth has to be 800 us - first two bits are a one
     if (pulseWidthMicros > RC5_MAX_HALFBIT_LENGTH_MICROS) {
       println("Frame error - wrong start bits, probably not RC5");
       resetFrameCb();
       return;
     }
-    receivedFrame |= (1<<bitCount--); // Second bit is a one
+    receivedFrame |= (TRUE<<bitCount--); // Second bit is a one
     pulseCount++;
-  } else if (bitCount < 12) { // for bits 11 to 0
+  } else if (bitCount < START_BIT2_POSITION) { // for bits 11 to 0
     // if pulseWidth is about 1700us then two half bits were transmitted
     // so increment pulseCount one more time
     if (pulseWidthMicros > RC5_MAX_HALFBIT_LENGTH_MICROS) {
@@ -166,27 +172,26 @@ void receiveDataCb(int pulseWidthMicros, IrPulseState pulse) {
     // even pulseCounts mean middle of bit
     // rising edge in the middle of a bit means a zero
     // falling edge is a one
-    if (pulseCount % 2 == 0) {
+    if (IS_EVEN(pulseCount)) {
       if (pulse == IR_HIGH_PULSE) { // falling edge
-        receivedFrame |= (1<<bitCount--);
+        receivedFrame |= (TRUE<<bitCount--);
       } else { // rising edge
         bitCount--;
       }
     }
     // when bit zero is written, bitCount is -1
-    if (bitCount == -1) {
+    if (bitCount < 0) {
       resetFrameCb(); // reset frame
       numberOfReceivedFrames++; // add received frame
-      frameToggleBit = (receivedFrame>>11) & (0x0001); // toggle bit is 3rd bit
-      frameAddress = (receivedFrame>>6) & (0x001f); // address is 5 bits
-      frameCommand = (receivedFrame>>0) & (0x003f); // command is 6 bits
+      frameToggleBit = (receivedFrame>>RC5_TOGGLE_BIT_POSITION) & (RC5_TOGGLE_BIT_MASK);
+      frameAddress = (receivedFrame>>RC5_ADDRESS_POSITION) & (RC5_ADDRESS_MASK);
+      frameCommand = (receivedFrame>>RC5_COMMAND_POSITION) & (RC5_COMMAND_MASK);
       println("Frame received: %04x. Toggle = %d Command = %d Address = %d",
           receivedFrame, frameToggleBit, frameCommand, frameAddress);
       return;
     }
-    pulseCount++; // increment pulse count value
+    pulseCount++;
   }
-
 }
 /**
  * @brief Resets frame after timeout.
