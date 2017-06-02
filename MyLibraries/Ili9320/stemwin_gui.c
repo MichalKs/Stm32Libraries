@@ -12,7 +12,12 @@
 #include <WM.h>
 #include <FRAMEWIN.h>
 #include <BUTTON.h>
-#include <stm32f4xx.h>
+#ifdef USE_F4_DISCOVERY
+  #include <stm32f4xx_hal.h>
+#endif
+#ifdef USE_F7_DISCOVERY
+  #include <stm32f7xx_hal.h>
+#endif
 
 #define DEBUG_STGUI
 

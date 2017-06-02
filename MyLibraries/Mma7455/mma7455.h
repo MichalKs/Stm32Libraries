@@ -8,6 +8,6 @@
 #ifndef MYLIBRARIES_MMA7455_MMA7455_H_
 #define MYLIBRARIES_MMA7455_MMA7455_H_
 
-
+#include "utils.h"
 
 #endif /* MYLIBRARIES_MMA7455_MMA7455_H_ */

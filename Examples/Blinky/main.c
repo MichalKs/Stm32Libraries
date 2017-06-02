@@ -38,31 +38,31 @@
  */
 void softTimerCallback(void) {
 
-  Led_toggle(LED_NUMBER2);
-  println("Hello world");
-
-  const int FRAME_MAX_SIZE = 10;
-  char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
-  int length;                         // length of command
-
-  // check for new frames from PC
-  if (SerialPort_getFrame(frameBuffer, &length, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
-    println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
-
-    // control LED0 from terminal
-    if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
-      Led_changeState(LED_NUMBER0, LED_ON);
-    }
-    if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
-      Led_changeState(LED_NUMBER0, LED_OFF);
-    }
-    if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
-      Led_changeState(LED_NUMBER1, LED_ON);
-    }
-    if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
-      Led_changeState(LED_NUMBER1, LED_OFF);
-    }
-  }
+  Led_toggle(LED_NUMBER0);
+//  println("Hello world");
+//
+//  const int FRAME_MAX_SIZE = 10;
+//  char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
+//  int length;                         // length of command
+//
+//  // check for new frames from PC
+//  if (SerialPort_getFrame(frameBuffer, &length, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
+//    println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
+//
+//    // control LED0 from terminal
+//    if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
+//      Led_changeState(LED_NUMBER0, LED_ON);
+//    }
+//    if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
+//      Led_changeState(LED_NUMBER0, LED_OFF);
+//    }
+//    if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
+//      Led_changeState(LED_NUMBER1, LED_ON);
+//    }
+//    if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
+//      Led_changeState(LED_NUMBER1, LED_OFF);
+//    }
+//  }
 }
 /**
   * @brief  Main program
@@ -70,15 +70,16 @@ void softTimerCallback(void) {
 int main(void) {
 
   CommonHal_initialize();
-
-  const int COMM_BAUD_RATE = 115200;
-  SerialPort_initialize(COMM_BAUD_RATE);
-  println("Starting program"); // Print a string to terminal
-
+//
+//  const int COMM_BAUD_RATE = 115200;
+//  SerialPort_initialize(COMM_BAUD_RATE);
+//  println("Starting program"); // Print a string to terminal
+//
   Led_addNewLed(LED_NUMBER0);
-  Led_addNewLed(LED_NUMBER1);
-  Led_addNewLed(LED_NUMBER2);
-
+  Led_changeState(LED_NUMBER0, LED_ON);
+//  Led_addNewLed(LED_NUMBER1);
+//  Led_addNewLed(LED_NUMBER2);
+//
   // Add a soft timer with callback
   const int SOFT_TIMER_PERIOD_MILLIS = 1000;
   int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
