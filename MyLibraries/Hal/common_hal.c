@@ -19,11 +19,10 @@
 #include "common_hal.h"
 #include "led_hal.h"
 #include "utils.h"
-
-#ifdef USE_F7_DISCOVERY
+#if defined(USE_F7_DISCOVERY)
   #include <stm32f7xx_hal.h>
 #endif
-#ifdef USE_F4_DISCOVERY
+#if defined USE_F4_DISCOVERY
   #include <stm32f4xx_hal.h>
 #endif
 
@@ -91,7 +90,7 @@ static void systemClockConfig(void) {
   }
 }
 #endif
-#if USE_F7_DISCOVERY
+#ifdef USE_F7_DISCOVERY
 /**
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow :
@@ -149,39 +148,32 @@ static void systemClockConfig(void) {
   * @note   The Base Address is 0x20010000 since this memory interface is the AXI.
   *         The Region Size is 256KB, it is related to SRAM1 and SRAM2  memory size.
   */
-static void MPU_Config(void) {
-  MPU_Region_InitTypeDef MPU_InitStruct;
-
-  /* Disable the MPU */
+static void configureMpu(void) {
+  MPU_Region_InitTypeDef mpuInitialization;
   HAL_MPU_Disable();
 
   /* Configure the MPU attributes as WT for SRAM */
-  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.BaseAddress = 0x20010000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_256KB;
-  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
-  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-  MPU_InitStruct.SubRegionDisable = 0x00;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+  mpuInitialization.Enable = MPU_REGION_ENABLE;
+  mpuInitialization.BaseAddress = 0x20010000;
+  mpuInitialization.Size = MPU_REGION_SIZE_256KB;
+  mpuInitialization.AccessPermission = MPU_REGION_FULL_ACCESS;
+  mpuInitialization.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+  mpuInitialization.IsCacheable = MPU_ACCESS_CACHEABLE;
+  mpuInitialization.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  mpuInitialization.Number = MPU_REGION_NUMBER0;
+  mpuInitialization.TypeExtField = MPU_TEX_LEVEL0;
+  mpuInitialization.SubRegionDisable = 0x00;
+  mpuInitialization.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
 
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  HAL_MPU_ConfigRegion(&mpuInitialization);
 
-  /* Enable the MPU */
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
-
 /**
   * @brief  CPU L1-Cache enable.
   */
-static void CPU_CACHE_Enable(void) {
-  /* Enable I-Cache */
+static void enableCpuCache(void) {
   SCB_EnableICache();
-
-  /* Enable D-Cache */
   SCB_EnableDCache();
 }
 #endif
@@ -196,10 +188,10 @@ void CommonHal_initialize(void) {
 
 #ifdef USE_F7_DISCOVERY
   /* Configure the MPU attributes as Write Through */
-  MPU_Config();
+  configureMpu();
 
   /* Enable the CPU Cache */
-  CPU_CACHE_Enable();
+  enableCpuCache();
 #endif
 
   /* STM32 HAL library initialization:

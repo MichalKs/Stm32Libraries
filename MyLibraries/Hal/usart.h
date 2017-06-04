@@ -33,6 +33,10 @@
 typedef enum {
   USART_HAL_USART1,
   USART_HAL_USART2,
+  USART_HAL_USART3,
+  USART_HAL_USART4,
+  USART_HAL_USART5,
+  USART_HAL_USART6,
 } UsartNumber;
 
 #define UART_BUF_LEN_TX 512 ///< Buffer length for UART peripheral

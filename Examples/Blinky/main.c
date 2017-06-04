@@ -39,7 +39,7 @@
 void softTimerCallback(void) {
 
   Led_toggle(LED_NUMBER0);
-//  println("Hello world");
+  println("Hello world");
 //
 //  const int FRAME_MAX_SIZE = 10;
 //  char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
@@ -70,11 +70,11 @@ void softTimerCallback(void) {
 int main(void) {
 
   CommonHal_initialize();
-//
-//  const int COMM_BAUD_RATE = 115200;
-//  SerialPort_initialize(COMM_BAUD_RATE);
-//  println("Starting program"); // Print a string to terminal
-//
+
+  const int COMM_BAUD_RATE = 115200;
+  SerialPort_initialize(COMM_BAUD_RATE);
+  println("Starting program"); // Print a string to terminal
+
   Led_addNewLed(LED_NUMBER0);
   Led_changeState(LED_NUMBER0, LED_ON);
 //  Led_addNewLed(LED_NUMBER1);

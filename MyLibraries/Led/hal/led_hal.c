@@ -16,6 +16,7 @@
  */
 
 #include "led_hal.h"
+
 #ifdef USE_F4_DISCOVERY
   #include <stm32f4xx_hal.h>
   #include "f4_discovery_defs.h"

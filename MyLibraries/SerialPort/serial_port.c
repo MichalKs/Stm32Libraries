@@ -48,7 +48,11 @@ static Fifo receiveFifo;  ///< RX FIFO
 static Fifo transmitFifo; ///< TX FIFO
 static int frameCounter; ///< Nonzero signals a new frame (number of received frames)
 
-#define SERIAL_PORT_USART USART_HAL_USART2
+#if defined(USE_F7_DISCOVERY)
+  #define SERIAL_PORT_USART USART_HAL_USART6
+#else
+  #define SERIAL_PORT_USART USART_HAL_USART2
+#endif
 
 static int transmitCb(char* characterToSend);
 static void receiveCb(char receivedCharacter);
