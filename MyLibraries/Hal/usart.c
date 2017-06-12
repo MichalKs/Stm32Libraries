@@ -27,6 +27,7 @@
 
 #include "usart_f4_discovery_defs.h"
 #include "usart_f7_discovery_defs.h"
+
 /**
  * @addtogroup UART
  * @{
@@ -163,12 +164,12 @@ void Usart_initialize(UsartNumber usart, int baud, void(*rxCb)(char), int(*txCb)
     return;
   }
 
-  usart2Handle.Init.BaudRate   = baud;
-  usart2Handle.Init.WordLength = UART_WORDLENGTH_8B;
-  usart2Handle.Init.StopBits   = UART_STOPBITS_1;
-  usart2Handle.Init.Parity     = UART_PARITY_NONE;
-  usart2Handle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-  usart2Handle.Init.Mode       = UART_MODE_TX_RX;
+  usartHandle->Init.BaudRate   = baud;
+  usartHandle->Init.WordLength = UART_WORDLENGTH_8B;
+  usartHandle->Init.StopBits   = UART_STOPBITS_1;
+  usartHandle->Init.Parity     = UART_PARITY_NONE;
+  usartHandle->Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+  usartHandle->Init.Mode       = UART_MODE_TX_RX;
 
   if (HAL_UART_Init(usartHandle) != HAL_OK) {
     CommonHal_errorHandler();
