@@ -31,6 +31,13 @@
  * @{
  */
 
+#ifdef BOARD_STM32F4_DISCOVERY
+  #define BOARD_MAXIMUM_AVAILABLE_LEDS 4
+#endif
+#ifdef BOARD_STM32F7_DISCOVERY
+  #define BOARD_MAXIMUM_AVAILABLE_LEDS 1
+#endif
+
 void LedHal_initialize     (int led);
 void LedHal_toggle         (int led);
 void LedHal_changeLedState (int led, Boolean state);

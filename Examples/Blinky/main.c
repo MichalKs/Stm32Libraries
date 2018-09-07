@@ -38,7 +38,7 @@
  */
 void softTimerCallback(void) {
 
-//  Led_toggle(LED_NUMBER0);
+  Led_toggle(LED_NUMBER0);
 //  println("Hello world");
 //
 //  const int FRAME_MAX_SIZE = 10;
@@ -71,9 +71,9 @@ int main(void) {
 
   CommonHal_initialize();
 
-//  const int COMM_BAUD_RATE = 115200;
-//  SerialPort_initialize(COMM_BAUD_RATE);
-//  println("Starting program"); // Print a string to terminal
+  const int COMM_BAUD_RATE = 115200;
+  SerialPort_initialize(COMM_BAUD_RATE);
+  println("Starting program"); // Print a string to terminal
 
   Led_addNewLed(LED_NUMBER0);
   Led_addNewLed(LED_NUMBER1);
@@ -81,12 +81,13 @@ int main(void) {
   Led_addNewLed(LED_NUMBER3);
   Led_changeState(LED_NUMBER0, LED_ON);
   Led_changeState(LED_NUMBER1, LED_ON);
-  Led_changeState(LED_NUMBER2, LED_OFF);
-  Led_changeState(LED_NUMBER3, LED_OFF);
+  Led_changeState(LED_NUMBER2, LED_ON);
+  Led_changeState(LED_NUMBER3, LED_ON);
 
   // Add a soft timer with callback
   const int SOFT_TIMER_PERIOD_MILLIS = 100;
-  int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
+  int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS,
+      softTimerCallback);
   Timer_startSoftwareTimer(timerId);
 
   while (TRUE) {

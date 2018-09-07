@@ -15,8 +15,8 @@
  * @endverbatim
  */
 
-#include "common_hal.h"
 #include "usart.h"
+#include "common_hal.h"
 #ifdef BOARD_STM32F4_DISCOVERY
   #include "usart_f4_discovery_defs.h"
 #endif
@@ -30,29 +30,83 @@
  */
 
 
-#define RECEIVE_BUFFER_LENGTH 1             ///< Length of the low level receive buffer
-static void (*rxCallback)(char);            ///< Callback function for receiving data
-static int  (*txCallback)(char*);           ///< Callback function for transmitting data (fills up buffer with data to send)
+#define RECEIVE_BUFFER_LENGTH       1 ///< Length of the low level receive buffer
+#define NUMBER_OF_AVAILABLE_USARTS  2
 
-static char rxBuffer[RECEIVE_BUFFER_LENGTH];///< Reception buffer - we receive one character at a time
-static volatile Boolean isSendingData;      ///< Flag saying if UART is currently sending any data
+
+typedef struct {
+  UART_HandleTypeDef * handle;
+  void (*sendDataToUpperLayer)(char receivedCharacter); ///< Callback function for receiving data
+  UsartTransmission (*getMoreDataToTransmit)(void);     ///< Callback function for transmitting data (fills up buffer with data to send)
+  char receiveBuffer[RECEIVE_BUFFER_LENGTH];
+  Boolean isSendingData;                                ///< Flag saying if UART is currently sending any data
+  Boolean isInitialized;
+} UsartControl;
 
 static UART_HandleTypeDef usart1Handle;     ///< Handle for UART peripheral
 static UART_HandleTypeDef usart2Handle;     ///< Handle for UART peripheral
 static UART_HandleTypeDef usart6Handle;     ///< Handle for UART peripheral
 
+UsartControl usartControl[NUMBER_OF_AVAILABLE_USARTS];
+
+/**
+ * @brief Initialize UART
+ * @param baud Baud rate
+ * @param rxCb Receive callback
+ * @param txCb Transmit callback
+ */
+void Usart_initialize(UsartNumber usart, UsartHalInitialization * usartInitialization) {
+
+  if (usart >= NUMBER_OF_AVAILABLE_USARTS) {
+    return;
+  }
+
+  usartControl[usart].isInitialized = TRUE;
+  usartControl[usart].sendDataToUpperLayer = usartInitialization->sendDataToUpperLayer;
+  usartControl[usart].getMoreDataToTransmit = usartInitialization->getMoreDataToTransmit;
+  usartControl[usart].isSendingData = FALSE;
+
+
+
+  switch(usart) {
+  case USART_HAL_USART2:
+    usart2Handle.Instance = USART2;
+    usartControl[usart].handle = &usart2Handle;
+    break;
+  case USART_HAL_USART6:
+    usart2Handle.Instance = USART6;
+    usartControl[usart].handle = &usart6Handle;
+    break;
+  default:
+    return;
+  }
+
+  usartControl[usart].handle->Init.BaudRate   = usartInitialization->baudRate;
+  usartControl[usart].handle->Init.WordLength = UART_WORDLENGTH_8B;
+  usartControl[usart].handle->Init.StopBits   = UART_STOPBITS_1;
+  usartControl[usart].handle->Init.Parity     = UART_PARITY_NONE;
+  usartControl[usart].handle->Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+  usartControl[usart].handle->Init.Mode       = UART_MODE_TX_RX;
+
+  if (HAL_UART_Init(usartControl[usart].handle) != HAL_OK) {
+    CommonHal_errorHandler();
+  }
+
+  if (HAL_UART_Receive_IT(usartControl[usart].handle,
+      (uint8_t*)usartControl[usart].receiveBuffer, RECEIVE_BUFFER_LENGTH) != HAL_OK) {
+    CommonHal_errorHandler();
+  }
+}
 /**
  * @brief Enables UART IRQ
  */
 void Usart_enableIrq(UsartNumber usart) {
   switch(usart) {
-  case USART_HAL_USART1:
-    break;
   case USART_HAL_USART2:
     HAL_NVIC_EnableIRQ(USART2_IRQ_NUMBER);
     break;
   case USART_HAL_USART6:
-//    HAL_NVIC_EnableIRQ(USART6_IRQ_NUMBER);
+    HAL_NVIC_EnableIRQ(USART6_IRQ_NUMBER);
     break;
   }
 }
@@ -61,13 +115,11 @@ void Usart_enableIrq(UsartNumber usart) {
  */
 void Usart_disableIrq(UsartNumber usart) {
   switch(usart) {
-  case USART_HAL_USART1:
-    break;
   case USART_HAL_USART2:
     HAL_NVIC_DisableIRQ(USART2_IRQ_NUMBER);
     break;
   case USART_HAL_USART6:
-//    HAL_NVIC_DisableIRQ(USART6_IRQ_NUMBER);
+    HAL_NVIC_DisableIRQ(USART6_IRQ_NUMBER);
     break;
   }
 }
@@ -79,16 +131,10 @@ void Usart_disableIrq(UsartNumber usart) {
  * @retval FALSE UART is not sending data
  */
 Boolean Usart_isSendingData(UsartNumber usart) {
-  switch(usart) {
-  case USART_HAL_USART1:
-    return isSendingData;
-  case USART_HAL_USART2:
-    return isSendingData;
-  case USART_HAL_USART6:
-    return isSendingData;
-  default:
+  if (usart >= NUMBER_OF_AVAILABLE_USARTS) {
     return FALSE;
   }
+  return usartControl[usart].isSendingData;
 }
 /**
  * @brief Sends data using the UART IRQ
@@ -97,82 +143,24 @@ Boolean Usart_isSendingData(UsartNumber usart) {
  * enable the IRQ.
  */
 void Usart_sendDataIrq(UsartNumber usart) {
-
-  UART_HandleTypeDef * usartHandle;
-
-  switch(usart) {
-  case USART_HAL_USART1:
-    usartHandle = &usart1Handle;
-    break;
-  case USART_HAL_USART2:
-    usartHandle = &usart2Handle;
-    break;
-  case USART_HAL_USART6:
-    usartHandle = &usart6Handle;
-    break;
+  if (usart >= NUMBER_OF_AVAILABLE_USARTS) {
+    return;
   }
-
-  // has to be static to serve as a buffer for UART
-  static char buf[UART_BUF_LEN_TX];
-
-  // if no function set do nothing
-  if (txCallback == NULL) {
+  if (usartControl[usart].getMoreDataToTransmit == NULL) {
     return;
   }
 
-  // get the data
-  int numberOfBytes = txCallback(buf);
-
+  UsartTransmission transmission = usartControl[usart].getMoreDataToTransmit();
   // if there is any data in the FIFO
-  if (numberOfBytes > 0) {
+  if (transmission.bufferLength > 0) {
     // send it to PC
-    if (HAL_UART_Transmit_IT(usartHandle, (uint8_t*)buf, numberOfBytes) != HAL_OK) {
+    if (HAL_UART_Transmit_IT(usartControl[usart].handle,
+        (uint8_t*)transmission.transmitBuffer, transmission.bufferLength) != HAL_OK) {
       CommonHal_errorHandler();
     }
-    isSendingData = TRUE;
+    usartControl[usart].isSendingData = TRUE;
   } else {
-    isSendingData = FALSE;
-  }
-}
-/**
- * @brief Initialize UART
- * @param baud Baud rate
- * @param rxCb Receive callback
- * @param txCb Transmit callback
- */
-void Usart_initialize(UsartNumber usart, int baud, void(*rxCb)(char), int(*txCb)(char*) ) {
-
-  txCallback = txCb;
-  rxCallback = rxCb;
-
-  UART_HandleTypeDef * usartHandle;
-
-  switch(usart) {
-  case USART_HAL_USART2:
-    usart2Handle.Instance = USART2;
-    usartHandle = &usart2Handle;
-    break;
-  case USART_HAL_USART6:
-    usart6Handle.Instance = USART6;
-    usartHandle = &usart6Handle;
-    break;
-  default:
-    return;
-  }
-
-  usartHandle->Init.BaudRate   = baud;
-  usartHandle->Init.WordLength = UART_WORDLENGTH_8B;
-  usartHandle->Init.StopBits   = UART_STOPBITS_1;
-  usartHandle->Init.Parity     = UART_PARITY_NONE;
-  usartHandle->Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-  usartHandle->Init.Mode       = UART_MODE_TX_RX;
-
-  if (HAL_UART_Init(usartHandle) != HAL_OK) {
-    CommonHal_errorHandler();
-  }
-
-  if(HAL_UART_Receive_IT(usartHandle, (uint8_t*)rxBuffer, RECEIVE_BUFFER_LENGTH) != HAL_OK) {
-    CommonHal_errorHandler();
+    usartControl[usart].isSendingData = FALSE;
   }
 }
 // ********************** HAL UART callbacks and IRQs **********************
@@ -182,17 +170,18 @@ void Usart_initialize(UsartNumber usart, int baud, void(*rxCb)(char), int(*txCb)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef * usartHandle) {
 
-  if (rxCallback == NULL) {
-    return;
-  }
-
-  // send the received char to upper layer
-  rxCallback(*rxBuffer);
-
-  // start another reception
-  if (HAL_UART_Receive_IT(usartHandle, (uint8_t *)(rxBuffer), RECEIVE_BUFFER_LENGTH) != HAL_OK) {
-    CommonHal_errorHandler();
-  }
+  // FIXME This is still to do
+//  if (rxCallback == NULL) {
+//    return;
+//  }
+//
+//  // send the received char to upper layer
+//  rxCallback(*rxBuffer);
+//
+//  // start another reception
+//  if (HAL_UART_Receive_IT(usartHandle, (uint8_t *)(rxBuffer), RECEIVE_BUFFER_LENGTH) != HAL_OK) {
+//    CommonHal_errorHandler();
+//  }
 }
 /**
  * @brief Transfer completed callback (called whenever IRQ sends the whole buffer)

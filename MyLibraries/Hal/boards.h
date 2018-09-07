@@ -10,10 +10,8 @@
 
 #ifdef BOARD_STM32F4_DISCOVERY
   #include <stm32f4xx_hal.h>
-  #define BOARD_MAXIMUM_AVAILABLE_LEDS 4
 #endif
 #ifdef BOARD_STM32F7_DISCOVERY
-
   #include <stm32f7xx_hal.h>
 #endif
 

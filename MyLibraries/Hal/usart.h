@@ -31,17 +31,31 @@
  */
 
 typedef enum {
-  USART_HAL_USART1,
   USART_HAL_USART2,
-  USART_HAL_USART3,
-  USART_HAL_USART4,
-  USART_HAL_USART5,
   USART_HAL_USART6,
 } UsartNumber;
 
-#define UART_BUF_LEN_TX 512 ///< Buffer length for UART peripheral
+#include "boards.h"
 
-void    Usart_initialize   (UsartNumber usart, int baud, void(*rxCb)(char), int(*txCb)(char*));
+#ifdef BOARD_STM32F4_DISCOVERY
+  #define DEBUG_CONSOLE_USART USART_HAL_USART2
+#endif
+#ifdef BOARD_STM32F7_DISCOVERY
+  #define DEBUG_CONSOLE_USART USART_HAL_USART6
+#endif
+
+typedef struct {
+  char * transmitBuffer;
+  int bufferLength;
+} UsartTransmission;
+
+typedef struct {
+  int baudRate;
+  void (*sendDataToUpperLayer)(char receivedCharacter);
+  UsartTransmission (*getMoreDataToTransmit)(void);
+} UsartHalInitialization;
+
+void    Usart_initialize   (UsartNumber usart, UsartHalInitialization * usartInitialization);
 Boolean Usart_isSendingData(UsartNumber usart);
 void    Usart_sendDataIrq  (UsartNumber usart);
 void    Usart_enableIrq    (UsartNumber usart);

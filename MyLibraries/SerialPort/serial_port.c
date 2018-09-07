@@ -37,34 +37,30 @@
  * @addtogroup SERIAL_PORT
  * @{
  */
+#define TRANSMIT_BUFFER_LENGTH  512   ///< Transmit buffer length
+#define RECEIVE_BUFFER_LENGTH   32    ///< Receive buffer length
 
-#define TRANSMIT_BUFFER_LENGTH  UART_BUF_LEN_TX ///< Transmit buffer length
-#define RECEIVE_BUFFER_LENGTH   32              ///< Receive buffer length
-#define TERMINATOR_CHARACTER    '\r'            ///< Frame terminator character
+static char receiveBuffer[RECEIVE_BUFFER_LENGTH];       ///< Buffer for received data.
+static char transmitBuffer[TRANSMIT_BUFFER_LENGTH];     ///< Buffer for transmitted data.
+static Fifo receiveFifo;                                ///< RX FIFO
+static Fifo transmitFifo;                               ///< TX FIFO
+static const char TERMINATOR_CHARACTER = '\r';          ///< Frame terminator character
 
-static char receiveBuffer[RECEIVE_BUFFER_LENGTH];    ///< Buffer for received data.
-static char transmitBuffer[TRANSMIT_BUFFER_LENGTH];  ///< Buffer for transmitted data.
-static Fifo receiveFifo;  ///< RX FIFO
-static Fifo transmitFifo; ///< TX FIFO
 static int frameCounter; ///< Nonzero signals a new frame (number of received frames)
 
-#if defined(USE_F7_DISCOVERY)
-  #define SERIAL_PORT_USART USART_HAL_USART6
-#else
-  #define SERIAL_PORT_USART USART_HAL_USART2
-#endif
-
-static int transmitCb(char* characterToSend);
-static void receiveCb(char receivedCharacter);
+static UsartTransmission getMoreDataToTransmit(void);
+static void receiveNewDataFromHal(char receivedCharacter);
 
 /**
  * @brief Initialize communication terminal interface.
  * @param baudRate Required baud rate
  */
 void SerialPort_initialize(int baudRate) {
-  // pass baud rate
-  // callback for received data and callback for transmitted data
-  Usart_initialize(SERIAL_PORT_USART, baudRate, receiveCb, transmitCb);
+  UsartHalInitialization usartInitialization;
+  usartInitialization.baudRate = baudRate;
+  usartInitialization.getMoreDataToTransmit = getMoreDataToTransmit;
+  usartInitialization.sendDataToUpperLayer = receiveNewDataFromHal;
+  Usart_initialize(DEBUG_CONSOLE_USART, &usartInitialization);
   // Initialize RX FIFO for receiving data from PC
   Fifo_addNewFifo(&receiveFifo, receiveBuffer, RECEIVE_BUFFER_LENGTH);
   // Initialize TX FIFO for transferring data to PC
@@ -77,20 +73,20 @@ void SerialPort_initialize(int baudRate) {
  */
 void SerialPort_putCharacter(char characterToSend) {
   // disable IRQ so it doesn't screw up FIFO count - leads to errors in transmission
-  Usart_disableIrq(SERIAL_PORT_USART);
+  Usart_disableIrq(DEBUG_CONSOLE_USART);
   Fifo_push(&transmitFifo, characterToSend);
   // enable transmitter if inactive
-  if (!Usart_isSendingData(SERIAL_PORT_USART)) {
-    Usart_sendDataIrq(SERIAL_PORT_USART);
+  if (!Usart_isSendingData(DEBUG_CONSOLE_USART)) {
+    Usart_sendDataIrq(DEBUG_CONSOLE_USART);
   }
   // enable IRQ again
-  Usart_enableIrq(SERIAL_PORT_USART);
+  Usart_enableIrq(DEBUG_CONSOLE_USART);
 }
 /**
  * @brief Send string to PC with newline
  * @param line Line to send
  */
-void SerialPort_printLine(char* line) {
+void SerialPort_printLine(char * line) {
   for (unsigned int i = 0; i < strlen(line); i++) {
     SerialPort_putCharacter(line[i]);
   }
@@ -109,20 +105,18 @@ char SerialPort_getCharacter(void) {
   return (char)receivedCharacter;
 }
 /**
- * @brief Get a complete frame from PC(nonblocking)
+ * @brief Get a complete frame from PC (nonblocking)
  * @param buf Buffer for data (data will be null terminated for easier string manipulation)
- * @param len Length not including terminator character
+ * @param len Length not including terminator character of frame
  * @retval COMM_GOT_FRAME Received frame
  * @retval COMM_NO_FRAME_READY No frame in buffer
  * @retval COMM_FRAME_ERROR Frame error
  */
 SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int maximumLength) {
-  char receivedByte;
+  // FIXME Probably add some IRQ synchronization here
   *length = 0;
-
   if (frameCounter) {
     while (TRUE) {
-
       // no more data and terminator wasn't reached => error
       if (Fifo_isEmpty(&receiveFifo)) {
         frameCounter = 0;
@@ -132,6 +126,7 @@ SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int max
         return SERIAL_PORT_FRAME_ERROR;
       }
 
+      char receivedByte;
       Fifo_pop(&receiveFifo, &receivedByte);
       frameBuffer[(*length)++] = receivedByte;
 
@@ -147,22 +142,19 @@ SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int max
       if (receivedByte == TERMINATOR_CHARACTER) {
         (*length)--; // length without terminator character
         frameBuffer[*length] = 0; // terminator character converted to NULL terminator
-        break;
+        frameCounter--;
+        return SERIAL_PORT_GOT_FRAME;
       }
-
     }
-    frameCounter--;
-    return SERIAL_PORT_GOT_FRAME;
-
   } else {
     return SERIAL_PORT_NO_FRAME_READY;
   }
 }
 /**
  * @brief Callback for receiving data from PC.
- * @param c Data sent from lower layer software.
+ * @param receivedCharacter Data sent from lower layer software.
  */
-void receiveCb(char receivedCharacter) {
+void receiveNewDataFromHal(char receivedCharacter) {
   FifoResultCode result = Fifo_push(&receiveFifo, receivedCharacter);
   // Checking result to ensure no buffer overflow occurred
   if ((receivedCharacter == TERMINATOR_CHARACTER) && (result == 0)) {
@@ -174,16 +166,22 @@ void receiveCb(char receivedCharacter) {
  * @param dataToTransmit Transmitted data
  * @return Number of bytes to be transmitted
  */
-int transmitCb(char * dataToTransmit) {
+UsartTransmission getMoreDataToTransmit(void) {
+  // Buffer for transmitted data for HAL module (double buffering)
+  static char transmitBufferHal[TRANSMIT_BUFFER_LENGTH];
+  UsartTransmission transmission = {0};
+
   if (Fifo_isEmpty(&transmitFifo)) {
-    return 0;
+    return transmission;
   }
   // get all the data at one go
   int i = 0;
-  while (Fifo_pop(&transmitFifo, dataToTransmit+i) == FIFO_OK) {
+  while (Fifo_pop(&transmitFifo, transmitBufferHal + i) == FIFO_OK) {
     i++;
   }
-  return i;
+  transmission.transmitBuffer = transmitBufferHal;
+  transmission.bufferLength = i;
+  return transmission;
 }
 /**
  * @}
