@@ -19,6 +19,8 @@
 #ifndef INC_COMMON_HAL_H_
 #define INC_COMMON_HAL_H_
 
+#include "boards.h"
+
 void CommonHal_initialize(void);
 void CommonHal_errorHandler(void);
 

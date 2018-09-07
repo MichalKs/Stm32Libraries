@@ -27,12 +27,12 @@
 		<link>
 			<name>libs/MyLibraries</name>
 			<type>2</type>
-			<location>/home/mik/git/Stm32Libraries/MyLibraries</location>
+			<location>C:/Git/Stm32Libraries/MyLibraries</location>
 		</link>
 		<link>
 			<name>libs/STM32F4</name>
 			<type>2</type>
-			<location>/home/mik/git/Stm32Libraries/ExternalLibraries/STM32F4</location>
+			<location>C:/Git/Stm32Libraries/ExternalLibraries/STM32F4</location>
 		</link>
 		<link>
 			<name>libs/STM32F7</name>

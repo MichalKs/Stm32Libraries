@@ -19,16 +19,10 @@
 #include "common_hal.h"
 #include "led_hal.h"
 #include "utils.h"
-#if defined(USE_F7_DISCOVERY)
-  #include <stm32f7xx_hal.h>
-#endif
-#if defined USE_F4_DISCOVERY
-  #include <stm32f4xx_hal.h>
-#endif
 
 #define HAL_ERROR_LED_NUMBER 3 ///< Number of LED for HAL errors
 
-#ifdef USE_F4_DISCOVERY
+#ifdef BOARD_STM32F4_DISCOVERY
 /**
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow :
@@ -90,7 +84,8 @@ static void systemClockConfig(void) {
   }
 }
 #endif
-#ifdef USE_F7_DISCOVERY
+
+#ifdef BOARD_STM32F7_DISCOVERY
 /**
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow :
@@ -186,7 +181,7 @@ void CommonHal_initialize(void) {
   LedHal_initialize(HAL_ERROR_LED_NUMBER);
   LedHal_changeLedState(HAL_ERROR_LED_NUMBER, FALSE);
 
-#ifdef USE_F7_DISCOVERY
+#ifdef BOARD_STM32F7_DISCOVERY
   /* Configure the MPU attributes as Write Through */
   configureMpu();
 

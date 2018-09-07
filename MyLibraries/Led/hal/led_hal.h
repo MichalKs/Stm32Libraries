@@ -19,6 +19,7 @@
 #define LED_HAL_H_
 
 #include "utils.h"
+#include "boards.h"
 
 /**
  * @defgroup  LED_HAL LED_HAL
@@ -29,8 +30,6 @@
  * @addtogroup LED_HAL
  * @{
  */
-
-#define MAX_LEDS 4 ///< Maximum number of LEDs available in design
 
 void LedHal_initialize     (int led);
 void LedHal_toggle         (int led);

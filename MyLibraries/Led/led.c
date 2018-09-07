@@ -24,7 +24,6 @@
  * @endverbatim
  */
 
-#include <stdio.h>
 #include "led.h"
 #include "led_hal.h"
 
@@ -33,15 +32,15 @@
  * @{
  */
 
-static LedState ledState[MAX_LEDS]; ///< States of the LEDs (MAX_LEDS is hardware dependent)
+static LedState ledState[BOARD_MAXIMUM_AVAILABLE_LEDS]; ///< States of the LEDs (MAX_LEDS is hardware dependent)
 
 /**
  * @brief Add an LED.
  * @param led LED init structure.
  */
 LedResultCode Led_addNewLed(LedNumber led) {
-  if (led >= MAX_LEDS) {
-    return LED_TOO_MANY_LEDS;
+  if (led >= BOARD_MAXIMUM_AVAILABLE_LEDS) {
+    return LED_INCORRECT_LED_NUMBER;
   }
   LedHal_initialize(led);
   ledState[led] = LED_OFF;
@@ -53,7 +52,7 @@ LedResultCode Led_addNewLed(LedNumber led) {
  * @param state New state.
  */
 LedResultCode Led_changeState(LedNumber led, LedState state) {
-  if (led >= MAX_LEDS) {
+  if (led >= BOARD_MAXIMUM_AVAILABLE_LEDS) {
     return LED_INCORRECT_LED_NUMBER;
   }
   if (ledState[led] == LED_UNUSED) {
@@ -65,7 +64,7 @@ LedResultCode Led_changeState(LedNumber led, LedState state) {
       LedHal_changeLedState(led, TRUE);
     }
   }
-  ledState[led] = state; // update LED state
+  ledState[led] = state;
   return LED_OK;
 }
 /**
@@ -73,18 +72,18 @@ LedResultCode Led_changeState(LedNumber led, LedState state) {
  * @param led LED number.
  */
 LedResultCode Led_toggle(LedNumber led) {
-  if (led >= MAX_LEDS) {
+  if (led >= BOARD_MAXIMUM_AVAILABLE_LEDS) {
     return LED_INCORRECT_LED_NUMBER;
   }
   if (ledState[led] == LED_UNUSED) {
     return LED_NOT_INITALIZED;
   } else {
+    LedHal_toggle(led);
     if (ledState[led] == LED_OFF) {
       ledState[led] = LED_ON;
     } else if (ledState[led] == LED_ON) {
       ledState[led]= LED_OFF;
     }
-    LedHal_toggle(led);
   }
   return LED_OK;
 }

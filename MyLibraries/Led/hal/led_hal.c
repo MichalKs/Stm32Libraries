@@ -16,13 +16,24 @@
  */
 
 #include "led_hal.h"
+#include "common_hal.h"
 
-#ifdef USE_F4_DISCOVERY
+#ifdef BOARD_STM32F4_DISCOVERY
   #include <stm32f4xx_hal.h>
+#endif
+#ifdef BOARD_STM32F7_DISCOVERY
+  #include <stm32f7xx_hal.h>
+#endif
+
+typedef struct {
+  GPIO_TypeDef * port;
+  uint32_t pin;
+} LedHalDefinition;
+
+#ifdef BOARD_STM32F4_DISCOVERY
   #include "f4_discovery_defs.h"
 #endif
-#ifdef USE_F7_DISCOVERY
-  #include <stm32f7xx_hal.h>
+#ifdef BOARD_STM32F7_DISCOVERY
   #include "f7_discovery_defs.h"
 #endif
 
@@ -32,62 +43,50 @@
  */
 
 /**
- * @brief LED GPIO ports
- */
-static GPIO_TypeDef* ledPort[MAX_LEDS] = {
-    LED1_PORT,
-    LED2_PORT,
-    LED3_PORT,
-    LED4_PORT
-};
-/**
- * @brief LED pin numbers
- */
-static uint32_t ledPin[MAX_LEDS] = {
-    LED1_PIN,
-    LED2_PIN,
-    LED3_PIN,
-    LED4_PIN
-};
-
-/**
  * @brief Add an LED.
  * @param led LED number.
  */
 void LedHal_initialize(int led) {
-  if (ledPort[led] == GPIOA) {
+  if (led >= BOARD_MAXIMUM_AVAILABLE_LEDS) {
+    return;
+  }
+  if (ledHalDefinitions[led].port == GPIOA) {
     __HAL_RCC_GPIOA_CLK_ENABLE();
-  } else if (ledPort[led] == GPIOB) {
+  } else if (ledHalDefinitions[led].port == GPIOB) {
     __HAL_RCC_GPIOB_CLK_ENABLE();
-  } else if (ledPort[led] == GPIOC) {
+  } else if (ledHalDefinitions[led].port == GPIOC) {
     __HAL_RCC_GPIOC_CLK_ENABLE();
-  } else if (ledPort[led] == GPIOD) {
+  } else if (ledHalDefinitions[led].port == GPIOD) {
     __HAL_RCC_GPIOD_CLK_ENABLE();
-  } else if (ledPort[led] == GPIOE) {
+  } else if (ledHalDefinitions[led].port == GPIOE) {
     __HAL_RCC_GPIOE_CLK_ENABLE();
-  } else if (ledPort[led] == GPIOF) {
+  } else if (ledHalDefinitions[led].port == GPIOF) {
     __HAL_RCC_GPIOF_CLK_ENABLE();
-  } else if (ledPort[led] == GPIOG) {
+  } else if (ledHalDefinitions[led].port == GPIOG) {
     __HAL_RCC_GPIOG_CLK_ENABLE();
-  } else if (ledPort[led] == GPIOH) {
+  } else if (ledHalDefinitions[led].port == GPIOH) {
     __HAL_RCC_GPIOH_CLK_ENABLE();
-  } else if (ledPort[led] == GPIOI) {
+  } else if (ledHalDefinitions[led].port == GPIOI) {
     __HAL_RCC_GPIOI_CLK_ENABLE();
   }
   GPIO_InitTypeDef gpioInitialization;
-  gpioInitialization.Mode  = GPIO_MODE_OUTPUT_PP;
-  gpioInitialization.Pull  = GPIO_PULLUP;
-  gpioInitialization.Speed = GPIO_SPEED_FREQ_LOW;
-  gpioInitialization.Pin = ledPin[led];
-  HAL_GPIO_Init(ledPort[led], &gpioInitialization);
-  HAL_GPIO_WritePin(ledPort[led], ledPin[led], GPIO_PIN_RESET); // turn LED off
+  gpioInitialization.Mode   = GPIO_MODE_OUTPUT_PP;
+  gpioInitialization.Pull   = GPIO_PULLUP;
+  gpioInitialization.Speed  = GPIO_SPEED_FREQ_LOW;
+  gpioInitialization.Pin    = ledHalDefinitions[led].pin;
+  HAL_GPIO_Init(ledHalDefinitions[led].port, &gpioInitialization);
+  HAL_GPIO_WritePin(ledHalDefinitions[led].port,
+      ledHalDefinitions[led].pin, GPIO_PIN_RESET); // turn LED off
 }
 /**
  * @brief Toggle an LED.
  * @param led LED number.
  */
 void LedHal_toggle(int led) {
-  ledPort[led]->ODR ^= ledPin[led];
+  if (led >= BOARD_MAXIMUM_AVAILABLE_LEDS) {
+    return;
+  }
+  ledHalDefinitions[led].port->ODR ^= ledHalDefinitions[led].pin;
 }
 /**
  * @brief Change the state of an LED.
@@ -95,10 +94,15 @@ void LedHal_toggle(int led) {
  * @param isLedOn Is LED on
  */
 void LedHal_changeLedState(int led, Boolean isLedOn) {
+  if (led >= BOARD_MAXIMUM_AVAILABLE_LEDS) {
+    return;
+  }
   if (isLedOn == TRUE) {
-    ledPort[led]->BSRR = ledPin[led]; // set bit
+    // set bit
+    ledHalDefinitions[led].port->BSRR = ledHalDefinitions[led].pin;
   } else {
-    ledPort[led]->BSRR = (ledPin[led] << 16); // reset bit
+    // reset bit
+    ledHalDefinitions[led].port->BSRR = (ledHalDefinitions[led].pin << 16);
   }
 }
 /**

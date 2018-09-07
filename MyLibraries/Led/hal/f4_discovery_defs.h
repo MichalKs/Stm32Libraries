@@ -17,4 +17,14 @@
 #define LED4_PORT GPIOD
 #define LED4_PIN  GPIO_PIN_15
 
+/**
+ * @brief Definition of LEDs in HAL
+ */
+static LedHalDefinition ledHalDefinitions[BOARD_MAXIMUM_AVAILABLE_LEDS] = {
+    {LED1_PORT, LED1_PIN},
+    {LED2_PORT, LED2_PIN},
+    {LED3_PORT, LED3_PIN},
+    {LED4_PORT, LED4_PIN},
+};
+
 #endif /* MYLIBRARIES_LED_HAL_F4_DISCOVERY_DEFS_H_ */

@@ -16,12 +16,7 @@
  */
 
 #include "onewire_hal.h"
-#ifdef USE_F4_DISCOVERY
-  #include <stm32f4xx_hal.h>
-#endif
-#ifdef USE_F7_DISCOVERY
-  #include <stm32f7xx_hal.h>
-#endif
+#include "common_hal.h"
 
 #define ONEWIRE_PIN          GPIO_PIN_1
 #define ONEWIRE_PORT         GPIOC

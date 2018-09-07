@@ -12,12 +12,7 @@
 #include <WM.h>
 #include <FRAMEWIN.h>
 #include <BUTTON.h>
-#ifdef USE_F4_DISCOVERY
-  #include <stm32f4xx_hal.h>
-#endif
-#ifdef USE_F7_DISCOVERY
-  #include <stm32f7xx_hal.h>
-#endif
+#include <stdio.h>
 
 #define DEBUG_STGUI
 
@@ -39,7 +34,8 @@ static void touchCallback(int x, int y);
  * @brief Initalize STemWin based GUI
  */
 void ST_GUI_Init(void) {
-  __HAL_RCC_CRC_CLK_ENABLE();
+  // FIXME Put this in hal for GUI
+//  __HAL_RCC_CRC_CLK_ENABLE();
   GUI_Init();
 
   TSC2046_Initialize();

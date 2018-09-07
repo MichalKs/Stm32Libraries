@@ -53,10 +53,9 @@ typedef enum {
  * @brief LED errors
  */
 typedef enum {
-  LED_OK,            //!< LED_OK
-  LED_NOT_INITALIZED,//!< LED_NOT_INITALIZED
-  LED_TOO_MANY_LEDS, //!< LED_TOO_MANY_LEDS
-  LED_INCORRECT_LED_NUMBER,
+  LED_OK,                   //!< LED_OK
+  LED_NOT_INITALIZED,       //!< LED_NOT_INITALIZED
+  LED_INCORRECT_LED_NUMBER, //!< LED_INCORRECT_LED_NUMBER
 } LedResultCode;
 
 LedResultCode Led_addNewLed   (LedNumber led);

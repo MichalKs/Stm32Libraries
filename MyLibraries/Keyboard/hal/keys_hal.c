@@ -1,7 +1,7 @@
 /**
  * @file    keys_hal.c
  * @brief   Matrix keyboard low level functions
- * @date    6 paź 2014
+ * @date    6 paz 2014
  * @author  Michal Ksiezopolski
  * 
  * FIXME This module in not finished nor tested with HAL
@@ -18,12 +18,7 @@
  */
 
 #include <keys_hal.h>
-#ifdef USE_F4_DISCOVERY
-  #include <stm32f4xx_hal.h>
-#endif
-#ifdef USE_F7_DISCOVERY
-  #include <stm32f7xx_hal.h>
-#endif
+#include "common_hal.h"
 
 /**
  * @addtogroup KEYS_HAL
