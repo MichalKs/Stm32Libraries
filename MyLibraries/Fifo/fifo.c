@@ -15,16 +15,8 @@
  * @endverbatim
  */
 
-#include <fifo.h>
-#include <stdio.h>
-
-#ifdef DEBUG_FIFO
-  #define print(str, args...) printf("FIFO--> "str"%s",##args,"\r")
-  #define println(str, args...) printf("FIFO--> "str"%s",##args,"\r\n")
-#else
-  #define print(str, args...) (void)0
-  #define println(str, args...) (void)0
-#endif
+#include "fifo.h"
+#include <stdlib.h>
 
 /**
  * @addtogroup FIFO

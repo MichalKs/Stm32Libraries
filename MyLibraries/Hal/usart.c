@@ -29,25 +29,35 @@
  * @{
  */
 
+/**
+ * @brief Length of the low level receive buffer
+ * @details This length assumes that the receive function will do its job before the next
+ * byte comes. For baud rate 115200 and 10 bits per one byte (adding stop bit and start bit) this
+ * means that the byte rate is 11520 bytes per second meaning that a byte may come every 87us -
+ * more than enough time to pack up the previous byte in some receive buffer
+ */
+#define RECEIVE_BUFFER_LENGTH       1
+#define NUMBER_OF_AVAILABLE_USARTS  2 ///< Number of available USARTs
 
-#define RECEIVE_BUFFER_LENGTH       1 ///< Length of the low level receive buffer
-#define NUMBER_OF_AVAILABLE_USARTS  2
-
-
+/**
+ * @brief Basic USART strucutre
+ */
 typedef struct {
-  UART_HandleTypeDef * handle;
-  void (*sendDataToUpperLayer)(char receivedCharacter); ///< Callback function for receiving data
-  UsartTransmission (*getMoreDataToTransmit)(void);     ///< Callback function for transmitting data (fills up buffer with data to send)
-  char receiveBuffer[RECEIVE_BUFFER_LENGTH];
+  UsartNumber usartNumber;                              ///< USART number
+  UART_HandleTypeDef * handle;                          ///< USART handle
+  void (*sendDataToUpperLayer)(char receivedCharacter); ///< Function for sending received data to upper layer
+  UsartTransmission (*getMoreDataToTransmit)(void);     ///< Function for getting more data to transmit (fills up buffer with data to send)
+  char receiveBuffer[RECEIVE_BUFFER_LENGTH];            ///< Receive buffer
   Boolean isSendingData;                                ///< Flag saying if UART is currently sending any data
   Boolean isInitialized;
 } UsartControl;
 
-static UART_HandleTypeDef usart1Handle;     ///< Handle for UART peripheral
 static UART_HandleTypeDef usart2Handle;     ///< Handle for UART peripheral
 static UART_HandleTypeDef usart6Handle;     ///< Handle for UART peripheral
 
-UsartControl usartControl[NUMBER_OF_AVAILABLE_USARTS];
+UsartControl usartControl[NUMBER_OF_AVAILABLE_USARTS]; ///< The USARTs
+
+static UsartNumber getUsartNumberFromHandle(UART_HandleTypeDef * usartHandle);
 
 /**
  * @brief Initialize UART
@@ -56,18 +66,9 @@ UsartControl usartControl[NUMBER_OF_AVAILABLE_USARTS];
  * @param txCb Transmit callback
  */
 void Usart_initialize(UsartNumber usart, UsartHalInitialization * usartInitialization) {
-
   if (usart >= NUMBER_OF_AVAILABLE_USARTS) {
     return;
   }
-
-  usartControl[usart].isInitialized = TRUE;
-  usartControl[usart].sendDataToUpperLayer = usartInitialization->sendDataToUpperLayer;
-  usartControl[usart].getMoreDataToTransmit = usartInitialization->getMoreDataToTransmit;
-  usartControl[usart].isSendingData = FALSE;
-
-
-
   switch(usart) {
   case USART_HAL_USART2:
     usart2Handle.Instance = USART2;
@@ -80,6 +81,11 @@ void Usart_initialize(UsartNumber usart, UsartHalInitialization * usartInitializ
   default:
     return;
   }
+  usartControl[usart].usartNumber = usart;
+  usartControl[usart].isInitialized = TRUE;
+  usartControl[usart].sendDataToUpperLayer = usartInitialization->sendDataToUpperLayer;
+  usartControl[usart].getMoreDataToTransmit = usartInitialization->getMoreDataToTransmit;
+  usartControl[usart].isSendingData = FALSE;
 
   usartControl[usart].handle->Init.BaudRate   = usartInitialization->baudRate;
   usartControl[usart].handle->Init.WordLength = UART_WORDLENGTH_8B;
@@ -163,37 +169,51 @@ void Usart_sendDataIrq(UsartNumber usart) {
     usartControl[usart].isSendingData = FALSE;
   }
 }
+/**
+ * @brief Gets USART number based on the handle
+ * @details Used for identifying USART in IRQ handler
+ * @return USART number
+ */
+UsartNumber getUsartNumberFromHandle(UART_HandleTypeDef * usartHandle) {
+  if (usartHandle == &usart2Handle) {
+    return USART_HAL_USART2;
+  }
+  if (usartHandle == &usart6Handle) {
+    return USART_HAL_USART6;
+  }
+  return USART_HAL_EMPTY;
+}
 // ********************** HAL UART callbacks and IRQs **********************
 /**
   * @brief  Transfer completed callback
-  * @param  uart UART handle
+  * @param  usartHandle UART handle
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef * usartHandle) {
-
-  // FIXME This is still to do
-//  if (rxCallback == NULL) {
-//    return;
-//  }
-//
-//  // send the received char to upper layer
-//  rxCallback(*rxBuffer);
-//
-//  // start another reception
-//  if (HAL_UART_Receive_IT(usartHandle, (uint8_t *)(rxBuffer), RECEIVE_BUFFER_LENGTH) != HAL_OK) {
-//    CommonHal_errorHandler();
-//  }
+  UsartNumber usart = getUsartNumberFromHandle(usartHandle);
+  if (usart == USART_HAL_EMPTY) {
+    return;
+  }
+  if (usartControl[usart].sendDataToUpperLayer == NULL) {
+    return;
+  }
+  // send the received char to upper layer
+  usartControl[usart].sendDataToUpperLayer(*usartControl[usart].receiveBuffer);
+  // start another reception
+  if (HAL_UART_Receive_IT(usartControl[usart].handle,
+      (uint8_t*)usartControl[usart].receiveBuffer, RECEIVE_BUFFER_LENGTH) != HAL_OK) {
+    CommonHal_errorHandler();
+  }
 }
 /**
  * @brief Transfer completed callback (called whenever IRQ sends the whole buffer)
  * @param uart UART handle
  */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef * usartHandle) {
-  if (usartHandle == &usart2Handle) {
-    Usart_sendDataIrq(USART_HAL_USART2);
+  UsartNumber usart = getUsartNumberFromHandle(usartHandle);
+  if (usart == USART_HAL_EMPTY) {
+    return;
   }
-  if (usartHandle == &usart6Handle) {
-    Usart_sendDataIrq(USART_HAL_USART6);
-  }
+  Usart_sendDataIrq(usart);
 }
 /**
  * @brief Initialize low level UART
@@ -216,27 +236,28 @@ void HAL_UART_MspInit(UART_HandleTypeDef * usartHandle) {
     HAL_GPIO_Init(USART2_RX_GPIO_PORT, &gpioInitalization);
     HAL_NVIC_SetPriority(USART2_IRQ_NUMBER, USART2_IRQ_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQ_NUMBER);
-  }
-  if (usartHandle == &usart6Handle) {
-//    USART6_TX_GPIO_CLK_ENABLE();
-//    USART6_RX_GPIO_CLK_ENABLE();
-//    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
-//    RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART6;
-//    RCC_PeriphClkInit.Usart6ClockSelection = RCC_USART6CLKSOURCE_SYSCLK;
-//    HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit);
-//    USART6_CLK_ENABLE();
-//    GPIO_InitTypeDef  gpioInitalization;
-//    gpioInitalization.Pin       = USART6_TX_PIN;
-//    gpioInitalization.Mode      = GPIO_MODE_AF_PP;
-//    gpioInitalization.Pull      = GPIO_PULLUP;
-//    gpioInitalization.Speed     = GPIO_SPEED_FAST;
-//    gpioInitalization.Alternate = USART6_TX_AF;
-//    HAL_GPIO_Init(USART6_TX_GPIO_PORT, &gpioInitalization);
-//    gpioInitalization.Pin       = USART6_RX_PIN;
-//    gpioInitalization.Alternate = USART6_RX_AF;
-//    HAL_GPIO_Init(USART6_RX_GPIO_PORT, &gpioInitalization);
-//    HAL_NVIC_SetPriority(USART6_IRQ_NUMBER, USART6_IRQ_PRIORITY, 0);
-//    HAL_NVIC_EnableIRQ(USART6_IRQ_NUMBER);
+  } else if (usartHandle == &usart6Handle) {
+    USART6_TX_GPIO_CLK_ENABLE();
+    USART6_RX_GPIO_CLK_ENABLE();
+#ifdef BOARD_STM32F7_DISCOVERY
+    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
+    RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART6;
+    RCC_PeriphClkInit.Usart6ClockSelection = RCC_USART6CLKSOURCE_SYSCLK;
+    HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit);
+#endif
+    USART6_CLK_ENABLE();
+    GPIO_InitTypeDef  gpioInitalization;
+    gpioInitalization.Pin       = USART6_TX_PIN;
+    gpioInitalization.Mode      = GPIO_MODE_AF_PP;
+    gpioInitalization.Pull      = GPIO_PULLUP;
+    gpioInitalization.Speed     = GPIO_SPEED_FAST;
+    gpioInitalization.Alternate = USART6_TX_AF;
+    HAL_GPIO_Init(USART6_TX_GPIO_PORT, &gpioInitalization);
+    gpioInitalization.Pin       = USART6_RX_PIN;
+    gpioInitalization.Alternate = USART6_RX_AF;
+    HAL_GPIO_Init(USART6_RX_GPIO_PORT, &gpioInitalization);
+    HAL_NVIC_SetPriority(USART6_IRQ_NUMBER, USART6_IRQ_PRIORITY, 0);
+    HAL_NVIC_EnableIRQ(USART6_IRQ_NUMBER);
   }
 }
 /**
@@ -250,23 +271,22 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef * usartHandle) {
     HAL_GPIO_DeInit(USART2_TX_GPIO_PORT, USART2_TX_PIN);
     HAL_GPIO_DeInit(USART2_RX_GPIO_PORT, USART2_RX_PIN);
     HAL_NVIC_DisableIRQ(USART2_IRQ_NUMBER);
-  }
-  if (usartHandle == &usart6Handle) {
-//    USART6_FORCE_RESET();
-//    USART6_RELEASE_RESET();
-//    HAL_GPIO_DeInit(USART6_TX_GPIO_PORT, USART6_TX_PIN);
-//    HAL_GPIO_DeInit(USART6_RX_GPIO_PORT, USART6_RX_PIN);
-//    HAL_NVIC_DisableIRQ(USART6_IRQ_NUMBER);
+  } else if (usartHandle == &usart6Handle) {
+    USART6_FORCE_RESET();
+    USART6_RELEASE_RESET();
+    HAL_GPIO_DeInit(USART6_TX_GPIO_PORT, USART6_TX_PIN);
+    HAL_GPIO_DeInit(USART6_RX_GPIO_PORT, USART6_RX_PIN);
+    HAL_NVIC_DisableIRQ(USART6_IRQ_NUMBER);
   }
 }
 /**
- * @brief  This function handles UART interrupt request.
+ * @brief This function handles UART interrupt request.
  */
 void USART2_IRQHandler(void) {
   HAL_UART_IRQHandler(&usart2Handle);
 }
 /**
- * @brief  This function handles UART interrupt request.
+ * @brief This function handles UART interrupt request.
  */
 void USART6_IRQHandler(void) {
   HAL_UART_IRQHandler(&usart6Handle);

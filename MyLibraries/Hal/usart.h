@@ -30,9 +30,13 @@
  * @{
  */
 
+/**
+ * @brief Usart number
+ */
 typedef enum {
-  USART_HAL_USART2,
-  USART_HAL_USART6,
+  USART_HAL_USART2,//!< USART_HAL_USART2
+  USART_HAL_USART6,//!< USART_HAL_USART6
+  USART_HAL_EMPTY,
 } UsartNumber;
 
 #include "boards.h"
@@ -44,15 +48,20 @@ typedef enum {
   #define DEBUG_CONSOLE_USART USART_HAL_USART6
 #endif
 
+/**
+ * @brief Single USART transmission
+ */
 typedef struct {
   char * transmitBuffer;
   int bufferLength;
 } UsartTransmission;
-
+/**
+ * @brief Usart initialization structure
+ */
 typedef struct {
-  int baudRate;
-  void (*sendDataToUpperLayer)(char receivedCharacter);
-  UsartTransmission (*getMoreDataToTransmit)(void);
+  int baudRate;                                         ///< The requested baud rate
+  void (*sendDataToUpperLayer)(char receivedCharacter); ///< Function for sending received data to upper layer
+  UsartTransmission (*getMoreDataToTransmit)(void);     ///< Function for getting more data to transmit
 } UsartHalInitialization;
 
 void    Usart_initialize   (UsartNumber usart, UsartHalInitialization * usartInitialization);

@@ -21,13 +21,13 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifndef COMM_DEBUG
-  #define COMM_DEBUG
+#ifndef SERIAL_DEBUG
+  #define SERIAL_DEBUG
 #endif
 
-#ifdef COMM_DEBUG
-  #define print(str, args...) printf("COMM--> "str"%s",##args,"\r")
-  #define println(str, args...) printf("COMM--> "str"%s",##args,"\r\n")
+#ifdef SERIAL_DEBUG
+  #define print(str, args...) printf("SERIAL--> "str"%s",##args,"\r")
+  #define println(str, args...) printf("SERIAL--> "str"%s",##args,"\r\n")
 #else
   #define print(str, args...) (void)0
   #define println(str, args...) (void)0
@@ -37,16 +37,16 @@
  * @addtogroup SERIAL_PORT
  * @{
  */
+
 #define TRANSMIT_BUFFER_LENGTH  512   ///< Transmit buffer length
 #define RECEIVE_BUFFER_LENGTH   32    ///< Receive buffer length
 
-static char receiveBuffer[RECEIVE_BUFFER_LENGTH];       ///< Buffer for received data.
-static char transmitBuffer[TRANSMIT_BUFFER_LENGTH];     ///< Buffer for transmitted data.
-static Fifo receiveFifo;                                ///< RX FIFO
-static Fifo transmitFifo;                               ///< TX FIFO
-static const char TERMINATOR_CHARACTER = '\r';          ///< Frame terminator character
-
-static int frameCounter; ///< Nonzero signals a new frame (number of received frames)
+static char receiveBuffer[RECEIVE_BUFFER_LENGTH];   ///< Buffer for received data FIFO.
+static char transmitBuffer[TRANSMIT_BUFFER_LENGTH]; ///< Buffer for transmitted data FIFO.
+static Fifo receiveFifo;                            ///< RX FIFO
+static Fifo transmitFifo;                           ///< TX FIFO
+static const char TERMINATOR_CHARACTER = '\r';      ///< Frame terminator character
+static int frameCounter;                            ///< Nonzero signals a new frame (number of received frames)
 
 static UsartTransmission getMoreDataToTransmit(void);
 static void receiveNewDataFromHal(char receivedCharacter);
@@ -73,6 +73,8 @@ void SerialPort_initialize(int baudRate) {
  */
 void SerialPort_putCharacter(char characterToSend) {
   // disable IRQ so it doesn't screw up FIFO count - leads to errors in transmission
+  // basically this function should be called from a lesser priority IRQ or main
+  // to work correctly
   Usart_disableIrq(DEBUG_CONSOLE_USART);
   Fifo_push(&transmitFifo, characterToSend);
   // enable transmitter if inactive
@@ -113,9 +115,9 @@ char SerialPort_getCharacter(void) {
  * @retval COMM_FRAME_ERROR Frame error
  */
 SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int maximumLength) {
-  // FIXME Probably add some IRQ synchronization here
   *length = 0;
   if (frameCounter) {
+    Usart_disableIrq(DEBUG_CONSOLE_USART);
     while (TRUE) {
       // no more data and terminator wasn't reached => error
       if (Fifo_isEmpty(&receiveFifo)) {
@@ -123,6 +125,7 @@ SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int max
         *length = 0;
         println("Invalid frame");
         Fifo_flush(&receiveFifo);
+        Usart_enableIrq(DEBUG_CONSOLE_USART);
         return SERIAL_PORT_FRAME_ERROR;
       }
 
@@ -135,6 +138,7 @@ SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int max
         *length = 0;
         println("Frame too long");
         Fifo_flush(&receiveFifo);
+        Usart_enableIrq(DEBUG_CONSOLE_USART);
         return SERIAL_PORT_FRAME_TOO_LARGE;
       }
 
@@ -143,6 +147,7 @@ SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int max
         (*length)--; // length without terminator character
         frameBuffer[*length] = 0; // terminator character converted to NULL terminator
         frameCounter--;
+        Usart_enableIrq(DEBUG_CONSOLE_USART);
         return SERIAL_PORT_GOT_FRAME;
       }
     }
@@ -155,9 +160,9 @@ SerialPortResultCode SerialPort_getFrame(char* frameBuffer, int* length, int max
  * @param receivedCharacter Data sent from lower layer software.
  */
 void receiveNewDataFromHal(char receivedCharacter) {
-  FifoResultCode result = Fifo_push(&receiveFifo, receivedCharacter);
+  Fifo_push(&receiveFifo, receivedCharacter);
   // Checking result to ensure no buffer overflow occurred
-  if ((receivedCharacter == TERMINATOR_CHARACTER) && (result == 0)) {
+  if (receivedCharacter == TERMINATOR_CHARACTER) {
     frameCounter++;
   }
 }

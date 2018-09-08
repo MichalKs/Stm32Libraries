@@ -34,35 +34,39 @@
 #endif
 
 /**
+ * @brief Checks serial port frames
+ */
+static void checkForSerialPortFrames(void) {
+  const int FRAME_MAX_SIZE = 32;
+  char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
+  int commandLength;
+
+  // check for new frames from PC
+  // if it does not work play with the CR=CR+LF setting in the PC terminal
+  if (SerialPort_getFrame(frameBuffer, &commandLength, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
+    println("Got frame of length %d: %s", (int)commandLength, (char*)frameBuffer);
+
+    // control LED0 from terminal
+    if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
+      Led_changeState(LED_NUMBER0, LED_ON);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
+      Led_changeState(LED_NUMBER0, LED_OFF);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
+      Led_changeState(LED_NUMBER1, LED_ON);
+    }
+    if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
+      Led_changeState(LED_NUMBER1, LED_OFF);
+    }
+  }
+}
+/**
  * @brief Callback for performing periodic tasks
  */
-void softTimerCallback(void) {
-
-  Led_toggle(LED_NUMBER0);
-//  println("Hello world");
-//
-//  const int FRAME_MAX_SIZE = 10;
-//  char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
-//  int length;                         // length of command
-//
-//  // check for new frames from PC
-//  if (SerialPort_getFrame(frameBuffer, &length, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
-//    println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
-//
-//    // control LED0 from terminal
-//    if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
-//      Led_changeState(LED_NUMBER0, LED_ON);
-//    }
-//    if (!strcmp((char*)frameBuffer, ":LED 0 OFF")) {
-//      Led_changeState(LED_NUMBER0, LED_OFF);
-//    }
-//    if (!strcmp((char*)frameBuffer, ":LED 1 ON")) {
-//      Led_changeState(LED_NUMBER1, LED_ON);
-//    }
-//    if (!strcmp((char*)frameBuffer, ":LED 1 OFF")) {
-//      Led_changeState(LED_NUMBER1, LED_OFF);
-//    }
-//  }
+static void softTimerCallback(void) {
+  Led_toggle(LED_NUMBER3);
+//  println("Hello world!!!");
 }
 /**
   * @brief  Main program
@@ -85,15 +89,15 @@ int main(void) {
   Led_changeState(LED_NUMBER3, LED_ON);
 
   // Add a soft timer with callback
-  const int SOFT_TIMER_PERIOD_MILLIS = 100;
+  const int SOFT_TIMER_PERIOD_MILLIS = 1000;
   int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS,
       softTimerCallback);
   Timer_startSoftwareTimer(timerId);
 
   while (TRUE) {
     Timer_softwareTimersUpdate();
+    checkForSerialPortFrames();
   }
-
   return 0;
 }
 

@@ -146,12 +146,12 @@ Boolean Timer_delayTimer(unsigned int millis, unsigned int startTimeMillis) {
 }
 /**
  * @brief Adds a soft timer
- * @param overflowValue Overflow value of timer
+ * @param timeoutMillis Overflow value of timer in ms
  * @param overflowCb Function called on overflow (should return void and accept no parameters)
  * @return Returns the ID of the new counter or error code
  * @retval TIMER_TOO_MANY_TIMERS Too many timers
  */
-int Timer_addSoftwareTimer(unsigned int overflowValue,
+int Timer_addSoftwareTimer(unsigned int timeoutMillis,
     void (*overflowCb)(void)) {
 
   if (softTimerCount > MAX_SOFT_TIMERS) {
@@ -162,7 +162,7 @@ int Timer_addSoftwareTimer(unsigned int overflowValue,
 
   softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].id             = softTimerCount;
   softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].overflowCb     = overflowCb;
-  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].overflowValue  = overflowValue;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].overflowValue  = timeoutMillis;
   softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].currentCount   = 0;
   softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].isActive       = FALSE; // inactive on startup
 
