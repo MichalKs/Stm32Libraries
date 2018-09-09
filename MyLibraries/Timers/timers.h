@@ -34,12 +34,14 @@
  */
 /**
  * @brief Timer errors
+ * @brief Errors are negative
  */
 typedef enum {
-  TIMER_OK = 0,                //!< TIMER_OK
-  TIMER_TOO_MANY_TIMERS = -100,//!< TIMER_TOO_MANY_TIMERS
+  TIMER_OK = 0,                 //!< TIMER_OK
+  TIMER_TOO_MANY_TIMERS = -1,   //!< TIMER_TOO_MANY_TIMERS
 } TimerResultCode;
 
+void         Timer_initialize           (void);
 void         Timer_delayMicros          (unsigned int micros);
 void         Timer_delayMillis          (unsigned int millis);
 void         Timer_startSoftwareTimer   (int id);

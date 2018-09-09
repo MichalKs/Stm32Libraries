@@ -44,7 +44,6 @@ typedef enum {
 
 typedef enum {
   RESULT_OK,
-  RESULT_OUT_OF_BOUNDS,
 } ResultCode;
 
 void Utils_hexdump(const uint8_t const * dataBuffer, int length);

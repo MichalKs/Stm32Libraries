@@ -40,35 +40,50 @@
  * @{
  */
 
-#define MAX_SOFT_TIMERS       10    ///< Maximum number of soft timers.
-#define ID_TO_ARRAY_INDEX(x)  (x-1) ///< Converts timer ID to array index
+#define MAXIMUM_SOFT_TIMERS   10        ///< Maximum number of soft timers.
+#define ID_TO_ARRAY_INDEX(x)  ((x) - 1) ///< Converts timer ID to array index
 
 /**
  * @brief Soft timer structure.
  */
 typedef struct {
-  int id;                     ///< Timer ID
-  unsigned int currentCount;  ///< Current count value
-  unsigned int overflowValue; ///< Overflow value
-  Boolean isActive;           ///< Is timer active?
-  void (*overflowCb)(void);   ///< Function called on overflow event
-} TIMER_SoftTimerTypedef;
+  int id;                           ///< Timer ID
+  unsigned int currentCountMillis;  ///< Current count value
+  unsigned int timeoutMillis;       ///< Overflow value
+  Boolean isActive;                 ///< Is timer active?
+  void (*overflowCb)(void);         ///< Function called on overflow event
+} SoftTimer;
 
-static TIMER_SoftTimerTypedef softTimers[MAX_SOFT_TIMERS]; ///< Array of soft timers
-static int softTimerCount; ///< Count number of soft timers
-static volatile unsigned int systemClockMicros;
-static Boolean isMicrosCounterInitialized = FALSE;
+static SoftTimer softTimers[MAXIMUM_SOFT_TIMERS];   ///< Array of soft timers
+static int softTimerCount;                          ///< Count number of soft timers
+static volatile unsigned int systemClockMillis;     ///< System clock timer.
+static volatile unsigned int systemClockMicros;     ///< Microsecond counter
+static Boolean isMicrosCounterInitialized = FALSE;  ///< Is us counter initialized
 
-static void microsUpdateCb(void) {
+/**
+ * @brief Updates the system time in ms
+ */
+static void updateMillisCounter(void) {
+  systemClockMillis++;
+}
+/**
+ * @brief Updates the us counter
+ */
+static void updateMicrosCounter(void) {
   systemClockMicros++;
 }
-
+/**
+ * @brief Initialize the timer module (SysTick)
+ */
+void Timer_initialize(void) {
+  SysTick_initialize(updateMillisCounter);
+}
 /**
  * @brief Returns the system time.
  * @return System time
  */
 unsigned int Timer_getTimeMillis(void) {
-  return SysTick_getTimeMillis();
+  return systemClockMillis;
 }
 /**
  * @brief Blocking delay function.
@@ -76,19 +91,18 @@ unsigned int Timer_getTimeMillis(void) {
  * @warning This is a blocking function. Use with care!
  */
 void Timer_delayMillis(unsigned int millis) {
-
   unsigned int startTimeMillis = Timer_getTimeMillis();
   unsigned int currentTimeMillis;
 
   while (TRUE) {
     currentTimeMillis = Timer_getTimeMillis();
     if ((currentTimeMillis >= startTimeMillis) &&
-        (currentTimeMillis-startTimeMillis > millis)) {
+        (currentTimeMillis - startTimeMillis >= millis)) {
       break;
     }
     // account for system timer overflow
     if ((currentTimeMillis < startTimeMillis) &&
-        (UINT32_MAX-startTimeMillis + currentTimeMillis > millis)) {
+        (UINT32_MAX - startTimeMillis + currentTimeMillis >= millis)) {
       break;
     }
   }
@@ -98,26 +112,24 @@ void Timer_delayMillis(unsigned int millis) {
  * @param micros Microseconds to delay
  */
 void Timer_delayMicros(unsigned int micros) {
-
   if (!isMicrosCounterInitialized) {
     const int TIMER_FREQUENCY_HZ = 1000000;
     HardwareTimers_configureTimerAsIrqWithCallback(HARDWARE_TIMERS_TIMER5, TIMER_FREQUENCY_HZ,
-        microsUpdateCb);
+        updateMicrosCounter);
     isMicrosCounterInitialized = TRUE;
   }
 
   unsigned int startTimeMicros = systemClockMicros;
   unsigned int currentTimeMicros;
-
   while (TRUE) {
     currentTimeMicros = systemClockMicros;
     if ((currentTimeMicros >= startTimeMicros) &&
-        (currentTimeMicros-startTimeMicros > micros)) {
+        (currentTimeMicros - startTimeMicros >= micros)) {
       break;
     }
     // account for system timer overflow
     if ((currentTimeMicros < startTimeMicros) &&
-        (UINT32_MAX-startTimeMicros + currentTimeMicros > micros)) {
+        (UINT32_MAX - startTimeMicros + currentTimeMicros >= micros)) {
       break;
     }
   }
@@ -130,15 +142,13 @@ void Timer_delayMicros(unsigned int micros) {
  * @retval TRUE Delay value has been reached
  */
 Boolean Timer_delayTimer(unsigned int millis, unsigned int startTimeMillis) {
-
   unsigned int currentTimeMillis = Timer_getTimeMillis();
-
-  if ((currentTimeMillis >= startTimeMillis) && (currentTimeMillis-startTimeMillis > millis)) {
+  if ((currentTimeMillis >= startTimeMillis) &&
+      (currentTimeMillis - startTimeMillis >= millis)) {
     return TRUE;
-
   // account for system timer overflow
   } else if ((currentTimeMillis < startTimeMillis) &&
-      (UINT32_MAX-startTimeMillis + currentTimeMillis > millis)) {
+      (UINT32_MAX - startTimeMillis + currentTimeMillis >= millis)) {
     return TRUE;
   } else {
     return FALSE;
@@ -148,24 +158,21 @@ Boolean Timer_delayTimer(unsigned int millis, unsigned int startTimeMillis) {
  * @brief Adds a soft timer
  * @param timeoutMillis Overflow value of timer in ms
  * @param overflowCb Function called on overflow (should return void and accept no parameters)
- * @return Returns the ID of the new counter or error code
+ * @return Returns the ID of the new counter or error code (count start from 1)
  * @retval TIMER_TOO_MANY_TIMERS Too many timers
  */
-int Timer_addSoftwareTimer(unsigned int timeoutMillis,
-    void (*overflowCb)(void)) {
-
-  if (softTimerCount > MAX_SOFT_TIMERS) {
+int Timer_addSoftwareTimer(unsigned int timeoutMillis, void (*overflowCb)(void)) {
+  if (softTimerCount > MAXIMUM_SOFT_TIMERS) {
     println("Reached maximum number of timers!");
     return TIMER_TOO_MANY_TIMERS;
   }
   softTimerCount++;
 
-  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].id             = softTimerCount;
-  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].overflowCb     = overflowCb;
-  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].overflowValue  = timeoutMillis;
-  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].currentCount   = 0;
-  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].isActive       = FALSE; // inactive on startup
-
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].id                  = softTimerCount;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].overflowCb          = overflowCb;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].timeoutMillis       = timeoutMillis;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].currentCountMillis  = 0;
+  softTimers[ID_TO_ARRAY_INDEX(softTimerCount)].isActive            = FALSE; // inactive on startup
   return softTimerCount;
 }
 /**
@@ -173,22 +180,22 @@ int Timer_addSoftwareTimer(unsigned int timeoutMillis,
  * @param id Timer ID
  */
 void Timer_startSoftwareTimer(int id) {
-  softTimers[ID_TO_ARRAY_INDEX(id)].currentCount = 0;
-  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = TRUE; // start timer
+  softTimers[ID_TO_ARRAY_INDEX(id)].currentCountMillis = 0;
+  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = TRUE;
 }
 /**
  * @brief Pauses given timer (current count value unchanged)
  * @param id Timer ID
  */
 void Timer_pauseSoftwareTimer(int id) {
-  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = FALSE; // pause timer
+  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = FALSE;
 }
 /**
  * @brief Resumes a timer (starts counting from last value).
  * @param id Timer ID
  */
 void Timer_resumeSoftwareTimer(int id) {
-  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = TRUE; // start timer
+  softTimers[ID_TO_ARRAY_INDEX(id)].isActive = TRUE;
 }
 /**
  * @brief Updates all the timers and calls the overflow functions as
@@ -200,12 +207,13 @@ void Timer_softwareTimersUpdate(void) {
 
   static unsigned int previousTimeMillis;
   unsigned int deltaMillis;
-  unsigned int currentTimeMillis = SysTick_getTimeMillis();
+  unsigned int currentTimeMillis = Timer_getTimeMillis();
 
   if (currentTimeMillis >= previousTimeMillis) {
     // How much time passed from previous run
     deltaMillis = currentTimeMillis - previousTimeMillis;
-  } else { // if overflow occurs
+  } else {
+    // if overflow occurs
     // the difference is the value that previousTimeMillis
     // has to UINT32_MAX + the new number of currentTimeMillis
     deltaMillis = UINT32_MAX - previousTimeMillis + currentTimeMillis;
@@ -214,21 +222,17 @@ void Timer_softwareTimersUpdate(void) {
   previousTimeMillis += deltaMillis; // update time for the function
 
   for (int i = 0; i < softTimerCount; i++) {
-
     if (softTimers[i].isActive == TRUE) {
-
-      softTimers[i].currentCount += deltaMillis; // update active timer values
-
-      if (softTimers[i].currentCount >= softTimers[i].overflowValue) { // if overflow
-        softTimers[i].currentCount = 0; // zero out timer
+      softTimers[i].currentCountMillis += deltaMillis;
+      if (softTimers[i].currentCountMillis >= softTimers[i].timeoutMillis) {
+        softTimers[i].currentCountMillis = 0; // zero out timer
         if (softTimers[i].overflowCb != NULL) {
-          softTimers[i].overflowCb(); // call the overflow function
+          softTimers[i].overflowCb();
         }
       }
     }
   }
 }
-
 /**
  * @}
  */

@@ -55,7 +55,7 @@ typedef struct {
 static UART_HandleTypeDef usart2Handle;     ///< Handle for UART peripheral
 static UART_HandleTypeDef usart6Handle;     ///< Handle for UART peripheral
 
-UsartControl usartControl[NUMBER_OF_AVAILABLE_USARTS]; ///< The USARTs
+static UsartControl usartControl[NUMBER_OF_AVAILABLE_USARTS]; ///< The USARTs
 
 static UsartNumber getUsartNumberFromHandle(UART_HandleTypeDef * usartHandle);
 

@@ -27,24 +27,26 @@
  * @addtogroup SYSTICK
  * @{
  */
-
-static volatile unsigned int systemClockMillis;  ///< System clock timer.
+static void (*tickHandler)(void); ///< Tick callback
 
 /**
- * @brief Get the system time
- * @return System time.
+ * @brief Initializes the SysTick
+ * @details SysTick is actually initialized by the STM32 HAL so we
+ * only set handler here
+ * @param tickCb Tick event handler callback
  */
-unsigned int SysTick_getTimeMillis(void) {
-  return systemClockMillis;
+void SysTick_initialize(void (*tickCb)(void)) {
+  tickHandler = tickCb;
 }
 /**
  * @brief Interrupt handler for SysTick.
  */
 void SysTick_Handler(void) {
   HAL_IncTick();
-  systemClockMillis++; // Update system time
+  if (tickHandler) {
+    tickHandler();
+  }
 }
-
 /**
  * @}
  */

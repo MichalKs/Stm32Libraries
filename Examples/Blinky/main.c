@@ -65,7 +65,7 @@ static void checkForSerialPortFrames(void) {
  * @brief Callback for performing periodic tasks
  */
 static void softTimerCallback(void) {
-  Led_toggle(LED_NUMBER3);
+//  Led_toggle(LED_NUMBER3);
 //  println("Hello world!!!");
 }
 /**
@@ -97,6 +97,8 @@ int main(void) {
   while (TRUE) {
     Timer_softwareTimersUpdate();
     checkForSerialPortFrames();
+    Timer_delayMicros(100*1000);
+    Led_toggle(LED_NUMBER2);
   }
   return 0;
 }
