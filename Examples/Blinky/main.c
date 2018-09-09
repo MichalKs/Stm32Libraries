@@ -65,7 +65,7 @@ static void checkForSerialPortFrames(void) {
  * @brief Callback for performing periodic tasks
  */
 static void softTimerCallback(void) {
-//  Led_toggle(LED_NUMBER3);
+  Led_toggle(LED_NUMBER3);
 //  println("Hello world!!!");
 }
 /**
@@ -74,6 +74,7 @@ static void softTimerCallback(void) {
 int main(void) {
 
   CommonHal_initialize();
+  Timer_initialize();
 
   const int COMM_BAUD_RATE = 115200;
   SerialPort_initialize(COMM_BAUD_RATE);
