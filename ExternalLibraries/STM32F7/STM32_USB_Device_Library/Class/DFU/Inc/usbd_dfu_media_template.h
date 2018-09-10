@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    usbd_dfu_media_template.h
   * @author  MCD Application Team
-  * @version V2.4.2
-  * @date    11-December-2015
   * @brief   header file for the usbd_dfu_media_template.c file
   ******************************************************************************
   * @attention

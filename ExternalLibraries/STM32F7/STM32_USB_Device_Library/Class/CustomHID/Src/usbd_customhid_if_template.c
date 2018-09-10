@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    usbd_customhid_if_template.c
   * @author  MCD Application Team
-  * @version V2.4.2
-  * @date    11-December-2015
   * @brief   USB Device Custom HID interface file.
   *		     This template should be copied to the user folder, renamed and customized
   *          following user needs.
@@ -26,6 +24,11 @@
   *
   ******************************************************************************
   */
+
+  /* BSPDependencies
+  - "stm32xxxxx_{eval}{discovery}{nucleo_144}.c"
+  - "stm32xxxxx_{eval}{discovery}_io.c"
+  EndBSPDependencies */
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_customhid_if_template.h"

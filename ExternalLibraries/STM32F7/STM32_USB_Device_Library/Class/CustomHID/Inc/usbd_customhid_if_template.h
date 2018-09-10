@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    usbd_customhid_if_template.h
   * @author  MCD Application Team
-  * @version V2.4.2
-  * @date    11-December-2015
   * @brief   Header for usbd_customhid_if_template.c file.
   ******************************************************************************
   * @attention

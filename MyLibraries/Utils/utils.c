@@ -66,7 +66,7 @@ unsigned int Utils_convertUnsignedIntToHostEndianness(unsigned int value) {
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void Utils_hexdump(const uint8_t const *dataBuffer, int length) {
+void Utils_hexdump(const uint8_t * dataBuffer, int length) {
 
   const int MAXIMUM_CHARACTERS_IN_LINE = 16;
   const int DELAY_TIME_MILLIS = 50;
@@ -94,7 +94,7 @@ void Utils_hexdump(const uint8_t const *dataBuffer, int length) {
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void Utils_hexdumpWithCharacters(const uint8_t const *dataBuffer, int length) {
+void Utils_hexdumpWithCharacters(const uint8_t * dataBuffer, int length) {
 
   const int MAXIMUM_CHARACTERS_IN_LINE = 8;
   const int DELAY_TIME_MILLIS = 50;
@@ -131,7 +131,7 @@ void Utils_hexdumpWithCharacters(const uint8_t const *dataBuffer, int length) {
  * @param length Number of bytes to send.
  * @warning Uses blocking delays so as not to overflow buffer.
  */
-void Utils_hexdump16(const uint16_t const * dataBuffer, int length) {
+void Utils_hexdump16(const uint16_t * dataBuffer, int length) {
 
   const int MAXIMUM_CHARACTERS_IN_LINE = 8;
   const int DELAY_TIME_MILLIS = 50;

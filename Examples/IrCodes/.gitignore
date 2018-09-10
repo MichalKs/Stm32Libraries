@@ -1,1 +1,4 @@
-/Release/
+/stm32f4/
+/.settings/
+/stm32f7_discovery/
+/stm32f4_discovery/

@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    usbd_cdc_if_template.c
   * @author  MCD Application Team
-  * @version V2.4.2
-  * @date    11-December-2015
   * @brief   Generic media access Layer.
   ******************************************************************************
   * @attention
@@ -24,6 +22,12 @@
   *
   ******************************************************************************
   */ 
+
+  /* BSPDependencies
+  - "stm32xxxxx_{eval}{discovery}.c"
+  - "stm32xxxxx_{eval}{discovery}_io.c"
+  - "stm32xxxxx_{eval}{discovery}_audio.c"
+  EndBSPDependencies */  
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_audio_if_template.h"

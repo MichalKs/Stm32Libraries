@@ -1,0 +1,14 @@
+
+
+
+
+This example blinks some LEDs and sends data over UART to the serial port
+at baud rate 115200.
+
+1. For STM32F4-Discovery:
+- we use the 4 on board LEDs. 
+- UART connections: RX=PA2, TX=PA3
+
+2. For STM32F7-Discovery:
+- we ue one on board LED (PI1)
+- UART connections: RX=PC7, TX=PC6

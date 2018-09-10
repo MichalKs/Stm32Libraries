@@ -34,8 +34,8 @@
  * @brief Usart number
  */
 typedef enum {
-  USART_HAL_USART2,//!< USART_HAL_USART2
-  USART_HAL_USART6,//!< USART_HAL_USART6
+  USART_HAL_USART2 = 0,//!< USART_HAL_USART2
+  USART_HAL_USART6 = 1,//!< USART_HAL_USART6
   USART_HAL_EMPTY,
 } UsartNumber;
 

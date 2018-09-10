@@ -46,9 +46,9 @@ typedef enum {
   RESULT_OK,
 } ResultCode;
 
-void Utils_hexdump(const uint8_t const * dataBuffer, int length);
-void Utils_hexdumpWithCharacters(const uint8_t const * dataBuffer, int length);
-void Utils_hexdump16(const uint16_t const * dataBuffer, int length);
+void Utils_hexdump(const uint8_t * dataBuffer, int length);
+void Utils_hexdumpWithCharacters(const uint8_t * dataBuffer, int length);
+void Utils_hexdump16(const uint16_t * dataBuffer, int length);
 unsigned int Utils_convertUnsignedIntToHostEndianness(unsigned int value);
 Boolean Utils_isArchitectureBigEndian(void);
 

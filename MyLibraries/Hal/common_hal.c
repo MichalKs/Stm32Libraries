@@ -20,7 +20,12 @@
 #include "led_hal.h"
 #include "utils.h"
 
-#define HAL_ERROR_LED_NUMBER 3 ///< Number of LED for HAL errors
+#ifdef BOARD_STM32F4_DISCOVERY
+  #define HAL_ERROR_LED_NUMBER 3 ///< Number of LED for HAL errors
+#endif
+#ifdef BOARD_STM32F7_DISCOVERY
+ #define HAL_ERROR_LED_NUMBER 0 ///< Number of LED for HAL errors
+#endif
 
 #ifdef BOARD_STM32F4_DISCOVERY
 /**
@@ -105,8 +110,8 @@ static void systemClockConfig(void) {
   *            Flash Latency(WS)              = 7
   */
 static void systemClockConfig(void) {
-  RCC_ClkInitTypeDef RCC_ClkInitStruct;
-  RCC_OscInitTypeDef RCC_OscInitStruct;
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
   /* Enable HSE Oscillator and activate PLL with HSE as source */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
@@ -118,23 +123,24 @@ static void systemClockConfig(void) {
   RCC_OscInitStruct.PLL.PLLN = 432;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 9;
-  if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
     CommonHal_errorHandler();
   }
 
   /* activate the OverDrive to reach the 216 Mhz Frequency */
-  if(HAL_PWREx_EnableOverDrive() != HAL_OK) {
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
     CommonHal_errorHandler();
   }
 
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
      clocks dividers */
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK |
+      RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-  if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK) {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK) {
     CommonHal_errorHandler();
   }
 }
@@ -199,7 +205,6 @@ void CommonHal_initialize(void) {
 
   systemClockConfig();
 }
-
 /**
  * @brief Error handler for HAL
  */

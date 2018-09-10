@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    usbd_hid.c
   * @author  MCD Application Team
-  * @version V2.4.2
-  * @date    11-December-2015
   * @brief   This file provides the HID core functions.
   *
   * @verbatim
@@ -45,6 +43,11 @@
   *
   ******************************************************************************
   */ 
+
+  /* BSPDependencies
+  - "stm32xxxxx_{eval}{discovery}{nucleo_144}.c"
+  - "stm32xxxxx_{eval}{discovery}_io.c"
+  EndBSPDependencies */
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_hid.h"

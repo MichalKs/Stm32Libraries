@@ -43,7 +43,8 @@ static void checkForSerialPortFrames(void) {
 
   // check for new frames from PC
   // if it does not work play with the CR=CR+LF setting in the PC terminal
-  if (SerialPort_getFrame(frameBuffer, &commandLength, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
+  if (SerialPort_getFrame(frameBuffer, &commandLength, FRAME_MAX_SIZE) ==
+      SERIAL_PORT_GOT_FRAME) {
     println("Got frame of length %d: %s", (int)commandLength, (char*)frameBuffer);
 
     // control LED0 from terminal
@@ -65,8 +66,8 @@ static void checkForSerialPortFrames(void) {
  * @brief Callback for performing periodic tasks
  */
 static void softTimerCallback(void) {
-  Led_toggle(LED_NUMBER3);
-//  println("Hello world!!!");
+  Led_toggle(LED_NUMBER0);
+  println("Hello world!!!");
 }
 /**
   * @brief  Main program
@@ -75,6 +76,7 @@ int main(void) {
 
   CommonHal_initialize();
   Timer_initialize();
+  Timer_delayMillis(100);
 
   const int COMM_BAUD_RATE = 115200;
   SerialPort_initialize(COMM_BAUD_RATE);
@@ -98,8 +100,8 @@ int main(void) {
   while (TRUE) {
     Timer_softwareTimersUpdate();
     checkForSerialPortFrames();
-    Timer_delayMicros(100*1000);
-    Led_toggle(LED_NUMBER2);
+//    Timer_delayMicros(100*1000);
+//    Led_toggle(LED_NUMBER0);
   }
   return 0;
 }

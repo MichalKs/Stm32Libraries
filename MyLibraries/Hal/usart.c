@@ -75,7 +75,7 @@ void Usart_initialize(UsartNumber usart, UsartHalInitialization * usartInitializ
     usartControl[usart].handle = &usart2Handle;
     break;
   case USART_HAL_USART6:
-    usart2Handle.Instance = USART6;
+    usart6Handle.Instance = USART6;
     usartControl[usart].handle = &usart6Handle;
     break;
   default:
@@ -97,7 +97,6 @@ void Usart_initialize(UsartNumber usart, UsartHalInitialization * usartInitializ
   if (HAL_UART_Init(usartControl[usart].handle) != HAL_OK) {
     CommonHal_errorHandler();
   }
-
   if (HAL_UART_Receive_IT(usartControl[usart].handle,
       (uint8_t*)usartControl[usart].receiveBuffer, RECEIVE_BUFFER_LENGTH) != HAL_OK) {
     CommonHal_errorHandler();
@@ -239,12 +238,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef * usartHandle) {
   } else if (usartHandle == &usart6Handle) {
     USART6_TX_GPIO_CLK_ENABLE();
     USART6_RX_GPIO_CLK_ENABLE();
-#ifdef BOARD_STM32F7_DISCOVERY
-    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
-    RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART6;
-    RCC_PeriphClkInit.Usart6ClockSelection = RCC_USART6CLKSOURCE_SYSCLK;
-    HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit);
-#endif
     USART6_CLK_ENABLE();
     GPIO_InitTypeDef  gpioInitalization;
     gpioInitalization.Pin       = USART6_TX_PIN;

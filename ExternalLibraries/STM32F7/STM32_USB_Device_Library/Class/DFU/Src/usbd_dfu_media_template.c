@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    usbd_dfu_media_template.c
   * @author  MCD Application Team
-  * @version V2.4.2
-  * @date    11-December-2015
   * @brief   Memory management layer
   ******************************************************************************
   * @attention
@@ -25,6 +23,10 @@
   ******************************************************************************
   */ 
 
+  /* BSPDependencies
+  - "stm32xxxxx_{eval}{discovery}{nucleo_144}.c"
+  - "stm32xxxxx_{eval}{discovery}_io.c"
+  EndBSPDependencies */
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_dfu_media_template.h"

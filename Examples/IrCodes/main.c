@@ -35,19 +35,18 @@
 #endif
 
 /**
- * @brief Callback for performing periodic tasks
+ * @brief Checks serial port frames
  */
-void softTimerCallback(void) {
-
-  Led_toggle(LED_NUMBER2);
-
-  const int FRAME_MAX_SIZE = 10;
+static void checkForSerialPortFrames(void) {
+  const int FRAME_MAX_SIZE = 32;
   char frameBuffer[FRAME_MAX_SIZE];   // buffer for receiving commands from PC
-  int length;                         // length of command
+  int commandLength;
 
   // check for new frames from PC
-  if (SerialPort_getFrame(frameBuffer, &length, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
-    println("Got frame of length %d: %s", (int)length, (char*)frameBuffer);
+  // if it does not work play with the CR=CR+LF setting in the PC terminal
+  if (SerialPort_getFrame(frameBuffer, &commandLength, FRAME_MAX_SIZE) == SERIAL_PORT_GOT_FRAME) {
+    println("Got frame of length %d: %s", (int)commandLength, (char*)frameBuffer);
+
     // control LED0 from terminal
     if (!strcmp((char*)frameBuffer, ":LED 0 ON")) {
       Led_changeState(LED_NUMBER0, LED_ON);
@@ -64,23 +63,43 @@ void softTimerCallback(void) {
   }
 }
 /**
+ * @brief Callback for performing periodic tasks
+ */
+void softTimerCallback(void) {
+  Led_toggle(LED_NUMBER2);
+}
+/**
   * @brief  Main program
   */
 int main(void) {
   CommonHal_initialize();
+  Timer_initialize();
+
   const int COMM_BAUD_RATE = 115200;
   SerialPort_initialize(COMM_BAUD_RATE);
-  println("Starting program");
+  println("Starting program"); // Print a string to terminal
+
   Led_addNewLed(LED_NUMBER0);
   Led_addNewLed(LED_NUMBER1);
   Led_addNewLed(LED_NUMBER2);
+  Led_addNewLed(LED_NUMBER3);
+  Led_changeState(LED_NUMBER0, LED_ON);
+  Led_changeState(LED_NUMBER1, LED_ON);
+  Led_changeState(LED_NUMBER2, LED_ON);
+  Led_changeState(LED_NUMBER3, LED_ON);
   IrCodes_initialize();
+
+  // Add a soft timer with callback
   const int SOFT_TIMER_PERIOD_MILLIS = 1000;
-  int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS, softTimerCallback);
+  int timerId = Timer_addSoftwareTimer(SOFT_TIMER_PERIOD_MILLIS,
+      softTimerCallback);
   Timer_startSoftwareTimer(timerId);
 
   while (TRUE) {
     Timer_softwareTimersUpdate();
+    checkForSerialPortFrames();
+    Timer_delayMicros(100*1000);
+    Led_toggle(LED_NUMBER2);
   }
   return 0;
 }

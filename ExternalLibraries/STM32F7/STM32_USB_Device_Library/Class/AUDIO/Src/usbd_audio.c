@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    usbd_audio.c
   * @author  MCD Application Team
-  * @version V2.4.2
-  * @date    11-December-2015
   * @brief   This file provides the Audio core functions.
   *
   * @verbatim
@@ -60,6 +58,12 @@
   *
   ******************************************************************************
   */ 
+
+  /* BSPDependencies
+  - "stm32xxxxx_{eval}{discovery}.c"
+  - "stm32xxxxx_{eval}{discovery}_io.c"
+  - "stm32xxxxx_{eval}{discovery}_audio.c"
+  EndBSPDependencies */
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_audio.h"
